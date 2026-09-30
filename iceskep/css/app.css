@@ -131,7 +131,7 @@ html[data-theme="night"] .tab.on{color:var(--accent)}
 .gear:hover,.gear.on{background:var(--card);color:var(--ink)}
 
 .main{min-width:0;display:flex;flex-direction:column}
-.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 20px;
+.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;height:60px;padding:8px 20px;
   background:var(--page);border-bottom:1px solid var(--rule)}
 .coinbox,.streakbox{display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 13px;border-radius:20px;
   border:1px solid var(--rule);background:var(--card);font-family:var(--ui);font-size:16px;color:var(--ink-2);white-space:nowrap}
@@ -332,7 +332,7 @@ html[data-theme="night"] .bank-t b{color:var(--accent)}
 /* ============================================================
    THE QUESTION
    ============================================================ */
-.fbar{position:sticky;top:56px;z-index:30;display:flex;align-items:center;gap:12px;min-height:52px;margin:-26px -20px 16px;padding:4px 14px;
+.fbar{position:sticky;top:60px;z-index:30;display:flex;align-items:center;gap:12px;min-height:52px;margin:-26px -20px 16px;padding:4px 14px;
   background:var(--page);border-bottom:1px solid var(--rule)}
 .fbar .x{width:44px;height:44px;font-size:30px;line-height:1;color:var(--ink-2);flex:none}
 .fbar .cnt{font-family:var(--ui);font-size:16px;color:var(--ink-2);white-space:nowrap}
