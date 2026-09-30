@@ -8,141 +8,118 @@
    =========================================================== */
 var DB = (function(){
 
-/* The HSC edition keeps its own drawer. The IBA/GRE edition used
-   'iceskep.v1'; nothing from it should ever mix with this record. */
-var KEY='iceskep.hsc.v1';
+var KEY='iceskep.hsc.v1';          /* unchanged, so nobody's record is lost */
 var S=null, _t=null;
+var MIG=3;                         /* one-time changes already applied to a record */
+var HOURS=[60,120,180,240];        /* study minutes a day a student can pick */
 
 function fresh(){
   return {
-    v:1,
-    mig:2,                      /* one-time changes already applied to this record */
-    track:'hsc',
+    v:1, mig:MIG,
     theme:'day',
     sound:true,
-    timer:true,                 /* the top-right stopwatch */
     firstOpen:'',
-    onboarded:false,            /* the five-question first visit has been seen */
-    leftLog:{},                 /* 'YYYY-MM-DD' -> {hsc:{a,z}} content minutes left */
-    name:'',                    /* only ever printed on your own certificate */
+    onboarded:false,            /* the first-visit screen has been passed */
+    noteClosed:false,           /* the honesty note on Start was dismissed */
+    logo:'bubbles',             /* 'bubbles' or 'cards' */
+    scope:{kind:'all', sj:'', ch:''},   /* what Practice is pointed at */
 
     /* ability, per topic id */
     theta:{}, nseen:{}, lastSeen:{},
     itemB:{}, itemStat:{},
 
-    /* spaced repetition, for items you have missed */
+    /* the mistake schedule: {r, due, lapse, done} per question */
     cards:{},
 
-    /* measured time. 'YYYY-MM-DD' -> {tot, byTopic:{}, byHour:{}, bySec:{}} */
-    time:{},
-
-    /* streak */
-    streak:0, best:0, lastDay:'', freezes:2, freezeMonth:'', frozen:{}, repairWeek:'',
-
-    /* per-day activity counters */
-    acts:{},
-
-    /* rolling answer log — the raw material for every chart */
-    log:[],
-
-    /* finished practice sets */
-    runs:[],
-
-    /* what you have read */
-    readTricks:{},
-    learn:{},                   /* topic -> {sub-topic: when it was marked learnt} */
-
-    /* goals — one figure: the share of a paper's MCQ you are aiming at */
-    goal:{ mins:45, hsc:{pct:88} },
-    examDate:{ hsc:'' },
-
     /* per-question progress: {n attempts, ok correct, miss last-miss ms,
-       okT last-correct ms, cl 1 once the question counts as done} */
+       okT last-correct ms, l 1 if the latest answer was right, cl 1 once
+       the question counts as done} */
     items:{},
 
-    /* ---- the game layer: everything earned rather than measured ---- */
-    game:{
-      xp:0, level:1, coins:0,
-      bestCombo:0, answered:0, correct:0, fixed:0,
-      badges:{},                 /* id -> when it was earned            */
-      seen:{},                   /* one-time moments already shown      */
-      chests:0, dry:0, opened:0, /* pending chests, pity counter        */
-      records:{},                /* name -> {v, t}                      */
-      stars:{},                  /* topic -> {acc, speed, clean}        */
-      cards:{tricks:{}, topics:{}},
-      own:{}, wear:{avatar:'owl', frame:'plain', pack:'journal'},
-      pet:{stage:0, fedDay:'', name:''},
-      lifelines:{fifty:1, trick:1},
-      unlocked:{},
-      dream:'', title:'',
-      credit:{},                 /* topic -> questions credited by a test */
-      diag:0,
-      qotd:{day:'', ok:null, grid:[]},
-      qotdCount:0, sureRun:0, cleanRun:0, today:null, gaveFreeze:0,
-      season:{id:'', xp:0, claimed:{}},
-      quests:{day:'', list:[], claimed:{}, wk:'', weekly:null, wclaimed:0},
-      events:{},
-      duels:[], reports:[], notes:{},
-      lastOpen:'', breakShown:0, doubleUntil:0,
-      openLoop:null              /* a set left unfinished                */
-    },
+    /* streak: days in a row with five questions answered */
+    streak:0, best:0, lastDay:'',
+
+    /* per-day counters, 'YYYY-MM-DD' -> {q, right, wrong, sets} */
+    acts:{},
+
+    /* rolling answer log: the raw material for the prediction */
+    log:[],
+
+    /* rewards: one currency */
+    coins:0,
+    wallet:[],                  /* recent earnings and purchases, newest last */
+    power:{fifty:1, second:1, plus30:1},
+    badges:{},                  /* id -> when it was earned */
+    answered:0, correct:0, won:0,
+    examBest:{},                /* paper -> best full-paper share (0..1) */
 
     settings:{
-      setSize:16,                /* questions in an ordinary set */
-      alarm:true,                /* ring when a question's real-exam time runs out */
-      dailyMin:119,              /* study minutes per day — drives "days left"   */
-      dailyQ:20,                 /* questions a day you chose for yourself       */
-      passLine:70,               /* score lines on every 0–100 bar               */
-      goalLine:85,
-      hardPredict:true,          /* the conservative prediction. see predict.js */
-      challenge:'exam',          /* how far above your level a set aims:         */
-                                 /* flow ~85% right · exam ~60% · brutal ~45%    */
-      effects:true,              /* animations, confetti, floating points        */
-      haptics:true,              /* a tap on the phone for right and wrong       */
-      confidence:false,          /* ask "sure or guessing" before the verdict    */
-      redemption:true,           /* a second question on the same idea after a miss */
-      breaks:true,               /* suggest a break after an hour                */
-      reminderHour:-1,           /* -1 = off; otherwise the hour to nudge at     */
-      lang:'en'                  /* 'en' or 'bn' for the interface; English by default */
+      dailyMin:180,             /* study minutes a day, one of HOURS */
+      lang:'bn',                /* 'bn' or 'en' for the interface */
+      calm:false                /* animations and vibration off */
     }
   };
 }
 
+function nearestHours(m){
+  var best=HOURS[2], d=1e9;
+  for(var i=0;i<HOURS.length;i++){ var x=Math.abs(HOURS[i]-m); if(x<d){ d=x; best=HOURS[i]; } }
+  return best;
+}
+
+/* An older record carries features that no longer exist. Keep what still
+   means something, carry over what has a new home, and drop the rest. */
+function migrate(o){
+  var g=o.game||{}, k;
+  var n={};
+  var f=fresh();
+  for(k in f) n[k]=o[k]!==undefined ? o[k] : f[k];
+  var st=o.settings||{};
+  n.settings={
+    dailyMin: st.dailyMin===119 ? 180 : nearestHours(st.dailyMin||180),
+    lang: 'bn',
+    calm: st.effects===false
+  };
+  n.coins=+g.coins||0;
+  n.answered=+g.answered||0; n.correct=+g.correct||0; n.won=+g.fixed||0;
+  var lf=g.lifelines||{};
+  n.power={fifty:Math.max(1, Math.min(9, +lf.fifty||0)), second:1, plus30:1};
+  n.wallet=[]; n.badges={};
+  if(!o.acts) n.acts={};
+  /* full-paper results: the old mock runs, as a best share per paper */
+  n.examBest={};
+  (o.runs||[]).forEach(function(r){
+    if((r.mode==='mock'||r.mode==='admission') && r.sec && r.n){
+      var p=r.right/r.n; if(!(n.examBest[r.sec]>=p)) n.examBest[r.sec]=p;
+    }
+  });
+  n.noteClosed=false;
+  n.onboarded=!!(o.onboarded || (o.log&&o.log.length));
+  n.scope={kind:'all', sj:'', ch:''};
+  n.logo='bubbles';
+  n.mig=MIG;
+  return n;
+}
+
 function load(){
-  try{ S=JSON.parse(localStorage.getItem(KEY))||fresh(); }catch(e){ S=fresh(); }
-  var f=fresh(), k, oldRecord=!(S.mig>=2);
-  for(k in f) if(!(k in S)) S[k]=f[k];
-  for(k in f.settings) if(!(k in S.settings)) S.settings[k]=f.settings[k];
-  /* retired: the app no longer moves on by itself or opens the explanation unasked */
-  delete S.settings.autoAdvance; delete S.settings.autoAdvanceMs;
-  delete S.settings.revealFast; delete S.settings.mixTypes; delete S.settings.strictPace;
-  for(k in f.goal) if(!(k in S.goal)) S.goal[k]=f.goal[k];
-  /* the game layer arrived after the first release: fill in what is missing,
-     one level deep, so an older record keeps everything it had */
-  if(!S.game) S.game=f.game;
-  for(k in f.game) if(!(k in S.game)) S.game[k]=f.game[k];
-  for(k in f.game.wear) if(!(k in S.game.wear)) S.game.wear[k]=f.game.wear[k];
-  if(!S.firstOpen) S.firstOpen=today();
-  /* retired: the next set never starts by itself any more */
-  delete S.settings.autoplay;
-  /* this edition has one track and one exam date */
-  S.track='hsc';
-  if(!S.examDate || typeof S.examDate!=='object') S.examDate={hsc:''};
-  if(S.examDate.hsc===undefined) S.examDate.hsc='';
-  if(!S.goal.hsc) S.goal.hsc={pct:88};
-  /* Drakkhak: the interface opens in English and in daylight, and a day of
-     study is 1 hr 59 min unless you set it. Applied once to older records. */
-  if(oldRecord){
-    S.settings.lang='en'; S.theme='day';
-    if(S.settings.dailyMin===180) S.settings.dailyMin=119;
-    S.mig=2;
+  var raw=null;
+  try{ raw=JSON.parse(localStorage.getItem(KEY)); }catch(e){ raw=null; }
+  if(raw && typeof raw==='object' && raw.mig>=MIG){
+    S=raw;
+    var f=fresh(), k;
+    for(k in f) if(!(k in S)) S[k]=f[k];
+    for(k in f.settings) if(!(k in S.settings)) S.settings[k]=f.settings[k];
+    for(k in f.power) if(!(k in S.power)) S.power[k]=f.power[k];
+    for(k in f.scope) if(!(k in S.scope)) S.scope[k]=f.scope[k];
+  } else if(raw && typeof raw==='object' && ('theta' in raw)){
+    S=migrate(raw);
+    saveNow();
+  } else {
+    S=fresh();
   }
-  if(!S.learn) S.learn={};
-  /* anyone with answers on record has already met the app */
-  if(!S.onboarded && S.log && S.log.length) S.onboarded=true;
+  if(!S.firstOpen) S.firstOpen=today();
   return S;
 }
-function game(){ return state().game; }
 function state(){ return S||load(); }
 function save(){ if(_t) clearTimeout(_t); _t=setTimeout(saveNow,160); }
 function saveNow(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -152,96 +129,40 @@ function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0
 function today(){ return ymd(new Date()); }
 function dayNum(s){ return Math.floor(new Date(s+'T00:00:00').getTime()/864e5); }
 function daysBetween(a,b){ return dayNum(b)-dayNum(a); }
-function lastNDays(n){
-  var out=[], now=new Date();
-  for(var i=n-1;i>=0;i--){
-    var d=new Date(now.getTime()-i*864e5), k=ymd(d);
-    out.push({date:k, d:d, mins:minsOn(k), acts:actsOn(k)});
-  }
-  return out;
-}
 
-/* ---------- time ledger ---------- */
-function dayTime(k){
-  var s=state();
-  var d = s.time[k] || (s.time[k]={tot:0, byTopic:{}, byHour:{}, bySec:{}, byTrack:{}});
-  if(!d.byTrack) d.byTrack={};        /* records written before byTrack existed */
-  return d;
-}
-function minsOn(k){ var t=state().time[k]; return t?t.tot:0; }
-function minsOnTopic(topicId, days){
-  var s=state(), tot=0, list=days||Object.keys(s.time);
-  for(var i=0;i<list.length;i++){
-    var t=s.time[list[i]]; if(t&&t.byTopic[topicId]) tot+=t.byTopic[topicId];
-  }
-  return tot;
-}
-function minsOnSection(secKey, days){
-  var s=state(), tot=0, list=days||Object.keys(s.time);
-  for(var i=0;i<list.length;i++){
-    var t=s.time[list[i]]; if(t&&t.bySec[secKey]) tot+=t.bySec[secKey];
-  }
-  return tot;
-}
-/* Time spent on a track is billed directly, not summed from its sections:
-   plenty of screens (the overview, the trick library, the prediction) belong
-   to a track without belonging to any one section, and those minutes are
-   real study time that would otherwise vanish from the ledger. */
-function minsOnTrack(track, days){
-  var s=state(), tot=0, list=days||Object.keys(s.time);
-  for(var i=0;i<list.length;i++){
-    var t=s.time[list[i]];
-    if(t && t.byTrack && t.byTrack[track]) tot+=t.byTrack[track];
-  }
-  return tot;
-}
-function totalMins(){
-  var s=state(), tot=0; for(var k in s.time) tot+=s.time[k].tot; return tot;
-}
-
-/* ---------- activity counters ---------- */
-function blankAct(){ return {q:0,right:0,wrong:0,timed:0,secs:0,tricks:0,vocab:0,sets:0}; }
+/* ---------- per-day counters ---------- */
+function blankAct(){ return {q:0,right:0,wrong:0,sets:0}; }
 function actsOn(k){ return state().acts[k]||blankAct(); }
 function actsToday(){
   var s=state(), k=today();
-  return s.acts[k]||(s.acts[k]=blankAct());
+  var a=s.acts[k];
+  if(!a){
+    a=s.acts[k]=blankAct();
+    var keys=Object.keys(s.acts).sort();
+    while(keys.length>90) delete s.acts[keys.shift()];
+  }
+  return a;
 }
 function bump(kind, n){
   var a=actsToday(); a[kind]=(a[kind]||0)+(n===undefined?1:n); save();
 }
 
-/* ---------- streak ----------
-   A day counts once you have answered five questions or logged five
-   minutes. Opening the page is not studying. */
-function DAY_MET(k){
-  var a=actsOn(k); return (a.q>=5) || (minsOn(k)>=5);
-}
+/* ---------- streak: simple days in a row ----------
+   A day counts once five questions are answered. Opening the page is
+   not studying. Miss a whole day and it starts again. */
+function DAY_MET(k){ return actsOn(k).q>=5; }
 function touchStreak(){
   var s=state(), t=today();
-  if(!DAY_MET(t)) return false;
-  if(s.lastDay===t) return false;
+  if(!DAY_MET(t) || s.lastDay===t) return false;
   var gap = s.lastDay ? daysBetween(s.lastDay, t) : 999;
-  var mon = t.slice(0,7);
-  if(s.freezeMonth!==mon){ s.freezeMonth=mon; s.freezes=Math.max(2, s.freezes); }
-  if(gap===1){ s.streak++; }
-  else if(gap===2 && s.freezes>0){
-    s.freezes--; s.streak+=1;
-    var missed=new Date(new Date(t+'T00:00:00').getTime()-864e5);
-    s.frozen[ymd(missed)]=1;
-  }
-  else { s.streak=1; }
+  s.streak = gap===1 ? s.streak+1 : 1;
   s.best=Math.max(s.best, s.streak);
   s.lastDay=t; save();
   return true;
 }
-/* a streak only stays alive while the gap is small — report it honestly */
 function liveStreak(){
   var s=state(); if(!s.lastDay) return 0;
-  var gap=daysBetween(s.lastDay, today());
-  if(gap<=0) return s.streak;
-  if(gap===1) return s.streak;      /* today is still open */
-  if(gap===2 && s.freezes>0) return s.streak;
-  return 0;
+  return daysBetween(s.lastDay, today())<=1 ? s.streak : 0;
 }
 
 /* ---------- the answer log ---------- */
@@ -251,11 +172,6 @@ function pushLog(rec){
   if(s.log.length>9000) s.log=s.log.slice(-7000);
   save();
 }
-function logSince(ms){
-  var s=state(), out=[], i;
-  for(i=s.log.length-1;i>=0;i--){ if(s.log[i].t<ms) break; out.push(s.log[i]); }
-  return out.reverse();
-}
 function logFor(pred, limit){
   var s=state(), out=[];
   for(var i=s.log.length-1;i>=0;i--){
@@ -264,40 +180,45 @@ function logFor(pred, limit){
   return out;
 }
 
+/* a question's latest answer, right or wrong. Records written before the
+   flag existed are read from the two timestamps. */
+function lastOk(it){
+  if(!it || !it.n) return null;
+  if(it.l!==undefined) return !!it.l;
+  return (it.okT||0) > (it.miss||0);
+}
+
 /* ---------- import / export ---------- */
 function exportJSON(){ return JSON.stringify(state()); }
 function importJSON(txt){
   var o=JSON.parse(txt);
   if(!o||typeof o!=='object'||!('theta' in o)) throw new Error('Not a Drakkhak backup.');
-  if(o.goal && (o.goal.gre || o.goal.iba)) throw new Error('That copy is from the IBA/GRE edition.');
-  /* write it first: load() reads from storage, so assigning S alone was undone */
+  /* write it first: load() reads from storage */
   localStorage.setItem(KEY, JSON.stringify(o));
   load(); saveNow(); return true;
 }
-function reset(){ S=fresh(); saveNow(); }
+function reset(){ S=fresh(); S.firstOpen=today(); saveNow(); }
 
 return {
-  load:load, state:state, game:game, save:save, saveNow:saveNow,
-  ymd:ymd, today:today, dayNum:dayNum, daysBetween:daysBetween, lastNDays:lastNDays,
-  dayTime:dayTime, minsOn:minsOn, minsOnTopic:minsOnTopic, minsOnSection:minsOnSection,
-  minsOnTrack:minsOnTrack, totalMins:totalMins,
+  load:load, state:state, save:save, saveNow:saveNow, HOURS:HOURS,
+  ymd:ymd, today:today, dayNum:dayNum, daysBetween:daysBetween,
   actsOn:actsOn, actsToday:actsToday, bump:bump, blankAct:blankAct,
   touchStreak:touchStreak, liveStreak:liveStreak, DAY_MET:DAY_MET,
-  pushLog:pushLog, logSince:logSince, logFor:logFor,
+  pushLog:pushLog, logFor:logFor, lastOk:lastOk,
   exportJSON:exportJSON, importJSON:importJSON, reset:reset
 };
 })();
 
 /* ===========================================================
    L(english, bangla) — the interface string in the language chosen
-   in Settings. English is the default and Bangla is one switch away.
+   in Settings. Bangla is the default; English is one switch away.
    Question content (stems, options, explanations) never goes
    through this: a question stays in the language it was written in.
    =========================================================== */
 function L(en, bn){
-  return (DB.state().settings.lang==='bn' && bn!==undefined && bn!==null) ? bn : en;
+  return (DB.state().settings.lang==='en' || bn===undefined || bn===null) ? en : bn;
 }
-function LBN(){ return DB.state().settings.lang==='bn'; }
+function LBN(){ return DB.state().settings.lang!=='en'; }
 
 /* ===========================================================
    U — formatting and small pure helpers, used everywhere.
@@ -306,44 +227,29 @@ var U = (function(){
 function h(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function clamp(x,a,b){ return x<a?a:x>b?b:x; }
-function pct(x){ return Math.round(x*100); }
 function round(x,n){ var m=Math.pow(10,n||0); return Math.round(x*m)/m; }
 
-/* spelt out, so "1 hr 59 min" reads as time at a glance */
+/* 6619 -> 6,619 (in the interface's own digits) */
+function num(n){ return N(String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',')); }
+/* "1 hr 30 min" */
 function mins(m){
   m=Math.round(m||0);
   var H=L('hr','ঘণ্টা'), M=L('min','মিনিট');
-  if(m<1) return '0 '+M;
-  if(m<60) return m+' '+M;
+  if(m<1) return N(0)+' '+M;
+  if(m<60) return N(m)+' '+M;
   var hh=Math.floor(m/60), mm=m%60;
-  return mm? hh+' '+H+' '+mm+' '+M : hh+' '+H;
+  return mm? N(hh)+' '+H+' '+N(mm)+' '+M : N(hh)+' '+H;
 }
-function minsLong(m){
-  m=Math.round(m||0);
-  if(m<60) return m+' '+L('minutes','মিনিট');
-  return U.round(m/60,1)+' '+L('hours','ঘণ্টা');
-}
-/* 6619 -> 6,619 */
-function num(n){ return String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+/* 75 -> 1:15 */
 function secs(s){
   s=Math.max(0,Math.round(s||0));
-  var m=Math.floor(s/60);
-  return m+':'+String(s%60).padStart(2,'0');
-}
-function ago(ts){
-  var d=(Date.now()-ts)/1000;
-  if(d<60) return L('just now','এইমাত্র');
-  if(d<3600) return Math.floor(d/60)+L(' min ago',' মিনিট আগে');
-  if(d<86400) return Math.floor(d/3600)+L(' hr ago',' ঘণ্টা আগে');
-  var days=Math.floor(d/86400);
-  return days===1?L('yesterday','গতকাল'):days+L(' days ago',' দিন আগে');
+  return N(Math.floor(s/60)+':'+String(s%60).padStart(2,'0'));
 }
 function median(a){
   if(!a.length) return 0;
   var b=a.slice().sort(function(x,y){return x-y;}), m=b.length>>1;
   return b.length%2 ? b[m] : (b[m-1]+b[m])/2;
 }
-function mean(a){ if(!a.length) return 0; var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s/a.length; }
 function sum(a){ var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s; }
 
 /* a deterministic shuffle, so a set is reproducible within a session */
@@ -355,23 +261,13 @@ function shuffle(a, seed){
   }
   return b;
 }
-function sample(a,n,seed){ return shuffle(a,seed).slice(0,n); }
-function uniq(a){ var s={},o=[]; for(var i=0;i<a.length;i++) if(!s[a[i]]){s[a[i]]=1;o.push(a[i]);} return o; }
 function groupBy(a,f){ var o={}; for(var i=0;i<a.length;i++){ var k=f(a[i]); (o[k]=o[k]||[]).push(a[i]); } return o; }
 
-/* the letter shown beside an option. The board prints ক খ গ ঘ, so the
-   app does too; the keyboard still answers A-D, because nobody changes
-   keyboard layout in the middle of a question. */
-var LETTERS=['ক','খ','গ','ঘ','ঙ'];
+/* the letter shown beside an option. The board prints ক খ গ ঘ; the
+   keyboard still answers A–D or 1–4. */
+var LETTERS=['ক','খ','গ','ঘ'];
 function letter(i){ return LETTERS[i]||String(i+1); }
-function keyLetter(i){ return 'ABCD'.charAt(i)||String(i+1); }
 
-/* Bangla has no ordinal suffix to add: 'তম' does the whole job */
-function ord(n){ return n+'তম'; }
-/* Bangla nouns do not take a plural for a counted quantity */
-function plural(n,one,many){ return n+' '+one; }
-
-return {h:h, clamp:clamp, pct:pct, round:round, mins:mins, minsLong:minsLong, num:num, secs:secs, ago:ago,
-        median:median, mean:mean, sum:sum, shuffle:shuffle, sample:sample, uniq:uniq, groupBy:groupBy,
-        letter:letter, keyLetter:keyLetter, ord:ord, plural:plural};
+return {h:h, clamp:clamp, round:round, mins:mins, num:num, secs:secs, median:median, sum:sum,
+        shuffle:shuffle, groupBy:groupBy, letter:letter};
 })();
