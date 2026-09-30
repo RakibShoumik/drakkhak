@@ -1,0 +1,137 @@
+/* ============================================================
+   DRAKKHAK for WoWonder
+
+   The look of the Drakkhak practice site on top of WoWonder's
+   Sunshine templates: warm parchment by day, a lamp-lit desk by
+   night, ink greys, one terracotta accent, and green and red only
+   where something is right or wrong. Headings are serif (Noto Serif
+   Bengali, then Georgia); everything else is Hind Siliguri, served
+   from this theme so Bangla reads correctly without a font CDN.
+
+   The colours of the whole Sunshine stylesheet were already moved
+   onto this palette by theme/build/build.py; this file adds what a
+   recolour cannot: the fonts, the card edges, the raised buttons,
+   the header and the welcome page. Loaded after style.css.
+   ============================================================ */
+
+/* ---------- the Bangla faces ---------- */
+@font-face{font-family:'Noto Serif Bengali';src:url('../fonts/drakkhak/noto-serif-bengali.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-400.woff2') format('woff2');
+  font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-500.woff2') format('woff2');
+  font-weight:500;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-600.woff2') format('woff2');
+  font-weight:600;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-700.woff2') format('woff2');
+  font-weight:700;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+
+/* ---------- the palette, the same tokens as the practice site ---------- */
+:root{
+  --dk-page:#F5F4ED; --dk-card:#FAF9F5; --dk-quiet:#F0EEE6; --dk-warm:#E8E6DC; --dk-rule:#E0DDD2; --dk-rule-2:#CFCBBE;
+  --dk-ink:#141413; --dk-ink-2:#5E5D59; --dk-ink-3:#76756E;
+  --dk-accent:#D97757; --dk-accent-press:#C6613F; --dk-accent-soft:#F6E6DE; --dk-on-accent:#FFF8F2;
+  --dk-ok:#4C7A4E; --dk-ok-soft:#E3EBDD; --dk-no:#B04A38; --dk-no-soft:#F5E3DD; --dk-star:#E2A12B;
+  --dk-serif:'Noto Serif Bengali',Georgia,'Times New Roman',serif;
+  --dk-ui:'Hind Siliguri',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dk-radius:12px;
+  --main-color:#D97757;
+  --plyr-color-main:#D97757;
+}
+
+html,body{background:var(--dk-page)!important}
+body{color:var(--dk-ink);font-family:var(--dk-ui);-webkit-font-smoothing:antialiased}
+::selection{background:var(--dk-accent-soft)}
+a{color:inherit}
+a:hover{color:var(--dk-accent-press)}
+
+/* ---------- serif headings, as on the practice site ---------- */
+h1,h2,h3,.h1,.h2,.h3,.modal-title,.page-margin h3,.wow_main_float_head h1,.wow_main_float_head h2,
+.login_left_combo h1,.login_innre .title,
+.post-heading .meta .title a b,#user-full-name,.wow_side_loggd_usr_hdr .title a,
+.profile-name,.user-name,.wo_page_hdng h2,.wo_page_hdng_innr span{
+  font-family:var(--dk-serif)!important;letter-spacing:-.005em}
+.post-heading .meta .title a b{font-weight:600;font-size:16.5px}
+
+/* ---------- Bangla reads bigger ---------- */
+.post-description,.post-description p,.post .post-text,.comment-text,.wo_shared_doc_text{font-size:16px;line-height:1.7}
+.post-description p{margin-bottom:6px}
+
+/* ---------- the header: parchment, a thin rule, no shadow ---------- */
+.navbar-default,.header-container .navbar-default{background:var(--dk-page)!important;box-shadow:none!important;
+  border-bottom:1px solid var(--dk-rule)!important}
+.header-brand img,.brand.header-brand img{width:150px!important;height:auto}
+.navbar-default .search-input,.search-container .search-input{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:22px!important}
+.navbar-default .search-input:focus{border-color:var(--dk-accent)!important}
+
+/* ---------- cards: one warm edge, no floating shadow ---------- */
+.panel,.panel-white,.wow_content,.left-sidebar,.wo_new_left_side,.alert.greetalert,.sidebar-conatnier .panel,
+.wow_side_loggd_usr,.list-group,.setting-panel,.wo_settings_page .setting-panel,.profile-container .card{
+  background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;box-shadow:none!important;border-radius:var(--dk-radius)!important}
+.panel-shadow{box-shadow:none!important}
+.alert.greetalert{border-left:4px solid var(--dk-accent)!important}
+.modal-content{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:16px!important;
+  box-shadow:0 30px 70px -30px rgba(20,20,19,.5)!important}
+.modal-header{background:transparent!important;border-bottom:1px solid var(--dk-rule)!important}
+.modal-footer{border-top:1px solid var(--dk-rule)!important}
+.dropdown-menu{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:var(--dk-radius)!important;
+  box-shadow:0 14px 34px -14px rgba(20,20,19,.35)!important}
+.dropdown-menu>li>a:hover,.dropdown-menu>li>a:focus{background:var(--dk-quiet)!important;color:var(--dk-ink)!important}
+
+/* the left menu: a soft terracotta wash on the current place */
+.left-sidebar ul li a{border-radius:10px}
+.left-sidebar ul li a:hover{background:var(--dk-quiet)}
+.left-sidebar ul li.active a,.left-sidebar ul li a.active{background:var(--dk-accent-soft)!important;color:var(--dk-accent-press)!important}
+
+/* ---------- buttons: one filled terracotta, raised like the site's big button ---------- */
+.btn{border-radius:12px;font-family:var(--dk-ui);font-weight:600}
+.btn-main,.btn-primary,.login button,.btn.btn-mat,.wow_mat_mdl .modal-footer .btn.main{
+  background:var(--dk-accent)!important;border-color:var(--dk-accent)!important;color:var(--dk-on-accent)!important}
+.btn-main:hover,.btn-primary:hover,.login button:hover,.btn.btn-mat:hover{background:var(--dk-accent-press)!important;border-color:var(--dk-accent-press)!important}
+.login button,.btn-main.btn-lg{box-shadow:0 4px 0 var(--dk-accent-press)!important;transition:transform .15s,box-shadow .15s}
+.login button:active,.btn-main.btn-lg:active{transform:translateY(3px);box-shadow:0 1px 0 var(--dk-accent-press)!important}
+.btn-default{background:var(--dk-card);border:1.5px solid var(--dk-rule-2);color:var(--dk-ink)}
+.btn-default:hover{background:var(--dk-quiet);border-color:var(--dk-ink-3)}
+#wo_home_btns.btn-main{box-shadow:none!important}
+
+/* ---------- inputs ---------- */
+.form-control,textarea.form-control,select.form-control{background:var(--dk-card);border:1.5px solid var(--dk-rule);border-radius:10px;color:var(--dk-ink);box-shadow:none}
+.form-control:focus{border-color:var(--dk-accent)!important;box-shadow:0 0 0 3px var(--dk-accent-soft)!important}
+.form-control::placeholder{color:var(--dk-ink-3)}
+.postText,.comment-textarea{background:var(--dk-quiet)!important;border:1px solid var(--dk-rule)!important}
+
+/* ---------- badges, counters, the verified mark ---------- */
+.new-update-alert,.badge,.notification-list .badge{background:var(--dk-accent)!important;color:var(--dk-on-accent)!important}
+.verified-color svg,.verified-color path{fill:var(--dk-accent)!important;color:var(--dk-accent)!important}
+
+/* the cookie notice keeps readable text on parchment */
+.cc-window,.cc-window .cc-message,.cc-window .cc-link{color:var(--dk-ink)!important}
+.cc-window{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:var(--dk-radius)!important}
+.cc-window .cc-link{color:var(--dk-accent-press)!important}
+
+/* ---------- the welcome page ---------- */
+.welcome-container,.wrapper{background:transparent}
+.login_left_combo h1{font-weight:700;font-size:46px;line-height:1.25;color:var(--dk-ink)}
+.login_left_combo p{font-family:var(--dk-ui);font-size:19px;line-height:1.6;color:var(--dk-ink-2)}
+.login_left_combo .logo img,.login_innre .logo img,.wrapper .logo img{width:200px;height:auto}
+.login_innre{background:transparent!important;border:0!important;box-shadow:none!important}
+.login_innre form{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:20px!important;
+  box-shadow:0 30px 60px -40px rgba(20,20,19,.35)!important}
+.login_innre .title{font-size:30px!important;font-weight:700}
+.login input{background:var(--dk-card)!important}
+.login button{border-radius:14px!important;font-size:18px!important;font-weight:700!important;min-height:52px}
+.login a.main,.login .dec.main{color:var(--dk-accent-press)!important}
+
+/* ---------- the honest scrollbar ---------- */
+@media (min-width:992px){
+  ::-webkit-scrollbar-thumb{background:var(--dk-rule-2)!important;border-radius:6px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--dk-accent)!important}
+}
+
+/* ---------- a phone: comfortable tap targets ---------- */
+@media (max-width:767px){
+  .btn{min-height:44px}
+  .left-sidebar ul li a{min-height:44px;display:flex;align-items:center}
+  .header-brand img,.brand.header-brand img{width:128px!important}
+  .login_left_combo h1{font-size:34px}
+}
