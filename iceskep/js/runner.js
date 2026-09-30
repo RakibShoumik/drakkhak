@@ -546,6 +546,8 @@ function afterPaint(){
   if(!R) return;
   document.removeEventListener('keydown', onKey, true);
   document.addEventListener('keydown', onKey, true);
+  var v=document.getElementById('view');
+  if(v) v.classList.toggle('wide', !!document.querySelector('.rcsplit'));
   if(R.phase==='ask' && R.timer) tickQ(R.timer.left());
   if(R.paper) tickPaper(R.paper.left());
   if(R.phase==='done'){

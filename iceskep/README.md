@@ -2,186 +2,137 @@
 
 *(formerly IceSkep. The storage key is still `iceskep.hsc.v1`, so nobody's record is lost.)*
 
-Question-first MCQ practice for the **HSC** (Bangladesh, Bangla medium): eleven papers,
-one hundred and twenty-two chapters, written from the NCTB textbooks a chapter at a time.
+Board-level MCQ practice from the NCTB books, for **Bangla-medium HSC students**: eleven
+papers, one hundred and twenty-two chapters, written a chapter at a time.
 
-Open `index.html`. That is the whole install. No account, no server, no build step, no
-network call — everything lives in your browser's local storage and the app works with
-the wifi off, Bangla type included.
+**One job: practise board-level MCQs and win back mistakes.** Every screen answers "what do I
+do next?" within three seconds. Open `index.html`; that is the whole install. No account, no
+server, no build step, no network call. Everything lives in the browser's local storage and the
+app works offline (Bangla type included), on a cheap phone on slow data.
+
+The interface is **Bangla by default**, with an English switch in Settings. Questions stay in
+the book's language (the English paper stays English).
 
 ---
 
-## What it is
+## The screens
 
-The written half of the exam is deliberately ignored. This app does one thing: the
-বহুনির্বাচনি half, which is decided by two things — whether the fact is actually in your
-head, and whether you can find it inside a minute. So the app is built around exactly
-those two things.
+Four tabs and a gear: **শুরু** (Start), **অনুশীলন** (Practice), **ম্যাপ** (Map), **অগ্রগতি**
+(Progress), and **Settings**. A tab bar at the bottom on phones; on a desk a sidebar with the same
+four, then the seven subjects, each with a thin "% done" bar (click one to practise it). The top
+bar holds two numbers: **coins** (tap for the Wallet) and the **streak**.
+
+- **First visit.** One screen: the logo, the tagline, the honesty note and one button,
+  **শুরু করো**, which starts the first set. A small link, *আগে ব্যবহার করেছি*, opens Restore.
+  There is no placement test.
+- **Start.** The number of questions left (of the whole syllabus), one big **চালিয়ে যাও**
+  button (16 questions, following the study path), the **ভুলের খাতা** (mistake bank) card,
+  one quiet line about the exam and whether the chosen study hours are enough, and the honesty
+  note until it is closed.
+- **Practice.** Choose the scope (all subjects mixed, one subject, one chapter), then a big
+  button for an ordinary set, four modes — **ভুলগুলো আবার** (mistake bank), **দুর্বল অধ্যায়**
+  (weak chapters), **পুরো পরীক্ষা** (one paper on board time, checked at the end), **৬০ সেকেন্ড
+  চ্যালেঞ্জ** — and the papers with score bars (the pass and goal lines are drawn on them).
+- **Map.** Every chapter as a stop on one winding road, Bangla at the bottom, Higher Math 2nd
+  paper at the top. Each paper is an island in its subject's colour that begins at a landmark;
+  a road you have walked glows; a chapter earns a star at a third, two thirds and all of its
+  questions done; "you are here" is where the map scrolls to. Tap a chapter to start its set.
+- **Progress.** Done (%) and Score, the cautious mark to beat, one bar per subject, the badges.
+- **Settings.** Study hours a day (1–4, default 3), language, sound, night mode, calm mode (no
+  animations, no vibration), logo, your data (export, restore, erase), and a link to how it works.
+
+---
+
+## The question screen
 
 **Answer first, and nothing moves until you say so.** The options appear in a fresh random
-order every time, so no letter is more likely than another. Right is a green wash and a
-chime; wrong is a red wash and a low tone, with the right option marked. Then exactly two
-buttons: **পরের প্রশ্ন** and **ব্যাখ্যা**. Click anywhere, press space, or press the
-button to go on. The explanation — why your choice was tempting, why the right one is
-right, and what to remember — only opens if you ask.
+order every time. Right is a green wash and a chime; wrong is a red wash and a low tone with the
+right option marked. Then two buttons: **পরের প্রশ্ন** and **ব্যাখ্যা**. The explanation only
+opens if you ask. Keys: `A`–`D` or `1`–`4` answer, `space` next, `E` explanation, `S` skip (full
+paper), `N` night, `M` sound, `?` the list.
 
-**Every question has the paper's own clock.** One minute, because the board sets
-twenty-five questions in twenty-five minutes. That figure is a blueprint value, editable
-in Settings, and it is the only place the clock comes from. When it runs out an alarm
-rings until you stop it (the button or Esc). Both the timer and the alarm can be switched
-off in Settings.
+Every question carries a small tag: **নতুন** (never answered), **আবার দেখা** (you missed it last
+time) or **যাচাই** (you got it right last time and it is being checked).
 
-**Four options, ক খ গ ঘ**, as on the real paper, and **no negative marking** — so on the
-real sheet there is never a reason to leave one blank. The keyboard still answers `A`–`D`
-or `1`–`4`, because nobody changes keyboard layout in the middle of a question.
+**Sets are 16 questions, and a question never repeats inside a set.** While unseen questions
+remain in scope, at least 13 of the 16 are new.
 
-**Three question types, the three the board sets:**
+**One minute a question**, the board's own pace. At zero an alarm sounds once, and an answer that
+comes late is marked right or wrong as usual but does not count the question as *done*.
 
-- **simple** — a stem and four options;
-- **multiple completion** — statements i, ii, iii, then নিচের কোনটি সঠিক? with
-  ক. i ও ii · খ. i ও iii · গ. ii ও iii · ঘ. i, ii ও iii, always in that order;
-- **উদ্দীপক** — a short scenario shared by two questions, which stays on screen beside
-  both of them so you never read the same scenario twice.
+**Four options, ক খ গ ঘ**, no negative marking. Three question types: simple,
+multiple-completion (statements i, ii, iii), and উদ্দীপক (a scenario shared by two questions,
+shown beside both).
 
-**The interface is English by default; every question is Bangla** (the English paper stays
-English). Bangla menus are one switch away in Settings → Language. The three switches in the
-top bar — **Sound, Timer, Night** — always read in English, in either language. The Bangla
-faces (Noto Serif Bengali for reading, Hind Siliguri for the interface) are served from
-`fonts/`, not a CDN, so the questions read correctly offline. A first visit always opens in
-day mode; Night turns on the warm dark theme.
+### Power-ups (practice sets only, never in a full paper)
 
----
+| power-up | what it does | price |
+|---|---|---|
+| **৫০:৫০** | removes two wrong options | 30 coins |
+| **দ্বিতীয় সুযোগ** | arm it before answering; if you miss, answer the same question again. The miss still goes to the mistake bank. Spent only if you miss. | 20 coins |
+| **+৩০ সেকেন্ড** | thirty more seconds on this question | 15 coins |
 
-## The eleven papers
+The number left of each is shown on its button. New students start with one of each.
 
-| paper | book | chapters | MCQ |
-|-------|------|----------|-----|
-| বাংলা ১ম পত্র | Bangla 1st + সহপাঠ | 26 | 30 |
-| ইংরেজি ১ম পত্র | English 1st | 15 | 25 |
-| তথ্য ও যোগাযোগ প্রযুক্তি | ICT | 6 | 25 |
-| পদার্থবিজ্ঞান ১ম ও ২য় পত্র | Physics 1st, 2nd | 10 + 11 | 25 each |
-| রসায়ন ১ম ও ২য় পত্র | Chemistry 1st, 2nd | 5 + 5 | 25 each |
-| জীববিজ্ঞান ১ম ও ২য় পত্র | Biology 1st, 2nd | 12 + 12 | 25 each |
-| উচ্চতর গণিত ১ম ও ২য় পত্র | Higher Math 1st, 2nd | 10 + 10 | 25 each |
+### Rewards — one currency
 
-Sohopath is the supplementary reader for **Bangla 1st paper**, so its novel and its play
-are chapters 25 and 26 of that paper rather than a paper of their own. The English paper
-stays in English; every other paper is in Bangla.
+**Coins:** 1 for every right answer, +2 more for winning back a mistake, +5 for finishing a set.
+The Wallet (tap the coin) shows the balance, recent earnings and the shop, which sells only the
+three power-ups. The **streak** is simply days in a row with five questions answered. **Badges**
+(Progress): first 100 and 500 right, a chapter with three stars, a paper finished, a full paper
+sat, a full paper at 80 % or more, 7- and 30-day streaks, 50 mistakes won back.
 
-**The study path is chapter order.** Inside a paper you never jump about. The papers are
-woven together in one round-robin pass, so a day's work spans several subjects and the
-first chapter of every paper is reached in the first week rather than eleven papers later.
+### The mistake bank
+
+A question goes in when your latest answer is wrong and leaves when you answer it right (+2
+coins). It comes back later as a **যাচাই** after 1, 4, 12, then 30 days.
 
 ---
 
-## Five places, a map, and a research page
+## The numbers
 
-| | |
-|---|---|
-| **Start** | The main place. Days of study left for the whole syllabus, a plain count ("0 of 6,689 questions done · 6,689 left"), the exam countdown, the streak, whether you finish in time, one nudge, and the next chapter with a **Start** button and a **Learn this chapter first** button. |
-| **Map** | Every one of the 122 chapters as stops on one winding road, climbing from Bangla at the bottom to Higher Math 2nd paper at the top. Each paper begins with a milestone showing its days left for all its chapters together. Each stop shows its three stars and its time left; tap it to open the chapter. The star rules sit on the right the whole time (on a phone, behind the ★ Star rules chip). |
-| **Practice** | Continue the plan, four ways in (weak chapters, against the clock, a full paper, the mistake bank), every paper with its score, and more modes under **More**. |
-| **Progress** | Days left (all seven subjects added together, with the per-subject breakdown), questions a day, score, done; the days-left line; the cautious prediction; the mistake bank; and under **More** the map, the whole plan, statistics, the prediction line by line, this week and your record. |
-| **Settings** | Study time per day (hours and minutes, **1 hr 59 min** by default), exam date, the switches, language, and **More settings**. |
-| **Research** | At the foot of the sidebar: a caution about what the app cannot do, then thirteen sections — one per method the app uses — each with the published evidence and a vintage technical drawing. |
+**Done** — a question is done when you answer it right inside the paper's minute, and, if you
+ever missed it, right again at least sixteen hours after the miss. Questions left and the map
+count the whole syllabus from day one: a chapter whose questions are not written yet is costed
+from its page count (about 1.5 questions a page, 40–80 a chapter) and shows as *soon*.
 
-**The sidebar** also carries the **seven subjects** (first and second papers joined), each with
-a small ring for how much is done and its days left. Tap one to jump to it on the map.
+**Score (0–100)** — right answers divided by (answers + a handful of imaginary misses), so it
+has to be earned with volume. The pass and goal lines come from `js/config.js`.
 
-**A chapter is Learn, then Drill.** *Learn* is a revision sheet built from the chapter's own
-questions: the one-line "fast route" of every question, grouped by sub-topic in the book's page
-order (about nine sections a chapter), each with one worked example. Mark a section **Got it**.
-*Drill* runs sets from that chapter until every question is done.
+**The cautious mark** — the tenth percentile of the predicted MCQ mark, always (beaten about
+nine times in ten). It starts from the ability your answers imply and charges for thin evidence,
+chapters never asked about, a pace too slow to reach the last question, and the exam hall itself.
+It appears once 20 answers exist. It covers the MCQ half only.
 
-**Stars** measure completion only: a third of a chapter's questions done is one star, two
-thirds two, all of them three. Nothing else — not speed, lifelines or coins — moves a star.
-
-**A set takes the window, but the top bar stays**, so Sound, Timer and Night are always in
-reach and the rewards have somewhere to land: on a right answer, coins and an XP token burst
-out of the answer and fly up into the gold coin box and the XP box, which count up as they
-land. Sets are **16 questions**, and while you still have unseen questions **at least 13 of
-the 16 are new**. When a set ends the results wait: the next set never starts by itself.
-
-The top bar: today's minutes, the XP box (level and progress; tap for Progress), the coin box
-(tap for the shop), days left for the whole syllabus (tap for the map), and **Sound, Timer,
-Night**. On a phone the five places move to a tab bar at the bottom. Keyboard: `A`–`D` answer,
-`space` next (or start a set), `E` explanation, `S` skip, `Esc` stop the alarm or close a
-window, `T` timer, `N` night, `M` sound, `R` your record, `?` the list.
+**The pace line on Start** — days of study left at the chosen hours a day, against the days to the
+exam date in `js/config.js` (no date set: only "finishes in N days").
 
 ---
 
-## The game layer, and what it refuses to do
+## The owner's settings: `js/config.js`
 
-Points, coins, stars, badges, chests and levels all come out of questions answered
-correctly, and the clock behind them still only counts minutes you were actually there
-for. Three rules hold the whole thing together:
+Students never see these. Edit the file, then run `node tools/build-index.js` so the offline
+cache picks it up.
 
-- **A reward is never worth more than the work behind it.** A দানব question pays four
-  times a সহজ one; a fast answer pays more than a slow one; a wrong answer costs nothing
-  unless you said you were sure.
-- **Nothing is taken away for being human.** Streaks can be frozen, repaired and kept;
-  there is no energy meter, nothing expires, and nothing stops you practising.
-- **Nothing can be bought.** Coins come from answering. There is no money in this app, no
-  loot box you pay for, and no cosmetic that makes a question easier.
+```js
+passLine: 70, goalLine: 85,   // drawn on the 0–100 score
+mcqTarget: 88,                // share of the MCQ half a student aims at (%)
+examDate: '',                 // 'YYYY-MM-DD'; empty = no countdown
+blueprint: { 'hsc/bio1': {n:25, spq:60}, ... }   // MCQ per paper, seconds per question
+```
 
-Deliberately absent, because they would work against the exam: paid anything,
-pay-to-win, energy timers, punishing streak loss, guilt notifications, public
-leaderboards, fake opponents, strangers in chat, endless autoplay, and points for minutes
-rather than for answers.
-
-What is in: XP and levels (quick at first), a rank ladder from পাস to বোর্ড স্ট্যান্ড,
-three stars per chapter, a chest with a pity counter, a badge wall with secret entries,
-formula cards unlocked by *using* them, chapter cards for finishing a chapter, a season track, daily and weekly quests, the question of
-the day with a fourteen-day grid, duels by code, share cards, a printable certificate and
-progress report, an error bounty, and modes that unlock as you go.
+**Check the blueprint against the current board notice.** It sets the clock on every question,
+the length of a full paper and the weight of every paper in the prediction; a stale blueprint
+quietly corrupts the numbers.
 
 ---
 
-## Score, completion, and days left
+## Saved progress
 
-**The score (0–100) has to be earned with volume.** It is right answers divided by
-(answers + a handful of imaginary misses every record starts with). Five out of five is a
-20; 450 out of 500 is an 87. A right answer on a warm-up question counts 0.7. Every score
-starts at zero. The **pass line is 70** and the **goal line is 85** — roughly 90 % on
-board-level questions with the volume behind it — and both can be moved.
-
-**A question is done** when you answer it right inside the paper's minute. If you ever
-missed it, it only counts once you get it right again on a later day.
-
-**Days left** is shown in the top bar, the sidebar, and on every overview: each unfinished
-question's minute plus a quarter-minute to read the result, times the attempts your own
-hit-rate says it will take, plus half a minute for every unread Learn point and a minute and a
-half for every unread formula card, divided by your study time per day (**1 hr 59 min** unless
-you change it). **The whole syllabus counts from day one:** a chapter whose questions are not
-written yet is costed from its page count (about 1.5 questions a page, 40–80 a chapter — the
-same rule the question writers follow) and shows as *soon* on the map.
-
-**Continue the plan** draws its new questions from the first unfinished chapters on the path
-(more than three quarters of every set while any are unseen), brings back anything due, and
-revisits finished chapters now and then.
-
-## The prediction is built to be beaten
-
-Most practice apps print the middle of their guess, so half the time the real exam comes
-in below it, and the one day it matters you are short.
-
-This one prints the **tenth percentile**, as a mark out of that paper's MCQ. It starts
-from the ability your answers imply, then charges you for every reason that estimate might
-be flattering:
-
-- how thin the evidence is (the standard error of the estimate)
-- how much of the chapter list, by weight, you have never been asked about
-- how many recent answers you gave with the timer switched off
-- whether your median pace would actually reach the last question — an unreached question
-  is the only kind that scores zero, because a wrong answer costs nothing
-- a flat charge for the exam hall itself
-
-Every charge is shown as a line item with its reason, so the number is arguable rather
-than magic. A paper's figure appears only once it has twenty answers behind it. Sit the
-real thing and you should come in **above** it, roughly nine times in ten.
-
-Turn *Hard prediction* off in Settings to see the ordinary middle-of-the-guess figure, and
-watch it jump. Leave it on.
+Everything is in this browser under `iceskep.hsc.v1`. Settings → Export downloads a copy;
+Restore brings it back. Clearing site data deletes the lot. Records written by earlier versions
+are migrated quietly on first load (old 50:50 lifelines become the new stock, coins and the
+won-back count carry over, removed fields are dropped).
 
 ---
 
@@ -193,83 +144,57 @@ sw.js                 offline cache, network first
 DATA-SCHEMA.md        the content contract
 css/app.css           parchment by day, warm dark by night
 fonts/                Noto Serif Bengali and Hind Siliguri, so Bangla works offline
-source/               the OCR text of the NCTB books, and chapters.json per book.
-                      Study material for writing questions. Never uploaded.
+img/                  the ticked-bubble favicon and app icons
+source/               the OCR text of the NCTB books, and chapters.json per book
+                      (study material for writing questions; never uploaded)
 tools/check-data.js   audits every bank and re-verifies every generated answer
 tools/build-index.js  rewrites the script tags and the offline cache list
 js/
-  data/registry.js    the eleven papers, the 122 chapters, the blueprint, the path
+  config.js           the owner's settings
+  data/registry.js    the eleven papers, the 122 chapters, the study path
   data/q-hsc-*.js     authored question banks, one file per chapter
-  gen/core.js         the generator engine: seeded draws, four-option assembly
-  gen/spare/          the IBA/GRE maths families, kept to be adapted. Not loaded.
-  store.js            local storage, dates, formatting, L('English','বাংলা'), the ক খ গ ঘ letters
-  fx.js               sounds, the green/red animations, the time-up alarm
-  ability.js          ability, the 0–100 score, done-tracking, shuffling, selection (13-of-16 new)
-  learn.js            each chapter's Learn sheet, built from its questions' fast lines and tags
-  plan.js             the study path, completion, days left (with unwritten chapters), subjects, the next set
-  clock.js            measured study time
-  predict.js          the cautious predicted MCQ mark, per paper
-  charts.js / runner.js / stats.js / boot.js
-  game.js             XP, levels, coins, ranks, stars (completion), badges, chests, cosmetics
-  quests.js           daily and weekly quests, the streak and its repair, events, wrapped
-  modes.js            blitz, survival, boss, ghost, duels, board MCQ, the skip test
-  share.js            share cards, the printable certificate and report, flags, notes
-  i18n.js             a safety net that translates any stray Bangla chrome when English is on
-  ui.js               the shell: Start, Map, Practice, Progress, Settings; top bar; sidebar subjects
-  ui-pages.js         everything one tap in: the chapter (Learn/Drill), plan, prediction, record, shop …
-  map.js              the map of all 122 chapters, with the star rules
-  research.js         the research page and its thirteen plates
-img/                  the logo (logo.svg) and app icons cut from the owner's দ্র card
+  gen/core.js         the generator engine (gen/spare/ is kept, not loaded)
+  store.js            local storage, migration, streak, L('English','বাংলা'), helpers
+  i18n.js             Bangla digits and language
+  fx.js               sounds, verdict flash, coin flight (off in calm mode)
+  ability.js          question index, ability, done-tracking, the mistake bank, marking
+  plan.js             completion, stars, the path, the next set, the pace line
+  clock.js            the countdown timer
+  predict.js          the cautious mark
+  game.js             coins, wallet, power-ups, shop
+  stats.js            badges
+  modes.js            how each kind of set is built
+  share.js            export, restore, erase
+  charts.js           the two logos, bars, medals, icons
+  runner.js           the question screen and the results
+  ui.js               the shell: routing, tab bar, sidebar, top bar, sheets, toasts
+  ui-pages.js         Start, First visit, Practice, Progress, Settings, Wallet
+  map.js              the road
+  research.js         how it works, and the honesty note
+  learn.js, quests.js empty on purpose: tools/build-index.js still lists them
+  boot.js
 ```
 
 ## Adding content
 
 1. Read `DATA-SCHEMA.md`.
 2. One file per chapter: `js/data/q-hsc-<paper>-ch<N>.js`. Generators in `js/gen/`.
-3. `node tools/check-data.js` — it fails on a bad chapter id, a duplicate id, a key out of
-   range, an item without exactly four options, a page tag outside the chapter's own pages,
-   or **any generated question whose answer its own `verify()` cannot reproduce**.
+3. `node tools/check-data.js` — it fails on a bad chapter id, a duplicate id, a key out of range,
+   an item without exactly four options, a page tag outside the chapter's own pages, or any
+   generated question whose answer its own `verify()` cannot reproduce.
 4. `node tools/build-index.js` — adds the new file to `index.html` and bumps the cache.
 
-Every fact must come from that chapter's pages, and the page number goes in the question's
-tags. Questions are **written**, never copied out of the book.
-
-## What is measured, and what is not
-
-The clock counts a minute only when the tab is in front of you **and** you have touched
-something in the last ninety seconds. Leaving the page open earns nothing. No figure on
-the Statistics page can be typed in or edited, which is the only reason it is worth
-looking at.
-
-A streak day is banked at five questions or five minutes — opening the page is not
-studying. Two freezes a month cover a single missed day, one more freeze is earned every
-seventh day of a live streak, and a lost day can be repaired once a week with coins. Your
-best streak stays on the record whatever happens to the current one.
-
-XP, coins and chests follow the same rule as the clock: they come from answers, never from
-time spent on the page. A formula card counts as read when it has actually been on your
-screen for a couple of seconds — rendering a list of eighty of them is not reading them,
-and the badges depend on that difference.
-
-Everything is in this browser and nowhere else, under its own storage key
-(`iceskep.hsc.v1`), so nothing from another edition of this app can mix with it. Settings
-has an export; take a copy now and then, because clearing site data deletes the lot.
-
----
+Every fact must come from that chapter's pages, and the page number goes in the question's tags.
+Questions are **written**, never copied out of a book.
 
 ## Honest limits
 
-- The **blueprint** — MCQ per paper, seconds per question — is the commonly reported board
-  pattern, not scraped from a live circular. It sets the clock on every question and the
-  weight of every paper in the prediction, so check it against the current official notice
-  and edit it in Settings if it has moved. A stale blueprint quietly corrupts the number.
-- The prediction covers the **MCQ half only**. The written half decides the grade with it,
-  and this app does not measure the written half — so there is no grade promised anywhere,
-  only a mark out of the MCQ.
-- **English 1st paper** has no separate MCQ section on the real paper. It is practised here
-  as MCQ anyway, on original passages and vocabulary from each unit's theme, because that
-  is the useful way to drill it — but do not read its predicted mark as a board figure.
-- Chapter weights come from each chapter's share of the book's pages. That is a reasonable
-  proxy for how much a board paper asks of it, not a published weighting.
-- All questions, উদ্দীপক, cards and passages are original, written for this app from the
-  NCTB textbooks. No sentence is copied out of a book.
+- The prediction covers the **MCQ half only**; the written half decides the grade with it and is
+  not measured here, so no grade is promised anywhere.
+- **English 1st paper** has no separate MCQ section on the real paper. It is practised here as MCQ
+  because that is the useful way to drill it; do not read its mark as a board figure.
+- Chapter weights come from each chapter's share of the book's pages, a proxy for how much a board
+  paper asks of it, not a published weighting.
+- **This website builds exam intuition, not knowledge.** There is no substitute for the NCTB
+  textbooks.
+- All questions, উদ্দীপক and passages are original, written for this app from the NCTB textbooks.

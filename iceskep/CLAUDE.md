@@ -5,15 +5,15 @@ DATA-SCHEMA.md) for the **HSC (Bangladesh, Bangla medium)**. The folder is still
 and the localStorage key stays `iceskep.hsc.v1` so records survive. The owner keeps a separate
 IBA/GRE copy elsewhere, so in this folder IBA/GRE content is removed.
 
-Since 2026-09-26 (owner's request): the **interface is English by default** (Bangla is a Settings
-switch; every UI string is written `L('English','বাংলা')`), questions stay Bangla; the top-bar
-Sound/Timer/Night switches are always English and always visible, even during a question; the app
-opens in day mode; places are Start · Map · Practice · Progress · Settings, with a Research page
-at the foot of the sidebar; days left counts the whole syllabus (unwritten chapters costed from
-their pages) at 1 hr 59 min a day by default; stars are completion only (⅓, ⅔, all done); sets are
-more than 75% new questions (13 of 16) while any are unseen; the study garden was removed.
-Each chapter's **Learn** sheet is built from its questions' `fast` lines and first non-page tag
-(the sub-topic), so keep writing both carefully.
+Since the redesign (see REDESIGN-PLAN.md): one job, practise board-level MCQs and win back mistakes.
+The interface is **Bangla by default** (every UI string is `L('English','বাংলা')`, digits through `N()`),
+questions stay in the book's language. Four tabs (শুরু, অনুশীলন, ম্যাপ, অগ্রগতি) plus a gear; top bar =
+coins and streak only. One currency (coins: 1 per right, +2 for winning back a mistake, +5 per set),
+three power-ups bought with coins, badges, a simple streak. Sets are 16 questions, never repeat a
+question, and while unseen questions remain at least 13 are new. The owner's settings (pass and goal
+lines, MCQ target, exam blueprint, exam date) live in `js/config.js`. `tools/build-index.js` hard-codes the
+engine file list, so `learn.js` and `quests.js` exist only as empty placeholders.
+Each question's `fast` line is shown after an answer ("Remember this"), so keep writing it carefully.
 
 The owner prefers short replies. Keep summaries brief.
 
@@ -56,7 +56,7 @@ Finish by showing one short table per book so the owner can check it.
 
 - Read only that chapter's pages (from `chapters.json`).
 - File: `js/data/q-hsc-<paper>-ch<N>.js`, following DATA-SCHEMA.md exactly (fields, why lines, difficulty spread, tags).
-- The chapter's Learn sheet is made from each question's `fast` line, grouped by its sub-topic tag in page order, so every `fast` must stand alone as a fact worth revising, and sub-topic tags should be consistent within a chapter.
+- Every `fast` line is shown after an answer, so it must stand alone as a fact worth revising. Keep the sub-topic tag (the first non-page tag) consistent within a chapter.
 - Write about 50 questions; use 40 for a short chapter and up to 80 for a long one.
 - Mix: about 60% simple, 20% multiple-completion and 20% উদ্দীপক pairs.
 - Every fact must come from these pages. Put the PDF page number in the tags (e.g. `p37`).

@@ -213,6 +213,5 @@ function invalidate(){ cache=null; }
 
 return {build:build, topic:topic, total:total, left:left, section:section, subject:subject, pct:pct,
         paperDone:paperDone, stars:stars, starTotal:starTotal, path:path, nextSet:nextSet,
-        estQuestions:estQuestions, dailyMin:dailyMin, studyDays:studyDays, daysToExam:daysToExam,
         paceLine:paceLine, invalidate:invalidate, SET_N:SET_N};
 })();

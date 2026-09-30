@@ -132,7 +132,7 @@ function legend(){
     '<li><span class="mini st-open"></span>'+L('Open to practise','অনুশীলনের জন্য খোলা')+'</li>'+
     '<li><span class="mini st-done"></span>'+L('Chapter finished','অধ্যায় শেষ')+'</li>'+
     '<li><span class="mini st-soon"></span>'+L('Questions coming soon','প্রশ্ন শিগগির আসছে')+'</li>'+
-    '<li><span class="mstars inline"><i class="on">&#9733;</i></span>'+L('A star for every third done','প্রতি তিন ভাগের এক ভাগে একটি তারা')+'</li>'+
+    '<li><span class="stars"><i class="on">&#9733;</i></span>'+L('A star for every third done','প্রতি তিন ভাগের এক ভাগে একটি তারা')+'</li>'+
   '</ul>';
 }
 

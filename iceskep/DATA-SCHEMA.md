@@ -45,7 +45,7 @@ ICE.topics['phy1.ch3']
 written from pages inside that range, and its `tags` must say which page.
 
 **The clock.** `spq` on a section is the seconds the paper allows one MCQ — 60, because
-the board sets 25 questions in 25 minutes. It is editable in Settings, and `ICE.pace(secKey)`
+the board sets 25 questions in 25 minutes. It is set in `js/config.js` (the owner's file), and `ICE.pace(secKey)`
 is the only thing that should ever be asked for a question's time.
 
 ---
@@ -196,6 +196,9 @@ combinations are fixed by the board) and anything whose options only make sense 
 
 ## 2. Formula and memory cards — `ICE.T.push({...})`
 
+> The redesigned app has no screen for cards yet. The schema stays so they can come back when
+> cards exist; nothing in the bank needs to change.
+
 One card is one thing worth carrying into the exam hall: a formula, a unit, a date, a
 definition the board keeps asking for. They are per chapter, and a card counts as read
 only once it has actually been on screen for a couple of seconds.
@@ -316,16 +319,8 @@ The checker's warnings are worth reading even when they do not fail the run: a m
 tag, a `why` line with nothing in it, an উদ্দীপক used once, a bank that is 30 % warm-ups.
 
 
-## The Learn sheet (added 2026-09-26)
+## The Learn sheet (retired)
 
-Every chapter page opens with **Learn**, a revision sheet built automatically from the chapter's
-questions — nothing extra to write, but two fields now matter twice:
-
-- `fast` — shown as a key point. Write it so it stands alone (a fact worth remembering), not as a
-  hint that only makes sense next to its own question. Identical `fast` lines are shown once.
-- `tags[1]` — the first tag that is not a page number is the **sub-topic**. Questions are grouped by
-  it, groups are ordered by their lowest page tag, and small neighbouring groups are merged so a
-  chapter reads as about nine sections. Keep sub-topic names consistent within a chapter.
-
-Each section also shows one worked example: a simple (`mc`, non-উদ্দীপক) question from the middle
-of the difficulty range, with its answer and the correct option's `why` line.
+The redesigned app has no Learn sheets. `fast` is still shown after an answer ("Remember this"), so
+write it so it stands alone (a fact worth remembering). The sub-topic tag (`tags[1]`) is no longer
+used by the app; keeping it consistent costs nothing and keeps the option open.

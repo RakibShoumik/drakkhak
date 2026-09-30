@@ -31,7 +31,6 @@ document.addEventListener('pointerdown', unlock, {passive:true});
 document.addEventListener('keydown', unlock, {passive:true});
 
 function setMuted(m){ muted=!!m; if(master) master.gain.value=muted?0:GAIN; }
-function isMuted(){ return muted; }
 
 /* one shaped tone */
 function tone(freq, at, dur, type, vol, slideTo){
@@ -103,7 +102,6 @@ function play(n, a){ if(SFX[n]) try{ SFX[n](a); }catch(e){} }
 
 /* ---------- visuals ---------- */
 function calm(){ try{ return !!DB.state().settings.calm; }catch(e){ return false; } }
-function effectsOn(){ return !calm(); }
 function layer(){ return document.getElementById('fxlayer'); }
 
 /* the wash and the shake, applied to the question card itself */
@@ -266,7 +264,7 @@ function pop(el, cls){
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
 }
 
-return {play:play, setMuted:setMuted, isMuted:isMuted, unlock:unlock, calm:calm, effectsOn:effectsOn,
-        verdictCorrect:verdictCorrect, verdictWrong:verdictWrong, buzz:buzz,
+return {play:play, setMuted:setMuted, calm:calm,
+        verdictCorrect:verdictCorrect, verdictWrong:verdictWrong,
         confetti:confetti, burst:burst, countUp:countUp, fly:fly, pop:pop};
 })();

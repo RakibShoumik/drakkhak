@@ -1,17 +1,15 @@
 /* ===========================================================
    Drakkhak service worker.
 
-   Network first, cache second, for anything on this origin. The
+   Network first, cache second, for everything on this origin. The
    content banks are plain script files that get added to and
-   corrected over time, and a cache-first worker would happily
-   serve last month's questions forever. So: try the network, put
-   whatever comes back in the cache, and fall back to the cache
-   only when the network is not there.
-
-   Cross-origin requests (the web fonts) are cache-first, because
-   those never change and are the slowest thing on the page.
+   corrected over time, and a cache-first worker would happily serve
+   last month's questions forever. So: try the network, put whatever
+   comes back in the cache, and fall back to the cache only when the
+   network is not there. Everything the app needs is on this origin
+   (the Bangla fonts included), so after one visit it runs offline.
    =========================================================== */
-var CACHE = 'drakkhak-v126';
+var CACHE = 'drakkhak-v128';
 var CORE = [
   './',
   './index.html',
@@ -22,12 +20,11 @@ var CORE = [
   './fonts/hind-siliguri-600.woff2',
   './fonts/hind-siliguri-700.woff2',
   './fonts/noto-serif-bengali.woff2',
+  './img/favicon.svg',
   './img/icon-180.png',
   './img/icon-192.png',
   './img/icon-512.png',
   './img/icon-64.png',
-  './img/logo-full.png',
-  './img/logo.svg',
   './js/data/registry.js',
   './js/gen/core.js',
   './js/data/q-hsc-bangla1-ch1.js',
@@ -117,12 +114,14 @@ var CORE = [
   './js/stats.js',
   './js/boot.js'
 ];
+/* the owner's settings file is not in the tool's list, so it is added here */
+var EXTRA = ['./js/config.js'];
 
 self.addEventListener('install', function(e){
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(function(c){
     /* a data file that does not exist yet must not fail the install */
-    return Promise.all(CORE.map(function(u){ return c.add(u).catch(function(){}); }));
+    return Promise.all(CORE.concat(EXTRA).map(function(u){ return c.add(u).catch(function(){}); }));
   }));
 });
 
@@ -136,20 +135,7 @@ self.addEventListener('fetch', function(e){
   var req = e.request;
   if(req.method !== 'GET') return;
 
-  var sameOrigin = new URL(req.url).origin === self.location.origin;
-
-  if(!sameOrigin){
-    e.respondWith(caches.match(req).then(function(hit){
-      return hit || fetch(req).then(function(res){
-        if(res && (res.status===200 || res.type==='opaque')){
-          var copy=res.clone();
-          caches.open(CACHE).then(function(c){ c.put(req, copy); });
-        }
-        return res;
-      }).catch(function(){ return hit; });
-    }));
-    return;
-  }
+  if(new URL(req.url).origin !== self.location.origin) return;
 
   e.respondWith(
     fetch(req).then(function(res){

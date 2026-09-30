@@ -1,8 +1,8 @@
 {
-  "name": "Drakkhak — HSC MCQ practice",
+  "name": "Drakkhak — বোর্ড-মানের MCQ অনুশীলন",
   "short_name": "Drakkhak",
-  "description": "MCQ practice for all eleven HSC papers, chapter by chapter from the NCTB textbooks.",
-  "lang": "en",
+  "description": "NCTB বই থেকে বোর্ড-মানের MCQ অনুশীলন: এইচএসসির এগারোটি পত্র, অধ্যায় ধরে ধরে।",
+  "lang": "bn",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -10,23 +10,8 @@
   "background_color": "#F5F4ED",
   "theme_color": "#F5F4ED",
   "icons": [
-    {
-      "src": "img/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "img/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "img/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "img/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

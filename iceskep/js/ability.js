@@ -132,7 +132,6 @@ function progress(qq, res){
   version++;
 }
 function touch(){ version++; }
-function itemState(id){ return DB.state().items[id]||null; }
 function cleared(id){ var it=DB.state().items[id]; return !!(it&&it.cl); }
 /* never answered */
 function untouched(qq){ var it=DB.state().items[qq.id]; return !it || !it.n; }
@@ -350,7 +349,7 @@ return {
   pickOne:pickOne, newShare:newShare, regroupPassages:regroupPassages, unique:unique,
   check:check, answerText:answerText, options:options,
   paceOf:paceOf, medianPace:medianPace,
-  present:present, itemState:itemState, cleared:cleared, score:score, aggregate:aggregate,
-  untouched:untouched, kind:kind, touch:touch, floorB:floorB, rand:rand
+  present:present, cleared:cleared, score:score, aggregate:aggregate,
+  untouched:untouched, kind:kind, touch:touch, rand:rand
 };
 })();

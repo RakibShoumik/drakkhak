@@ -231,15 +231,6 @@ function round(x,n){ var m=Math.pow(10,n||0); return Math.round(x*m)/m; }
 
 /* 6619 -> 6,619 (in the interface's own digits) */
 function num(n){ return N(String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',')); }
-/* "1 hr 30 min" */
-function mins(m){
-  m=Math.round(m||0);
-  var H=L('hr','ঘণ্টা'), M=L('min','মিনিট');
-  if(m<1) return N(0)+' '+M;
-  if(m<60) return N(m)+' '+M;
-  var hh=Math.floor(m/60), mm=m%60;
-  return mm? N(hh)+' '+H+' '+N(mm)+' '+M : N(hh)+' '+H;
-}
 /* 75 -> 1:15 */
 function secs(s){
   s=Math.max(0,Math.round(s||0));
@@ -250,7 +241,6 @@ function median(a){
   var b=a.slice().sort(function(x,y){return x-y;}), m=b.length>>1;
   return b.length%2 ? b[m] : (b[m-1]+b[m])/2;
 }
-function sum(a){ var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s; }
 
 /* a deterministic shuffle, so a set is reproducible within a session */
 function shuffle(a, seed){
@@ -261,13 +251,11 @@ function shuffle(a, seed){
   }
   return b;
 }
-function groupBy(a,f){ var o={}; for(var i=0;i<a.length;i++){ var k=f(a[i]); (o[k]=o[k]||[]).push(a[i]); } return o; }
 
 /* the letter shown beside an option. The board prints ক খ গ ঘ; the
    keyboard still answers A–D or 1–4. */
 var LETTERS=['ক','খ','গ','ঘ'];
 function letter(i){ return LETTERS[i]||String(i+1); }
 
-return {h:h, clamp:clamp, round:round, mins:mins, num:num, secs:secs, median:median, sum:sum,
-        shuffle:shuffle, groupBy:groupBy, letter:letter};
+return {h:h, clamp:clamp, round:round, num:num, secs:secs, median:median, shuffle:shuffle, letter:letter};
 })();
