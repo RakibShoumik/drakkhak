@@ -1,312 +1,187 @@
 /* ===========================================================
-   MODES — the same bank of questions, played differently.
+   MODES — how a set is put together.
 
-   Every mode draws on the same items and records the same honest
-   result: an answer in blitz counts exactly as much towards your
-   ability estimate as an answer in ordinary practice. What changes
-   is the shape of the session — a minute against the clock, a run
-   that ends at three mistakes, a topic with a health bar, a race
-   against your own best time, or the same ten questions sent to a
-   friend.
+   Five ways in, all over the scope Practice is pointed at (every
+   subject, one subject, or one chapter):
 
-   Modes arrive as you go, because a student on their first evening
-   does not need nine ways to practise; they need one.
+     set       an ordinary set. New ground first: while any question in
+               scope is unseen, 13 of the 16 are new.
+     mistakes  the mistake bank: questions whose latest answer was wrong.
+     weak      the chapters with the lowest mastery, newest questions first.
+     exam      one whole paper on board time, nothing marked until the end.
+     blitz     sixty seconds, as many as you can.
+
+   Start's "continue" is the ordinary set over everything, following
+   the study path. A question never appears twice in one set.
    =========================================================== */
 var MODES = (function(){
 
-var SPEC={
-  adaptive:{name:'অনুশীলন', en:'Practice',  note:'আপনার মানের একটু ওপরে বাঁধা একটি সেট।', noteEn:'A set pitched just above your level.', lock:null},
-  blitz:   {name:'ব্লিটজ', en:'Blitz',     note:'ষাট সেকেন্ড। যতগুলো পারেন।', noteEn:'Sixty seconds. As many as you can.', lock:'blitz',
-            secs:60, auto:true},
-  survival:{name:'সারভাইভাল', en:'Survival',  note:'তিনটি ভুল পর্যন্ত চলে, আর ক্রমশ কঠিন হয়।', noteEn:'Runs until three misses, and gets harder as it goes.', lock:'survival',
-            lives:3, auto:true},
-  boss:    {name:'বস', en:'Boss',      note:'একটি অধ্যায়, একটি হেলথ বার আর তিনটি হৃদয়।', noteEn:'One chapter, a health bar and three hearts.', lock:'boss',
-            hearts:3},
-  ghost:   {name:'ঘোস্ট রেস', en:'Ghost race', note:'নিজের সেরা সময়ের সাথে দশটি প্রশ্ন।', noteEn:'Ten questions against your own best time.', lock:'ghost'},
-  duel:    {name:'দ্বৈরথ', en:'Duel',     note:'বন্ধুর সাথে একই দশটি প্রশ্ন।', noteEn:'The same ten questions as a friend.', lock:'duel'},
-  /* the board takes nothing off for a wrong MCQ, so this mode is the
-     real sheet's arithmetic: one mark right, nothing off wrong, and
-     the mark visible as it builds. */
-  admission:{name:'বোর্ড এমসিকিউ', en:'Board MCQ', note:'শেষ করা একটি পত্র আবার, বোর্ডের হিসাবে — ভুলে কিছু কাটা যায় না।', noteEn:'A finished paper again, marked the board\'s way — nothing off for a miss.',
-            lock:'newgame', neg:0},
-  mock:    {name:'পূর্ণ পত্র', en:'Full paper',  note:'পুরো একটি পত্রের এমসিকিউ, আসল ঘড়িতে, শেষে দেখা।', noteEn:'A whole paper\'s MCQ on the real clock, checked at the end.', lock:'marathon'},
-  skiptest:{name:'বাদ দেওয়ার পরীক্ষা', en:'Skip test', note:'পাঁচটি কঠিন প্রশ্ন। পাস করলে অধ্যায়টি হিসাবের বাইরে।', noteEn:'Five hard questions. Pass and the chapter leaves the count.', lock:null},
-  diag:    {name:'শুরুর পরীক্ষা', en:'Diagnostic', note:'নিজের মান বুঝতে কয়েকটি প্রশ্ন।', noteEn:'A few questions to see where you stand.', lock:null}
-};
-/* .name and .note answer in the interface language */
-Object.keys(SPEC).forEach(function(k){
-  var o=SPEC[k], bn=o.name, en=o.en, nb=o.note, ne=o.noteEn;
-  Object.defineProperty(o,'name',{get:function(){ return L(en,bn); }, enumerable:true, configurable:true});
-  Object.defineProperty(o,'note',{get:function(){ return L(ne,nb); }, enumerable:true, configurable:true});
-});
-function spec(id){ return SPEC[id]||SPEC.adaptive; }
-function available(id){ var s=spec(id); return !s.lock || GAME.has(s.lock); }
-function list(){
-  var out=[];
-  for(var k in SPEC){
-    if(k==='adaptive'||k==='skiptest'||k==='diag') continue;
-    var s=SPEC[k];
-    out.push({id:k, name:s.name, note:s.note, open:available(k),
-              at:s.lock?lockLevel(s.lock):0});
+var setN=function(){ return PLAN.SET_N; };
+
+function scope(){ return DB.state().scope; }
+function setScope(sc){ DB.state().scope=sc; DB.save(); }
+
+/* the test a chapter id must pass to be in scope */
+function inScope(sc){
+  sc=sc||scope();
+  if(sc.kind==='subject'){
+    var sj=ICE.subject(sc.sj), secs=sj?sj.secs:[];
+    return function(tid){ var t=ICE.topics[tid]; return !!t && secs.indexOf(t.sec)>=0; };
   }
+  if(sc.kind==='chapter') return function(tid){ return tid===sc.ch; };
+  if(sc.kind==='paper') return function(tid){ var t=ICE.topics[tid]; return !!t && t.sec===sc.sec; };
+  return function(){ return true; };
+}
+/* every written question in scope */
+function pool(sc){
+  var f=inScope(sc), out=[];
+  for(var id in ICE.topics) if(f(id)) out=out.concat(AB.inTopic(id));
   return out;
 }
-function lockLevel(id){
-  for(var i=0;i<GAME.UNLOCKS.length;i++) if(GAME.UNLOCKS[i].id===id) return GAME.UNLOCKS[i].at;
-  return 0;
+function scopeLabel(sc){
+  sc=sc||scope();
+  if(sc.kind==='subject' && ICE.subject(sc.sj)) return ICE.subjname(sc.sj);
+  if(sc.kind==='chapter' && ICE.topics[sc.ch]) return ICE.tname(sc.ch);
+  if(sc.kind==='paper' && ICE.sections[sc.sec]) return ICE.sname(sc.sec);
+  return L('All subjects mixed','সব বিষয় মিশিয়ে');
+}
+/* can a set be made from this scope? (a chapter not written yet cannot) */
+function hasQuestions(sc){ return pool(sc).length>0; }
+
+/* ---------- the builders ---------- */
+function ordinary(sc){ return PLAN.nextSet(inScope(sc), setN()); }
+
+function mistakeSet(sc){
+  var f=inScope(sc);
+  var list=AB.mistakes(function(q){ return f(q.topic); });
+  list=U.shuffle(list, Date.now()%9973).slice(0, setN());
+  return AB.regroupPassages(list);
 }
 
-/* ---------- starting one ---------- */
-function start(id, o){
-  o=o||{};
-  if(!available(id)){
-    UI.toast(L(spec(id).name+' opens at level '+lockLevel(spec(id).lock)+'.',spec(id).name+' খোলে লেভেল '+lockLevel(spec(id).lock)+'-এ।'));
-    return;
+/* the weakest chapters in scope, only those you have answered in */
+function weakSet(sc){
+  var f=inScope(sc), n=setN();
+  var tops=Object.keys(ICE.topics).filter(function(id){ return f(id) && AB.inTopic(id).length && AB.seen(id)>0; });
+  if(!tops.length) return [];
+  tops.sort(function(a,b){ return AB.mastery(a).p-AB.mastery(b).p; });
+  var weakest=tops.slice(0,3);
+  var all=[]; weakest.forEach(function(id){ all=all.concat(AB.inTopic(id)); });
+  var fresh=all.filter(AB.untouched), taken={}, out=[], q;
+  var need=Math.min(AB.newShare(n), fresh.length);
+  while(out.length<need){ q=AB.pickOne(fresh, taken, 0.55); if(!q) break; taken[q.id]=1; out.push(q); }
+  var rest=all.filter(function(x){ return !AB.cleared(x.id); });
+  while(out.length<n){ q=AB.pickOne(rest, taken, 0.55) || AB.pickOne(all, taken, 0.55); if(!q) break; taken[q.id]=1; out.push(q); }
+  return AB.regroupPassages(AB.unique(out).slice(0,n));
+}
+
+/* A real paper is not tuned to you. Its mix follows each chapter's share
+   of the paper, and difficulty is drawn from fixed bands (never a warm-up,
+   about half at board level, the rest harder) whatever your record says. */
+function examSet(secKey){
+  var sec=ICE.sections[secKey];
+  if(!sec) return [];
+  var tops=ICE.topicsOf(secKey), taken={}, out=[], i;
+  var all=AB.inSection(secKey);
+  if(!all.length) return [];
+  var want=Math.min(sec.n, all.length), totalW=0;
+  tops.forEach(function(t){ if(AB.inTopic(t.id).length) totalW+=t.w; });
+  function band(list, lo, hi){
+    var c=list.filter(function(q){ var b=AB.itemB(q); return !taken[q.id] && b>=lo && b<hi; });
+    return c.length ? c[AB.rand(c.length)] : null;
   }
-  var f=({blitz:blitz, survival:survival, boss:boss, ghost:ghost,
-          admission:admission, skiptest:skiptest, diag:diag})[id];
-  if(f) f(o); else RUN.start(o);
-}
-
-function blitz(o){
-  var track=o.track||DB.state().track;
-  RUN.start({
-    track:track, sec:o.sec||null, topic:o.topic||null, mode:'blitz',
-    n:60, title:L('Blitz','ব্লিটজ'), back:o.back||'track', backParam:o.backParam||track
-  });
-}
-function survival(o){
-  var track=o.track||DB.state().track;
-  RUN.start({
-    track:track, sec:o.sec||null, topic:o.topic||null, mode:'survival',
-    n:80, title:L('Survival','সারভাইভাল'), back:o.back||'track', backParam:o.backParam||track
-  });
-}
-function boss(o){
-  var topic=o.topic;
-  if(!topic){ UI.toast(L('Choose a chapter to fight.','কোন অধ্যায়ের সাথে লড়বেন বেছে নিন।')); return; }
-  RUN.start({
-    track:ICE.topics[topic].track, topic:topic, mode:'boss', n:18, hard:true,
-    title:ICE.tname(topic)+' &mdash; '+L('boss','বস'), back:'topic', backParam:topic
-  });
-}
-function ghost(o){
-  var topic=o.topic;
-  if(!topic){ UI.toast(L('Choose a chapter to race in.','কোন অধ্যায়ে দৌড়াবেন বেছে নিন।')); return; }
-  RUN.start({
-    track:ICE.topics[topic].track, topic:topic, mode:'ghost', n:10,
-    title:ICE.tname(topic)+' &mdash; '+L('ghost race','ঘোস্ট রেস'), back:'topic', backParam:topic
-  });
-}
-function admission(o){
-  var sec=o.sec;
-  if(!sec){ UI.toast(L('Choose a paper.','একটি পত্র বেছে নিন।')); return; }
-  RUN.start({
-    track:sec.split('/')[0], sec:sec, mode:'admission', n:20, hard:true,
-    title:ICE.sname(sec)+' &mdash; '+L('board MCQ','বোর্ড এমসিকিউ'), back:'section', backParam:sec
-  });
-}
-function skiptest(o){
-  var topic=o.topic, pool=AB.inTopic(topic).slice();
-  if(pool.length<5){ UI.toast(L('Not enough questions in this chapter for a skip test.','এই অধ্যায়ে বাদ দেওয়ার পরীক্ষা দেওয়ার মতো যথেষ্ট প্রশ্ন নেই।')); return; }
-  pool.sort(function(a,b){ return (b.b||0)-(a.b||0); });
-  var queue=U.sample(pool.slice(0, Math.min(18, pool.length)), 5);
-  RUN.start({
-    queue:queue, track:ICE.topics[topic].track, topic:topic, mode:'skiptest',
-    title:L('Skip test','বাদ দেওয়ার পরীক্ষা')+' &mdash; '+ICE.tname(topic), back:'topic', backParam:topic
-  });
-}
-function diag(o){
-  var track=o.track||DB.state().track, want=o.n||12;
-  var secs=ICE.sectionsOf(track), queue=[], per=Math.max(2, Math.round(want/secs.length));
-  secs.forEach(function(sec){
-    queue=queue.concat(AB.mockSet({sec:sec.track+'/'+sec.id, n:per}));
-  });
-  queue=U.shuffle(queue, 11).slice(0,want);
-  if(!queue.length){ UI.toast(L('No questions are loaded yet.','এখনও কোনো প্রশ্ন লোড হয়নি।')); return; }
-  RUN.start({queue:queue, track:track, mode:'diag', exam:true, noBrief:!!o.noBrief,
-             title:o.title||L('Where you stand','আপনি কোথায় আছেন'), back:o.back||'today'});
-}
-
-/* ---------- per-run state ---------- */
-function init(R){
-  var s=spec(R.mode);
-  R.gm={
-    spec:s,
-    lives:s.lives||0, hearts:s.hearts||0,
-    hp:R.mode==='boss'?100:0,
-    ends:s.secs?Date.now()+s.secs*1000:0,
-    neg:s.neg||0, score:0,
-    ghost:R.mode==='ghost'?ghostTarget(R.topic):null,
-    combo:0, best:0, golden:null, beastRun:0
-  };
-  return R.gm;
-}
-function auto(R){
-  return !!(R.gm && R.gm.spec.auto);      /* blitz and survival keep moving: that is the mode */
-}
-function timeLeft(R){
-  if(!R.gm||!R.gm.ends) return null;
-  return Math.max(0,(R.gm.ends-Date.now())/1000);
-}
-
-/* one question in twenty-five is worth five times as much */
-function rollGolden(R){
-  if(!R || R.exam || R.mode==='skiptest') return false;
-  return Math.random()<0.04;
-}
-
-/* ---------- what an answer does to the mode ---------- */
-function afterAnswer(R, ok, q){
-  var g=R.gm; if(!g) return null;
-  if(R.mode==='survival'){
-    if(!ok){ g.lives--; FX.play('hit');
-      if(g.lives<=0) return {end:true, reason:L('Three misses. '+R.right+' right before that.','তিনটি ভুল। তার আগে '+R.right+'টি ঠিক।')}; }
-    return null;
-  }
-  if(R.mode==='boss'){
-    if(ok){
-      var bite=Math.round(100/9 * (1+Math.max(0,(q.b||0))*0.4));
-      g.hp=Math.max(0, g.hp-bite);
-      if(g.hp<=0) return {end:true, won:true, reason:L('The chapter is down.','অধ্যায়টি কুপোকাত।')};
-    } else {
-      g.hearts--; FX.play('hit');
-      if(g.hearts<=0) return {end:true, won:false, reason:L('Out of hearts.','হৃদয় শেষ।')};
+  tops.forEach(function(t){
+    var list=AB.inTopic(t.id);
+    if(!list.length) return;
+    var k=Math.round(want*t.w/totalW);
+    for(var j=0;j<k;j++){
+      var pk = j%2===0 ? (band(list, ICE.EXAM_B, ICE.HARD_B)||band(list, ICE.HARD_B, 9))
+                       : (band(list, ICE.HARD_B, 9)||band(list, ICE.EXAM_B, ICE.HARD_B));
+      if(!pk) pk=band(list, -9, 9);
+      if(pk){ taken[pk.id]=1; out.push(pk); }
     }
-    return null;
-  }
-  if(R.mode==='admission'){
-    g.score += ok ? 1 : -g.neg;
-    return null;
-  }
-  if(R.mode==='blitz'){
-    if(timeLeft(R)<=0) return {end:true, reason:L('Time is up.','সময় শেষ।')};
-    return null;
-  }
-  return null;
-}
-
-/* ---------- ghosts: your own past, as a pace bar ---------- */
-function ghostTarget(topic){
-  var runs=DB.state().runs.filter(function(r){ return r.topic===topic && r.n>=8; });
-  if(!runs.length) return null;
-  var best=null;
-  runs.forEach(function(r){
-    var per=r.secs/r.n;
-    if(!best || (r.right/r.n>=0.7 && per<best.per)) best={per:per, acc:r.right/r.n, t:r.t};
   });
-  return best;
-}
-function ghostState(R){
-  var g=R.gm; if(!g||!g.ghost) return null;
-  var mine=(Date.now()-R.startedAt)/1000;
-  var theirs=g.ghost.per*(R.answered||0);
-  return {mine:mine, theirs:theirs, ahead:mine<theirs, per:g.ghost.per};
-}
-
-/* ---------- duels: a code, not a server ----------
-   The code carries a seed. Both sides build the same ten questions
-   from it, so nothing has to be sent but a handful of characters. */
-function makeDuel(o){
-  var track=o.track||DB.state().track;
-  var seed=Math.floor(Math.random()*1679615);            /* 36^4 */
-  return 'H'+seed.toString(36).toUpperCase();
-}
-function duelQueue(code){
-  var track='hsc';
-  var seed=parseInt(code.slice(1),36);
-  if(!isFinite(seed)) return null;
-  var pool=ICE.Q.filter(function(q){ return q._track===track && (q.b||0)>=ICE.EXAM_B; });
-  if(pool.length<10) pool=ICE.Q.filter(function(q){ return q._track===track; });
-  if(pool.length<10) return null;
-  var s=seed>>>0, out=[], used={};
-  function rnd(){ s|=0; s=s+0x6D2B79F5|0;
-    var t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t;
-    return ((t^t>>>14)>>>0)/4294967296; }
-  var guard=0;
-  while(out.length<10 && guard++<500){
-    var i=Math.floor(rnd()*pool.length);
-    if(used[i]) continue;
-    used[i]=1; out.push(pool[i]);
+  while(out.length<want){
+    var extra=band(all, ICE.EXAM_B, 9)||band(all, -9, 9);
+    if(!extra) break;
+    taken[extra.id]=1; out.push(extra);
   }
-  return {track:track, queue:out};
-}
-function startDuel(code){
-  code=String(code||'').trim().toUpperCase();
-  var d=duelQueue(code);
-  if(!d){ UI.toast(L('That code does not look right.','কোডটি ঠিক মনে হচ্ছে না।')); return; }
-  RUN.start({queue:d.queue, track:d.track, mode:'duel', code:code,
-             title:L('Duel ','দ্বৈরথ ')+code, back:'social'});
-}
-/* a result is its own short code: code, right, and seconds */
-function resultCode(R){
-  return R.code+'-'+R.right+'-'+Math.round(U.sum(R.times));
-}
-function readResult(str){
-  var p=String(str||'').trim().toUpperCase().split('-');
-  if(p.length<3) return null;
-  var right=parseInt(p[1],10), secs=parseInt(p[2],10);
-  if(!isFinite(right)||!isFinite(secs)) return null;
-  return {code:p[0], right:right, secs:secs};
-}
-function saveDuel(rec){
-  var g=DB.game();
-  g.duels.unshift(rec);
-  if(g.duels.length>40) g.duels=g.duels.slice(0,40);
-  DB.save();
-}
-function duelWinner(mine, theirs){
-  if(mine.right!==theirs.right) return mine.right>theirs.right?'you':'them';
-  if(Math.abs(mine.secs-theirs.secs)<3) return 'tie';
-  return mine.secs<theirs.secs?'you':'them';
+  return AB.regroupPassages(AB.unique(U.shuffle(out, Date.now()%9973)).slice(0,want));
 }
 
-/* ---------- the skip test's verdict ---------- */
-function skipResult(R){
-  var pass=R.right>=4;
-  if(pass){
-    var g=DB.game();
-    g.credit[R.topic]=Date.now();
-    DB.save();
-    PLAN.invalidate();
-    GAME.addXP(120,'skip test');
-    GAME.unlockTopicCard(R.topic);
-    FX.confetti(70);
+/* sixty seconds: short, single-answer questions first */
+function blitzSet(sc){
+  var list=pool(sc);
+  var fast=list.filter(function(q){ return q.type==='mc'; });
+  if(fast.length<40) fast=list;
+  return AB.unique(U.shuffle(fast, Date.now()%9973)).slice(0,120);
+}
+
+/* ---------- what each card can say ---------- */
+function counts(sc){
+  var f=inScope(sc);
+  return {
+    mistakes: AB.mistakes(function(q){ return f(q.topic); }).length,
+    weak: Object.keys(ICE.topics).some(function(id){ return f(id) && AB.inTopic(id).length && AB.seen(id)>0; }),
+    written: pool(sc).length
+  };
+}
+/* the papers a scope covers, for the full-paper picker */
+function papersIn(sc){
+  sc=sc||scope();
+  var keys=ICE.sectionsOf('hsc').map(function(s){ return 'hsc/'+s.id; });
+  if(sc.kind==='subject' && ICE.subject(sc.sj)) keys=ICE.subject(sc.sj).secs.slice();
+  if(sc.kind==='chapter' && ICE.topics[sc.ch]) keys=[ICE.topics[sc.ch].sec];
+  return keys;
+}
+
+/* ---------- starting ---------- */
+function start(kind, o){
+  o=o||{};
+  var sc=o.scope||scope(), queue=[], opt={back:o.back||'practice', scope:sc};
+  switch(kind){
+    case 'continue':
+      queue=PLAN.nextSet(null, setN());
+      opt.mode='set'; opt.title=L('Continue','চালিয়ে যাও'); opt.back='start';
+      opt.again=function(){ start('continue'); };
+      break;
+    case 'set':
+      queue=ordinary(sc);
+      opt.mode='set'; opt.title=scopeLabel(sc);
+      opt.again=function(){ start('set', {scope:sc, back:opt.back}); };
+      break;
+    case 'mistakes':
+      queue=mistakeSet(sc);
+      opt.mode='mistakes'; opt.title=L('Mistake bank','ভুলের খাতা');
+      if(o.back) opt.back=o.back;
+      opt.again=function(){ start('mistakes', {scope:sc, back:opt.back}); };
+      break;
+    case 'weak':
+      queue=weakSet(sc);
+      opt.mode='weak'; opt.title=L('Weak chapters','দুর্বল অধ্যায়');
+      opt.again=function(){ start('weak', {scope:sc, back:opt.back}); };
+      break;
+    case 'exam':
+      queue=examSet(o.sec);
+      opt.mode='exam'; opt.exam=true; opt.sec=o.sec; opt.title=ICE.sname(o.sec);
+      opt.again=function(){ start('exam', {sec:o.sec}); };
+      break;
+    case 'blitz':
+      queue=blitzSet(sc);
+      opt.mode='blitz'; opt.blitz=true; opt.title=L('60-second challenge','৬০ সেকেন্ড চ্যালেঞ্জ');
+      opt.again=function(){ start('blitz', {scope:sc, back:opt.back}); };
+      break;
   }
-  return {pass:pass, right:R.right};
-}
-function credited(topic){ return !!DB.game().credit[topic]; }
-function dropCredit(topic){ delete DB.game().credit[topic]; DB.save(); PLAN.invalidate(); }
-
-/* ---------- the diagnostic: start with something already done ----------
-   Endowed progress, honestly earned: the twelve questions are real and
-   the credit is for the ones you actually got right. */
-function diagResult(R){
-  var g=DB.game();
-  g.diag=1;
-  /* enough to arrive somewhere rather than nowhere — about level three —
-     without skipping the ladder the rest of the app is built on */
-  var xp=60+R.right*20;
-  DB.save();
-  GAME.addXP(xp,'diagnostic');
-  GAME.addCoins(60);
-  GAME.earnChest();
-  var by={};
-  R.marks.forEach(function(m){
-    var k=ICE.topics[m.q.topic]?ICE.topics[m.q.topic].sec:null;
-    if(!k) return;
-    var b=by[k]||(by[k]={n:0,c:0}); b.n++; if(m.ok) b.c++;
-  });
-  return {xp:xp, right:R.right, n:R.marks.length, by:by};   /* a head start, on top of what the answers paid */
+  if(!queue.length){
+    UI.toast(kind==='mistakes' ? L('The mistake bank is empty here.','এখানে ভুলের খাতা খালি।')
+           : kind==='weak' ? L('Answer a few questions first, then the weak chapters show up.','আগে কিছু প্রশ্নের উত্তর দাও, তারপর দুর্বল অধ্যায় ধরা পড়বে।')
+           : L('There are no questions here yet.','এখানে এখনও কোনো প্রশ্ন নেই।'));
+    return false;
+  }
+  opt.queue=queue;
+  RUN.start(opt);
+  return true;
 }
 
-return {
-  SPEC:SPEC, spec:spec, available:available, list:list, lockLevel:lockLevel,
-  start:start, init:init, auto:auto, timeLeft:timeLeft, afterAnswer:afterAnswer,
-  rollGolden:rollGolden, ghostTarget:ghostTarget, ghostState:ghostState,
-  makeDuel:makeDuel, duelQueue:duelQueue, startDuel:startDuel,
-  resultCode:resultCode, readResult:readResult, saveDuel:saveDuel, duelWinner:duelWinner,
-  skipResult:skipResult, credited:credited, dropCredit:dropCredit,
-  diagResult:diagResult
-};
+return {scope:scope, setScope:setScope, inScope:inScope, pool:pool, scopeLabel:scopeLabel,
+        hasQuestions:hasQuestions, counts:counts, papersIn:papersIn, start:start};
 })();
