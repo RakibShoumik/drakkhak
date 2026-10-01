@@ -1,0 +1,23 @@
+/* ============================================================
+   DRAKKHAK — night: a lamp-lit desk.
+   Loaded after dark.css (itself recoloured onto this palette by
+   theme/build/build.py) whenever WoWonder's night mode is on.
+   ============================================================ */
+:root{
+  --dk-page:#16150F; --dk-card:#1D1C16; --dk-quiet:#1A1913; --dk-warm:#2A2820; --dk-rule:#332F26; --dk-rule-2:#453F33;
+  --dk-ink:#EDE9DC; --dk-ink-2:#A9A395; --dk-ink-3:#8D8778;
+  --dk-accent:#E08B6B; --dk-accent-press:#EFA184; --dk-accent-soft:#2F241D; --dk-on-accent:#16150F;
+  --dk-ok:#8FBE86; --dk-ok-soft:#1E2A1B; --dk-no:#E08A76; --dk-no-soft:#2E1D18; --dk-star:#E9B654;
+  --main-color:#E08B6B;
+  --plyr-color-main:#E08B6B;
+  color-scheme:dark;
+}
+body{color:var(--dk-ink)}
+.btn-main:hover,.btn-primary:hover,.login button:hover,.btn.btn-mat:hover{color:var(--dk-on-accent)!important}
+.login button,.btn-main.btn-lg{box-shadow:0 4px 0 #B8664A!important}
+.modal-content,.dropdown-menu{box-shadow:0 30px 70px -30px rgba(0,0,0,.7)!important}
+.left-sidebar ul li.active a,.left-sidebar ul li a.active{color:var(--dk-accent)!important}
+.login_innre form{box-shadow:0 30px 60px -40px rgba(0,0,0,.7)!important}
+/* text that Sunshine's own night mode leaves dark */
+.no-messages,.empty_state,.empty_state p,.empty_state h5,.no-messages p{color:var(--dk-ink-2)!important}
+.post-description,.post-description p,.comment-text{color:var(--dk-ink)}
