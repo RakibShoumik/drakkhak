@@ -846,3 +846,11 @@ html[data-theme="night"] .sj-ico .lmk{stroke:#16150F}
   .lvchip{padding:4px}
   .resmeta{grid-template-columns:1fr}
 }
+
+/* the way back to the community (config.js communityUrl) */
+.commbtn{display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 14px;border-radius:22px;
+  border:1.5px solid var(--accent);background:var(--accent-soft);color:var(--accent-press);font-family:var(--ui);font-size:15px;font-weight:700;white-space:nowrap}
+.commbtn:hover{background:var(--accent);color:#FFF8F2}
+.commbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+html[data-theme="night"] .commbtn{color:var(--accent)}
+@media (max-width:430px){ .commbtn span{display:none} .commbtn{padding:0 10px} }

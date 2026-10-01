@@ -56,6 +56,13 @@ function readHash(){
   return m ? {r:m[1], p:m[2]?decodeURIComponent(m[2]):null} : null;
 }
 
+/* config.js communityUrl: 'auto' means "the site root, if we are in /study/" */
+function communityUrl(){
+  var v=(typeof CONFIG!=='undefined' && CONFIG.communityUrl) || '';
+  if(v==='auto') return /\/study\//.test(location.pathname) ? location.pathname.replace(/\/study\/.*$/,'/') : '';
+  return v;
+}
+
 /* ---------- painting ---------- */
 function build(){
   viewEl=el('view');
@@ -68,6 +75,16 @@ function build(){
   el('sideGear').innerHTML=CHARTS.icon('settings')+'<span>'+L('Settings','সেটিংস')+'</span>';
   el('sideGear').onclick=function(){ go('settings'); };
   el('coinBox').onclick=function(){ PAGES.wallet(); };
+  /* the way back to the community, when this site lives inside one */
+  var cu=communityUrl(), old=el('commBtn');
+  if(old) old.remove();
+  if(cu){
+    var c=document.createElement('a');
+    c.id='commBtn'; c.className='commbtn'; c.href=cu;
+    c.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.4-.3 4.4 1.2 5 4.3"/></svg><span>'+L('Community','কমিউনিটি')+'</span>';
+    c.setAttribute('aria-label', L('Community','কমিউনিটি'));
+    el('top').insertBefore(c, el('coinBox'));
+  }
   el('coinBox').setAttribute('aria-label', L('Wallet','ওয়ালেট'));
   el('nav').innerHTML=TABS.map(function(t){
     return '<button type="button" class="tab" data-go="'+t.id+'" data-tab="'+t.id+'">'+CHARTS.icon(t.id)+'<span>'+L(t.en,t.bn)+'</span></button>';

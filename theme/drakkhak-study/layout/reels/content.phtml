@@ -1,0 +1,105 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/2.0.0/jquery.mobile-events.min.js"></script>
+<div class="loading_reel"></div>
+<div class="hidden_reels">
+    {{html}}
+</div>
+<script>
+	$(document).ready(function() {
+		window.history.pushState({}, "", "<?php echo $wo['page_url']; ?>");
+        $($('video')[0]).get(0).play();
+	});
+
+    function playPauseVideos(nextIndex) {
+        $('video').each(function(index) {
+            if (index != nextIndex) {
+                $(this).get(0).pause();
+            }
+            else{
+                $(this).get(0).play();
+            }
+        });
+    }
+
+    function Wo_NextReelVideo() {
+    
+        let currentId = parseInt($('.reels_list:not(.hidden)').data('id'));
+
+        $(".reels_list[data-id='" + currentId + "']").addClass('hidden');
+    
+        var currentIndex = $(".reels_list[data-id='" + currentId + "']").index();
+    
+        var nextIndex = currentIndex + 1;
+        var nextElement = $(".reels_list").eq(nextIndex);
+    
+        if (nextElement.length) {
+            playPauseVideos(nextIndex);
+            nextElement.removeClass('hidden');
+            window.history.pushState({}, "", $(nextElement).attr('data-reel-url'));
+            if ($(".reels_list[data-id='" + currentId + "']").length > 2) {
+            	return false;
+            }
+        }
+        else{
+            $(".reels_list[data-id='" + currentId + "']").removeClass('hidden');
+        }
+
+	    $.get(Wo_Ajax_Requests_File(), {f:'get_next_reel_video'}, function(data) {
+		    if (data.status == 200) {
+		    	$(".hidden_reels").append(data.html);
+		    }
+	    });
+    }
+
+    function Wo_PreviousReelVideo() {
+    
+        let currentId = parseInt($('.reels_list:not(.hidden)').data('id'));
+
+        $(".reels_list[data-id='" + currentId + "']").addClass('hidden');
+    
+        var currentIndex = $(".reels_list[data-id='" + currentId + "']").index();
+        
+        var nextIndex = currentIndex;
+        if (currentIndex > 0) {
+            nextIndex = currentIndex - 1;
+        }
+        
+        var nextElement = $(".reels_list").eq(nextIndex);
+    
+        if (nextElement.length) {
+        	playPauseVideos(nextIndex);
+
+        	nextElement.removeClass('hidden');
+            window.history.pushState({}, "", $(nextElement).attr('data-reel-url'));
+        }
+        else{
+            $(".reels_list[data-id='" + currentId + "']").removeClass('hidden');
+        }
+    }
+    
+    $('.story-img').bind('swipeup', handler);
+    function handler(event) { 
+    	Wo_NextReelVideo();
+    }
+    
+    $('.story-img').bind('swipedown', handler2);
+    function handler2(event) { 
+    	Wo_PreviousReelVideo();
+    }
+    
+    function load_ajax_lightbox_emojii(path){
+       var emojjii = "😀*😁*😂*🤣*😃*😄*😅*😆*😉*😊*😋*😎*😍*😘*😗*😙*😚*🙂*🤗*🤩*🤔*🤨*😐*😑*😶*🙄*😏*😣*😥*😮*🤐*😯*😪*😫*😴*😌*😛*😜*😝*🤤*😒*😓*😔*😕*🙃*🤑*😲*☹️*🙁*😖*😞*😟*😤*😢*😭*😦*😧*😨*😩*🤯*😬*😰*😱*😳*🤪*😵*😡*😠*🤬*😷*🤒*🤕*🤢*🤮*🤧*😇*🤠*🤡*🤥*🤫*🤭*🧐*🤓*😈*👿*👹*👺*💀*👻*👽*🤖*💩*😺*😸*😹*😻*😼*😽*🙀*😿*😾*👶*👧*🧒*👦*👩*🧑*👨*👵*🧓*👴*👲*💅*🤳*💃*🕺*🕴*👫*👭*👬*💑*🤲*👐*🙌*👏*🤝*👍*👎*👊*✊*🤛*🤜*🤞*✌️*🤟*🤘*👌*👈*👉*👆*👇*☝️*✋*🤚*🖐*🖖*👋*🤙*💪*🖕*✍️*🙏*💍*💄*💋*👄*👅*👂*👃*👣*👁*👀*🧠*🗣*👤*👥";
+    
+    	$('.lightbox_real_emojiis').html("");
+    	$.each(emojjii.split('*'), function(key, value) {
+    		$('.lightbox_real_emojiis').append("<span class=\"emoji_holder\" onclick=\"Wo_AddEmo('"+ value +"', '.lighbox.comment-textarea.textarea');\"><span>"+ value + "</span>");
+    	});
+    }
+    
+      $(document).keydown(function(e) {
+        	$(".lighbox.textarea").triggeredAutocomplete({
+	            hidden: '#hidden_inputbox_comment_lighbox',
+	            source: Wo_Ajax_Requests_File() + "?f=mention",
+	            trigger: "@" 
+        	});
+      });
+</script>

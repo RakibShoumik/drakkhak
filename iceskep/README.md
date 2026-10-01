@@ -135,6 +135,7 @@ cache picks it up.
 passLine: 70, goalLine: 85,   // drawn on the 0–100 score
 mcqTarget: 88,                // share of the MCQ half a student aims at (%)
 examDate: '',                 // 'YYYY-MM-DD'; empty = no countdown
+communityUrl: 'auto',         // a button back to the WoWonder community ('auto' = when served from /study/)
 blueprint: { 'hsc/bio1': {n:25, spq:60}, ... }   // MCQ per paper, seconds per question
 ```
 

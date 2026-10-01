@@ -23,6 +23,11 @@ look, the same way every time:
   5. everything in theme/build/overlay/ is copied on top: the four-bubble
      logo, the favicon, the fonts, the two stylesheets and info.php.
 
+Add --study to also put a Drakkhak practice-site button in the top bar
+(the theme "drakkhak-study"):
+
+    python3 theme/build/build.py path/to/sunshine theme/drakkhak-study --study
+
 Run it on a fresh Sunshine folder; it is not meant to be run twice on the
 same output (the out folder is wiped first).
 """
@@ -328,7 +333,48 @@ def patch_night_toggle(out):
                 write(q, t)
 
 
+# ---------------------------------------------------------------- the study variant
+STUDY_LI = '''
+							<li class="dk-study-li">
+								<?php
+								/* Drakkhak practice site. Change this address if you put the
+								   practice site somewhere other than /study on this domain. */
+								$dk_study_url = $wo['config']['site_url'] . '/study/';
+								?>
+								<a class="sixteen-font-size dk-study-btn" href="<?php echo $dk_study_url; ?>" title="Drakkhak MCQ">
+									<svg viewBox="0 0 112 28" width="38" height="10" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.2"><circle cx="14" cy="14" r="11"/><circle cx="42" cy="14" r="11"/><circle cx="98" cy="14" r="11"/></g><circle cx="70" cy="14" r="12.5" fill="currentColor"/><path d="m63.5 14.4 4.4 4.4 8.4-9.2" fill="none" stroke="var(--dk-card,#FAF9F5)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+									<span>অনুশীলন</span>
+								</a>
+							</li>'''
+
+
+def add_study_button(out):
+    """Put a Drakkhak button beside Home in the top bar, in every website mode."""
+    p = os.path.join(out, 'layout', 'header', 'content.phtml')
+    s = read(p)
+    marker = 'id="wo_home_btns">'
+    pos, n = 0, 0
+    while True:
+        i = s.find('data-ajax="?index.php?link1=home" ' + marker, pos)
+        if i < 0:
+            break
+        j = s.find('</li>', i)
+        s = s[:j + 5] + STUDY_LI + s[j + 5:]
+        pos = j + 5 + len(STUDY_LI)
+        n += 1
+    if not n:
+        sys.exit('build: could not find the Home button in header/content.phtml')
+    write(p, s)
+    q = os.path.join(out, 'info.php')
+    write(q, read(q).replace("$themeName = 'Drakkhak';", "$themeName = 'Drakkhak + Study';")
+                    .replace("$themeFolder = 'drakkhak';", "$themeFolder = '%s';" % os.path.basename(os.path.normpath(out))))
+
+
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    if len(args) != 2:
         sys.exit(__doc__)
-    build(sys.argv[1], sys.argv[2])
+    build(args[0], args[1])
+    if '--study' in sys.argv:
+        add_study_button(args[1])
+        print('with the Drakkhak study button in the top bar')

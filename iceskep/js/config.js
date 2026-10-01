@@ -15,6 +15,15 @@ var CONFIG = {
   /* the HSC exam date, 'YYYY-MM-DD'. Empty = no countdown is shown. */
   examDate: '',
 
+  /* the WoWonder community this site sits inside (the "Drakkhak + Study"
+     theme links here from its top bar). A button back to it appears in
+     this site's top bar.
+       'auto' : shown only when the site is opened from a /study/ folder,
+                linking to the site root (the community)
+       ''     : no button
+       a URL  : always shown, linking there                             */
+  communityUrl: 'auto',
+
   /* the exam blueprint: MCQ on each real paper (n) and the seconds the
      board allows one question (spq: 25 questions in 25 minutes = 60).
      A full paper in the app runs on exactly these two numbers. */

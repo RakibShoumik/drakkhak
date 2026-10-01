@@ -135,3 +135,18 @@ h1,h2,h3,.h1,.h2,.h3,.modal-title,.page-margin h3,.wow_main_float_head h1,.wow_m
   .header-brand img,.brand.header-brand img{width:128px!important}
   .login_left_combo h1{font-size:34px}
 }
+
+/* ---------- the study button (drakkhak-study theme only) ---------- */
+.navbar-default .navbar-nav>li.dk-study-li>a.dk-study-btn{display:flex;align-items:center;gap:8px;height:40px;margin:8px 2px 8px 6px;padding:0 14px!important;
+  border-radius:20px;border:1.5px solid var(--dk-accent);background:var(--dk-accent-soft);color:var(--dk-accent-press)!important;font-weight:700;font-size:14px}
+.navbar-default .navbar-nav>li.dk-study-li>a.dk-study-btn:hover{background:var(--dk-accent)!important;color:var(--dk-on-accent)!important}
+.dk-study-btn svg{flex:none}
+@media (max-width:991px){ .dk-study-btn span{display:none} .navbar-default .navbar-nav>li.dk-study-li>a.dk-study-btn{padding:0 10px!important;margin-left:4px} }
+/* with the extra button the search box gives way, never the icons on the right */
+.header-fixed1000 .container-fluid{flex-wrap:nowrap}
+.header-fixed1000 .container-fluid>.navbar-nav:not(.navbar-right){flex:1 1 auto;min-width:140px;margin-left:16px}
+.header-fixed1000 .container-fluid>.navbar-nav:not(.navbar-right)>li,.header-fixed1000 .search-container{width:100%;max-width:475px}
+.header-fixed1000 .container-fluid>.navbar-right{flex:none}
+.wow_hdr_innr_left .navbar-nav{display:flex;flex-wrap:nowrap;align-items:center}
+.wow_hdr_innr_left .navbar-nav>li{float:none}
+.wow_hdr_innr_left .navbar-nav:has(.dk-study-li){margin-left:36px}
