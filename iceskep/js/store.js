@@ -38,6 +38,12 @@ function fresh(){
 
     /* streak: days in a row with five questions answered */
     streak:0, best:0, lastDay:'',
+    shields:1,                  /* streak shields: each covers one missed day */
+    shielded:{},                /* 'YYYY-MM-DD' -> 1, days a shield covered */
+
+    /* the daily goal and the daily five */
+    goalDay:'', goalDays:0,     /* last day the goal was met, and how many days in all */
+    daily:{day:'', right:0, n:0}, dailyCount:0,
 
     /* per-day counters, 'YYYY-MM-DD' -> {q, right, wrong, sets} */
     acts:{},
@@ -55,6 +61,7 @@ function fresh(){
 
     settings:{
       dailyMin:180,             /* study minutes a day, one of HOURS */
+      goalSets:2,               /* the daily goal, in sets of 16 */
       lang:'bn',                /* 'bn' or 'en' for the interface */
       calm:false                /* animations and vibration off */
     }
@@ -147,22 +154,43 @@ function bump(kind, n){
   var a=actsToday(); a[kind]=(a[kind]||0)+(n===undefined?1:n); save();
 }
 
-/* ---------- streak: simple days in a row ----------
+/* ---------- streak: days in a row ----------
    A day counts once five questions are answered. Opening the page is
-   not studying. Miss a whole day and it starts again. */
+   not studying. A missed day eats a shield if there is one (a shield is
+   bought with coins, and nobody can hold more than two); otherwise the
+   streak starts again. */
 function DAY_MET(k){ return actsOn(k).q>=5; }
 function touchStreak(){
   var s=state(), t=today();
   if(!DAY_MET(t) || s.lastDay===t) return false;
   var gap = s.lastDay ? daysBetween(s.lastDay, t) : 999;
-  s.streak = gap===1 ? s.streak+1 : 1;
+  var missed = gap-1;
+  if(gap===1) s.streak++;
+  else if(gap<999 && missed<=s.shields){
+    s.shields-=missed; s.streak++;
+    for(var i=1;i<=missed;i++){
+      s.shielded[ymd(new Date(new Date(t+'T00:00:00').getTime()-i*864e5))]=1;
+    }
+  }
+  else s.streak=1;
   s.best=Math.max(s.best, s.streak);
   s.lastDay=t; save();
   return true;
 }
+/* the streak as it stands today, shields counted */
 function liveStreak(){
   var s=state(); if(!s.lastDay) return 0;
-  return daysBetween(s.lastDay, today())<=1 ? s.streak : 0;
+  var gap=daysBetween(s.lastDay, today());
+  return gap<=1 || gap-1<=s.shields ? s.streak : 0;
+}
+/* the last n days, oldest first: {date, met, shield, today} */
+function week(n){
+  var out=[], s=state(), now=new Date();
+  for(var i=(n||7)-1;i>=0;i--){
+    var k=ymd(new Date(now.getTime()-i*864e5));
+    out.push({date:k, met:DAY_MET(k), shield:!!s.shielded[k], today:i===0, q:actsOn(k).q});
+  }
+  return out;
 }
 
 /* ---------- the answer log ---------- */
@@ -203,7 +231,7 @@ return {
   load:load, state:state, save:save, saveNow:saveNow, HOURS:HOURS,
   ymd:ymd, today:today, dayNum:dayNum, daysBetween:daysBetween,
   actsOn:actsOn, actsToday:actsToday, bump:bump, blankAct:blankAct,
-  touchStreak:touchStreak, liveStreak:liveStreak, DAY_MET:DAY_MET,
+  touchStreak:touchStreak, liveStreak:liveStreak, DAY_MET:DAY_MET, week:week,
   pushLog:pushLog, logFor:logFor, lastOk:lastOk,
   exportJSON:exportJSON, importJSON:importJSON, reset:reset
 };

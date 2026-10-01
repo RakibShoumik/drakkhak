@@ -55,6 +55,51 @@ function buy(id){
   return {ok:true};
 }
 
-return {PAY:PAY, POWER:POWER, power:power, pname:pname, coins:coins, add:add, note:note, recent:recent,
+/* ---------- the streak shield: covers one missed day, at most two held ---------- */
+var SHIELD={id:'shield', cost:50, max:2, en:'Streak shield', bn:'স্ট্রিক শিল্ড',
+  noteEn:'Covers one missed day so the streak survives. You can hold two.',
+  noteBn:'একদিন না পড়লেও স্ট্রিক বাঁচিয়ে রাখে। সর্বোচ্চ দুটি রাখা যায়।'};
+function buyShield(){
+  var s=DB.state();
+  if(s.shields>=SHIELD.max) return {ok:false, full:true};
+  if(coins()<SHIELD.cost) return {ok:false, short:SHIELD.cost-coins()};
+  s.coins-=SHIELD.cost; s.shields++;
+  note({k:'buy', p:'shield', n:-SHIELD.cost});
+  DB.save();
+  return {ok:true};
+}
+
+/* ---------- levels: from right answers alone, quick at first ---------- */
+var LEVELS=[0,10,40,90,160,260,400,580,820,1120,1500,2000,2700,3600,5000];
+var LEVEL_NAMES=[['Beginner','নবিশ'],['Learner','শিক্ষার্থী'],['Steady','অধ্যবসায়ী'],['Hard-working','পরিশ্রমী'],
+  ['Capable','দক্ষ'],['Skilled','পারদর্শী'],['Sharp','তুখোড়'],['Bright','মেধাবী'],['Brilliant','প্রতিভাবান'],
+  ['A+ ready','A+ প্রস্তুত'],['Golden A+','গোল্ডেন A+'],['Topper','টপার'],['Board star','বোর্ড তারকা'],
+  ['Legend','কিংবদন্তি'],['Board stand','বোর্ড স্ট্যান্ড']];
+function level(c){
+  if(c===undefined||c===null) c=DB.state().correct||0;
+  var i=0;
+  while(i+1<LEVELS.length && c>=LEVELS[i+1]) i++;
+  var from=LEVELS[i], to=i+1<LEVELS.length ? LEVELS[i+1] : null;
+  return {lv:i+1, name:L(LEVEL_NAMES[i][0], LEVEL_NAMES[i][1]), from:from, to:to,
+          left: to ? to-c : 0, p: to ? (c-from)/(to-from) : 1};
+}
+
+/* ---------- the daily goal: sets of 16, +10 coins the first time it is met ---------- */
+var GOAL_PAY=10;
+function goal(){
+  var s=DB.state(), target=(s.settings.goalSets||2)*16, done=DB.actsToday().q;
+  return {target:target, done:done, p:Math.min(1, done/target), met:done>=target};
+}
+/* true the moment the goal is met today, once */
+function checkGoal(){
+  var s=DB.state(), g=goal();
+  if(!g.met || s.goalDay===DB.today()) return false;
+  s.goalDay=DB.today(); s.goalDays=(s.goalDays||0)+1;
+  add(GOAL_PAY); note({k:'goal', n:GOAL_PAY});
+  DB.save();
+  return true;
+}
+
+return {PAY:PAY, POWER:POWER, SHIELD:SHIELD, buyShield:buyShield, level:level, goal:goal, checkGoal:checkGoal, GOAL_PAY:GOAL_PAY, power:power, pname:pname, coins:coins, add:add, note:note, recent:recent,
         have:have, use:use, buy:buy};
 })();

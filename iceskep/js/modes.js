@@ -116,6 +116,22 @@ function blitzSet(sc){
   return AB.unique(U.shuffle(fast, Date.now()%9973)).slice(0,120);
 }
 
+/* the daily five: the same five questions for everyone today, from across
+   every written chapter, drawn by the date */
+function dailySet(){
+  var pool=ICE.Q.filter(function(q){ return !q.passage && AB.q(q.id); })
+                .sort(function(a,b){ return a.id<b.id?-1:a.id>b.id?1:0; });
+  if(!pool.length) return [];
+  var r=DB.dayNum(DB.today())*7919+17, out=[], seen={};
+  while(out.length<Math.min(5,pool.length)){
+    r=(r*1103515245+12345)&0x7fffffff;
+    var q=pool[r%pool.length];
+    if(!seen[q.id]){ seen[q.id]=1; out.push(q); }
+  }
+  return out;
+}
+function dailyDone(){ return DB.state().daily.day===DB.today(); }
+
 /* ---------- what each card can say ---------- */
 function counts(sc){
   var f=inScope(sc);
@@ -165,6 +181,12 @@ function start(kind, o){
       opt.mode='exam'; opt.exam=true; opt.sec=o.sec; opt.title=ICE.sname(o.sec);
       opt.again=function(){ start('exam', {sec:o.sec}); };
       break;
+    case 'daily':
+      if(dailyDone()){ UI.toast(L('Today\'s five are done. New ones tomorrow.','আজকের ৫টি শেষ। কাল নতুন ৫টি।')); return false; }
+      queue=dailySet();
+      opt.mode='daily'; opt.daily=true; opt.back='start'; opt.title=L('Today\'s five','আজকের ৫');
+      opt.again=null;
+      break;
     case 'blitz':
       queue=blitzSet(sc);
       opt.mode='blitz'; opt.blitz=true; opt.title=L('60-second challenge','৬০ সেকেন্ড চ্যালেঞ্জ');
@@ -183,5 +205,5 @@ function start(kind, o){
 }
 
 return {scope:scope, setScope:setScope, inScope:inScope, pool:pool, scopeLabel:scopeLabel,
-        hasQuestions:hasQuestions, counts:counts, papersIn:papersIn, start:start};
+        hasQuestions:hasQuestions, dailyDone:dailyDone, counts:counts, papersIn:papersIn, start:start};
 })();

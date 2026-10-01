@@ -21,37 +21,88 @@ function honesty(closable){
 function tagline(){ return L('Board-level MCQ practice from the NCTB books','NCTB বই থেকে বোর্ড-মানের MCQ অনুশীলন'); }
 
 /* ============================================================
-   START — the number, the button, the mistake bank
+   START — today first: the goal ring, the streak week, one big
+   button; then today's five, the mistake bank, the subjects and
+   the whole syllabus
    ============================================================ */
+var DAYS_BN=['র','সো','ম','বু','বৃ','শু','শ'], DAYS_EN=['S','M','T','W','T','F','S'];
+function greeting(){
+  var h=new Date().getHours();
+  return h<5 ? L('Up late','রাত জেগে পড়ছ') : h<12 ? L('Good morning','শুভ সকাল') : h<17 ? L('Good afternoon','শুভ দুপুর')
+       : h<20 ? L('Good evening','শুভ সন্ধ্যা') : L('Good night','শুভ রাত্রি');
+}
+function flameSvg(cls){
+  return '<svg class="'+(cls||'fl')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 3c.4 3.2-1.3 4.6-2.8 6.3C8.3 10.8 7 12.4 7 14.8 7 18 9.2 21 12 21s5-2.3 5-5.4c0-2.5-1.3-4-2.3-5.2-.5 1.2-1.1 1.9-1.9 2.2.5-2.4.5-6.3-.3-9.6Z"/></svg>';
+}
+function shieldSvg(){
+  return '<svg class="sh" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 3 8.2 7 10 4-1.8 7-5.6 7-10V6z"/></svg>';
+}
 function start(){
   var all=PLAN.total(), left=PLAN.left(), p=all.total?all.cleared/all.total:0;
-  var bank=AB.mistakes().length;
+  var s=DB.state(), bank=AB.mistakes().length, g=GAME.goal(), lv=GAME.level(), st=DB.liveStreak();
   var o='<div class="page start">';
 
-  /* 1. the central number */
-  o+='<section class="hero"><div class="hero-num">'+U.num(left)+'</div>'+
-     '<div class="hero-lbl">'+L('questions left · of '+U.num(all.total), 'প্রশ্ন বাকি · '+U.num(all.total)+'-এর মধ্যে')+'</div>'+
-     CHARTS.bar(p,'thick')+'</section>';
+  /* the greeting and the level */
+  o+='<div class="greet"><div><span class="hello">'+greeting()+'</span>'+
+     '<h1>'+(g.met?L('Goal met. One more?','লক্ষ্য পূরণ। আরেকটা?'):L('Ready for today?','আজ শুরু করবে?'))+'</h1></div>'+
+     '<button type="button" class="lvchip" data-go="progress"><b>'+N(lv.lv)+'</b><span>'+U.h(lv.name)+'</span></button></div>';
 
-  /* 2. one big button */
-  o+= left>0
-    ? '<button type="button" class="btn big go" data-act="continue">'+L('Continue · '+PLAN.SET_N+' questions','চালিয়ে যাও · '+N(PLAN.SET_N)+'টি প্রশ্ন')+'</button>'
-    : '<p class="alldone">'+L('Every question is done. Well done!','সব প্রশ্ন শেষ। সাবাস!')+'</p>';
+  /* today: the goal ring, the streak and its week, the one big button */
+  var wk=DB.week(7);
+  o+='<section class="today'+(g.met?' met':'')+'">'+
+     '<div class="today-top">'+
+       CHARTS.ring(g.p, 104, 'goal', '<b>'+N(Math.min(g.done,g.target))+'</b><small>/ '+N(g.target)+'</small>')+
+       '<div class="today-r">'+
+         '<div class="streakline">'+flameSvg(st?'fl on':'fl')+'<b>'+N(st)+'</b><span>'+L(st===1?'day in a row':'days in a row','দিন টানা')+'</span>'+
+           (s.shields?'<span class="shields" title="'+L('Streak shields','স্ট্রিক শিল্ড')+'">'+shieldSvg()+N(s.shields)+'</span>':'')+'</div>'+
+         '<div class="week">'+wk.map(function(d){
+            var day=new Date(d.date+'T00:00:00').getDay();
+            return '<span class="wd'+(d.met?' met':d.shield?' shield':'')+(d.today?' now':'')+'"><i>'+(d.met?'&#10003;':d.shield?shieldSvg():'')+'</i><em>'+(LBN()?DAYS_BN:DAYS_EN)[day]+'</em></span>';
+          }).join('')+'</div>'+
+         '<div class="goal-t">'+(g.met ? L('Daily goal met: +'+GAME.GOAL_PAY+' coins earned.','আজকের লক্ষ্য পূরণ: +'+N(GAME.GOAL_PAY)+' কয়েন পেয়েছ।')
+                                       : L((g.target-g.done)+' more questions to today\'s goal (+'+GAME.GOAL_PAY+' coins).','আজকের লক্ষ্যে আর '+N(g.target-g.done)+'টি প্রশ্ন (+'+N(GAME.GOAL_PAY)+' কয়েন)।'))+'</div>'+
+       '</div></div>'+
+     (left>0 ? '<button type="button" class="btn big go light" data-act="continue">'+L('Continue · '+PLAN.SET_N+' questions','চালিয়ে যাও · '+N(PLAN.SET_N)+'টি প্রশ্ন')+'</button>'
+             : '<p class="alldone">'+L('Every question is done. Well done!','সব প্রশ্ন শেষ। সাবাস!')+'</p>')+
+     '</section>';
 
-  /* 3. the mistake bank */
-  o+='<section class="card bankcard'+(bank?' has':'')+'"><div><div class="bank-t">'+L('Mistake bank','ভুলের খাতা')+' &middot; <b>'+
-     L(bank+' waiting', N(bank)+' টি অপেক্ষায়')+'</b></div>'+
-     '<div class="bank-s">'+(bank?L('Win back the questions you missed.','যে প্রশ্নগুলো ভুল করেছ, সেগুলো জিতে নাও।')
-                               :L('Nothing here yet. A miss lands here.','এখনও কিছু নেই। ভুল করলে এখানে জমবে।'))+'</div></div>'+
-     '<button type="button" class="btn'+(bank?'':' ghost')+'" data-act="bankGo"'+(bank?'':' disabled')+'>'+L('Win them back','ফিরিয়ে আনো')+'</button></section>';
+  /* today's five and the mistake bank, side by side on a desk */
+  var dd=MODES.dailyDone(), dr=s.daily;
+  o+='<div class="duo">';
+  o+='<button type="button" class="card tile daily'+(dd?' done':'')+'" data-act="dailyGo">'+
+     '<span class="tile-ico">'+(dd?'&#10003;':'<b>'+N(5)+'</b>')+'</span>'+
+     '<span class="tile-t">'+L('Today\'s five','আজকের ৫')+'</span>'+
+     '<span class="tile-s">'+(dd ? L(dr.right+' of '+dr.n+' right · new five tomorrow', N(dr.n)+'-এ '+N(dr.right)+' ঠিক · কাল নতুন ৫টি')
+                                 : L('The same five for everyone today · +10 coins','আজ সবার জন্য একই ৫টি · +১০ কয়েন'))+'</span></button>';
+  o+='<button type="button" class="card tile bank'+(bank?' has':'')+'" data-act="bankGo"'+(bank?'':' disabled')+'>'+
+     '<span class="tile-ico">'+N(bank)+'</span>'+
+     '<span class="tile-t">'+L('Mistake bank','ভুলের খাতা')+'</span>'+
+     '<span class="tile-s">'+(bank?L(bank+' waiting · +2 coins each to win back', N(bank)+' টি অপেক্ষায় · ফিরিয়ে আনলে প্রতিটিতে +২')
+                               :L('Empty. A miss lands here.','খালি। ভুল করলে এখানে জমবে।'))+'</span></button>';
+  o+='</div>';
 
-  /* 4. one quiet line */
-  o+='<p class="quiet">'+paceLine()+'</p>';
+  /* the subjects */
+  o+='<div class="label sec">'+L('Subjects','বিষয়')+'</div><div class="sjgrid">'+ICE.subjects.map(function(sj){
+    var x=PLAN.subject(sj.id), q=PLAN.pct(x), soon=x.total===x.est;
+    return '<button type="button" class="sjtile'+(soon?' soon':'')+'" data-act="openSubject" data-arg="'+sj.id+'" style="--sc:var(--s-'+sj.id+')">'+
+      '<span class="sj-ico">'+CHARTS.landmark(sj.id,'lmk')+'</span>'+
+      '<span class="sj-name">'+U.h(ICE.subjname(sj))+'</span>'+
+      '<span class="sj-pc">'+(soon?L('soon','শিগগির'):N(Math.floor(q*100))+'%')+'</span>'+
+      CHARTS.bar(q,'thin sc')+'</button>';
+  }).join('')+'</div>';
 
-  /* 5. the honesty note, until it is closed */
-  if(!DB.state().noteClosed) o+=honesty(true);
+  /* the whole syllabus, and the pace */
+  o+='<section class="card syll"><div class="syll-top"><div><div class="label">'+L('The whole syllabus','পুরো সিলেবাস')+'</div>'+
+     '<div class="syll-num"><b>'+U.num(left)+'</b> '+L('questions left · of '+U.num(all.total),'প্রশ্ন বাকি · '+U.num(all.total)+'-এর মধ্যে')+'</div></div>'+
+     '<span class="syll-pc">'+N(Math.floor(p*100))+'%</span></div>'+CHARTS.bar(p,'thick')+
+     '<p class="quiet">'+paceLine()+'</p></section>';
+
+  /* the honesty note, until it is closed */
+  if(!s.noteClosed) o+=honesty(true);
   return o+'</div>';
 }
+UIact('dailyGo', function(){ MODES.start('daily'); });
+UIact('continueFromRun', function(){ MODES.start('continue'); });
 /* the exam countdown, and whether studying at the chosen hours is enough */
 function paceLine(){
   var pl=PLAN.paceLine(), hrs=DB.state().settings.dailyMin/60;
@@ -198,6 +249,23 @@ function progress(){
   var all=PLAN.total(), p=all.total?all.cleared/all.total:0, sco=AB.score({});
   var o='<div class="page progress"><h1>'+L('Progress','অগ্রগতি')+'</h1>';
 
+  /* the level: from right answers alone */
+  var lv=GAME.level(), S=DB.state();
+  o+='<section class="card lvcard"><div class="lvmedal sm"><span>'+L('Level','লেভেল')+'</span><b>'+N(lv.lv)+'</b></div>'+
+     '<div class="lv-r"><div class="lv-name">'+U.h(lv.name)+'</div>'+CHARTS.bar(lv.p,'thick')+
+     '<div class="small">'+(lv.to?L(lv.left+' more right answers to level '+(lv.lv+1)+'.','লেভেল '+N(lv.lv+1)+'-এ যেতে আরও '+N(lv.left)+'টি ঠিক উত্তর।'):L('The top level. Board stand!','সর্বোচ্চ লেভেল। বোর্ড স্ট্যান্ড!'))+
+     ' &middot; '+L(S.correct+' right in all',L('','মোট ')+N(S.correct)+'টি ঠিক')+'</div></div></section>';
+
+  /* five weeks of practice, one square a day */
+  var days=DB.week(35);
+  o+='<section class="card heat"><div class="heat-top"><div class="label">'+L('The last five weeks','গত পাঁচ সপ্তাহ')+'</div>'+
+     '<span class="small">'+L('Best streak ','সেরা স্ট্রিক ')+N(Math.max(S.best||0, DB.liveStreak()))+L(' days',' দিন')+'</span></div><div class="heatgrid">'+
+     days.map(function(d){
+       var lvl = d.q>=48?4 : d.q>=32?3 : d.q>=16?2 : d.q>=5?1 : 0;
+       return '<i class="h'+lvl+(d.shield?' sh':'')+(d.today?' now':'')+'" title="'+d.date+' · '+N(d.q)+'"></i>';
+     }).join('')+'</div>'+
+     '<div class="heat-key small">'+L('Less','কম')+'<i class="h0"></i><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i>'+L('More','বেশি')+'</div></section>';
+
   o+='<div class="grid2">'+
     '<div class="card stat"><div class="label">'+L('Done','শেষ হয়েছে')+'</div><div class="v">'+N(Math.floor(p*100))+'<small>%</small></div>'+CHARTS.bar(p,'')+'</div>'+
     '<div class="card stat"><div class="label">'+L('Score','স্কোর')+'</div><div class="v">'+N(sco.score)+'<small>/'+N(100)+'</small></div>'+scoreBar(sco.score)+
@@ -250,6 +318,13 @@ function settings(){
     '<div class="seg">'+DB.HOURS.map(function(m){
       return '<button type="button" class="'+(st.dailyMin===m?'on':'')+'" data-act="hours" data-arg="'+m+'">'+L(m/60+' hr', N(m/60)+' ঘণ্টা')+'</button>';
     }).join('')+'</div>');
+  o+=row(L('Daily goal','দৈনিক লক্ষ্য'),
+    '<div class="seg">'+[1,2,3,4].map(function(n){
+      return '<button type="button" class="'+((st.goalSets||2)===n?'on':'')+'" data-act="goalSets" data-arg="'+n+'">'+L(n*16+' q',N(n*16)+'টি')+'</button>';
+    }).join('')+'</div>', L('Questions a day. Meeting it pays +'+GAME.GOAL_PAY+' coins.','দিনে কতটি প্রশ্ন। পূরণ করলে +'+N(GAME.GOAL_PAY)+' কয়েন।'));
+  if(installEvt) o+=row(L('Install the app','অ্যাপ হিসেবে ইনস্টল'),
+    '<button type="button" class="btn sm" data-act="install">'+L('Install','ইনস্টল')+'</button>',
+    L('An icon on your home screen. Works offline.','হোম স্ক্রিনে আইকন। ইন্টারনেট ছাড়াও চলে।'));
   o+=row(L('Language','ভাষা'),
     '<div class="seg"><button type="button" class="'+(st.lang==='bn'?'on':'')+'" data-act="lang" data-arg="bn">বাংলা</button>'+
     '<button type="button" class="'+(st.lang==='en'?'on':'')+'" data-act="lang" data-arg="en">English</button></div>',
@@ -274,6 +349,14 @@ function settings(){
 }
 
 UIact('hours', function(m){ DB.state().settings.dailyMin=+m; DB.save(); PLAN.invalidate(); UI.render(); });
+UIact('goalSets', function(n){ DB.state().settings.goalSets=+n; DB.save(); UI.render(); });
+var installEvt=null;
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); installEvt=e; });
+UIact('install', function(){
+  if(!installEvt) return;
+  installEvt.prompt();
+  installEvt.userChoice.then(function(){ installEvt=null; UI.render(); }, function(){});
+});
 UIact('lang', function(l){ I18N.setLang(l); I18N.apply(); UI.rebuild(); UI.render(); });
 UIact('flip', function(k){ UI.flip(k); });
 UIact('logo', function(k){ DB.state().logo=k; DB.save(); UI.rebuild(); UI.render(); });
@@ -323,17 +406,28 @@ function wallet(){
       var can=GAME.coins()>=p.cost;
       return '<div class="item"><div class="it"><b>'+h(GAME.pname(p))+'</b><span>'+h(L(p.noteEn,p.noteBn))+'</span><em>'+L('You have ','আছে ')+N(GAME.have(p.id))+'</em></div>'+
         '<button type="button" class="btn sm'+(can?'':' ghost')+'" data-act="buy" data-arg="'+p.id+'"'+(can?'':' disabled')+'><svg class="ci" viewBox="0 0 32 32"><use href="#coinSym"/></svg>'+N(p.cost)+'</button></div>';
-    }).join('')+'</div>';
+    }).join('')+(function(){
+      var sh=GAME.SHIELD, have=DB.state().shields, can=GAME.coins()>=sh.cost && have<sh.max;
+      return '<div class="item shield"><div class="it"><b>'+shieldSvg()+h(L(sh.en,sh.bn))+'</b><span>'+h(L(sh.noteEn,sh.noteBn))+'</span><em>'+L('You have ','আছে ')+N(have)+' / '+N(sh.max)+'</em></div>'+
+        '<button type="button" class="btn sm'+(can?'':' ghost')+'" data-act="buyShield"'+(can?'':' disabled')+'><svg class="ci" viewBox="0 0 32 32"><use href="#coinSym"/></svg>'+N(sh.cost)+'</button></div>';
+    })()+'</div>';
   var rec=GAME.recent(8);
   o+='<div class="label" style="margin-top:18px">'+L('Recent','সাম্প্রতিক')+'</div>';
   if(!rec.length) o+='<p class="small">'+L('Nothing earned yet. Answer a question.','এখনও কিছু জমেনি। একটি প্রশ্নের উত্তর দাও।')+'</p>';
   else o+='<ul class="recent">'+rec.map(function(e){
-    if(e.k==='buy') return '<li><span>'+L('Bought ','কিনেছ ')+h(GAME.pname(GAME.power(e.p)))+'</span><b class="neg">'+N(e.n)+'</b></li>';
+    if(e.k==='buy') return '<li><span>'+L('Bought ','কিনেছ ')+h(e.p==='shield'?L(GAME.SHIELD.en,GAME.SHIELD.bn):GAME.pname(GAME.power(e.p)))+'</span><b class="neg">'+N(e.n)+'</b></li>';
+    if(e.k==='goal') return '<li><span>'+L('Daily goal met','আজকের লক্ষ্য পূরণ')+'</span><b>+'+N(e.n)+'</b></li>';
     return '<li><span>'+U.h(L('Set: '+e.right+' right'+(e.won?', '+e.won+' won back':'')+(e.set?', finished':''),
         'সেট: '+N(e.right)+' ঠিক'+(e.won?', '+N(e.won)+'টি ফিরিয়ে আনা':'')+(e.set?', শেষ করা':'')))+'</span><b>+'+N(e.n)+'</b></li>';
   }).join('')+'</ul>';
   UI.sheet(o);
 }
+UIact('buyShield', function(){
+  var r=GAME.buyShield();
+  if(!r.ok){ UI.toast(r.full?L('You already hold two shields.','তোমার কাছে আগে থেকেই দুটি শিল্ড আছে।'):L('Not enough coins yet.','কয়েন এখনও যথেষ্ট নয়।')); return; }
+  FX.play('coin'); UI.paintChrome(); wallet();
+  if(UI.current()==='start') UI.render();
+});
 UIact('buy', function(id){
   var r=GAME.buy(id);
   if(!r.ok){ UI.toast(L('Not enough coins yet.','কয়েন এখনও যথেষ্ট নয়।')); return; }

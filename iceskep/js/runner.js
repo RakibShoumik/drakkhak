@@ -32,7 +32,7 @@ function start(o){
   }
   R={
     mode:o.mode, title:o.title||L('Practice','অনুশীলন'), back:o.back||'practice',
-    exam:!!o.exam, blitz:!!o.blitz, sec:o.sec||null, again:o.again||null,
+    exam:!!o.exam, blitz:!!o.blitz, daily:!!o.daily, lv0:GAME.level().lv, bestRun:0, goalHit:false, sec:o.sec||null, again:o.again||null,
     queue:queue, i:0, phase:'ask',
     view:null, resp:null, result:null, showWhy:false,
     right:0, answered:0, marks:[], times:[], run:0,
@@ -169,6 +169,7 @@ function settle(ok, i, secs, late, wasBank, viaSecond, secondOk){
   R.answered++; R.times.push(secs);
   R.marks.push({q:orig, v:q, ok:ok, secs:secs, resp:i, late:late, second:!!secondOk});
   R.run = ok ? R.run+1 : 0;
+  R.bestRun=Math.max(R.bestRun, R.run);
   if(ok) R.right++;
 
   var c=0, won=false;
@@ -186,6 +187,15 @@ function settle(ok, i, secs, late, wasBank, viaSecond, secondOk){
   DB.save();
 
   R.result={ok:ok, late:late, secs:secs, second:!!viaSecond, secondOk:!!secondOk};
+
+  /* the daily goal, met mid-set: a moment of its own */
+  if(GAME.checkGoal()){
+    R.goalHit=true; R.coins+=GAME.GOAL_PAY;
+    setTimeout(function(){
+      FX.play('badge'); FX.confetti(60);
+      UI.toast('<b>'+L('Daily goal met!','আজকের লক্ষ্য পূরণ!')+'</b> &middot; +'+N(GAME.GOAL_PAY)+L(' coins',' কয়েন'), 3600);
+    }, 500);
+  }
 
   if(R.exam){
     FX.play('tick');
@@ -220,7 +230,7 @@ function payOut(fromEl, c){
 
 /* ---------- power-ups: practice sets only ---------- */
 function pw(id){
-  if(!R || R.exam || R.blitz || R.phase!=='ask' || R.retry) return;
+  if(!R || R.exam || R.blitz || R.daily || R.phase!=='ask' || R.retry) return;
   var p=GAME.power(id);
   if(GAME.have(id)<=0){
     UI.toast(L(GAME.pname(p)+' is finished. Buy more with coins: tap the coin box.', GAME.pname(p)+' শেষ। কয়েন দিয়ে কেনো: ওপরের কয়েন বাক্সে ট্যাপ করো।'));
@@ -272,10 +282,13 @@ function finish(reason){
   R.secsUsed=Math.round((Date.now()-R.t0)/1000);
   var n=R.queue.length;
   /* finishing a set pays five; the 60-second challenge is not a set */
-  if(!R.blitz){ R.bonus=GAME.PAY.set; R.coins+=R.bonus; GAME.add(R.bonus); }
+  if(R.daily){ R.bonus=DAILY_PAY; R.coins+=R.bonus; GAME.add(R.bonus); }
+  else if(!R.blitz){ R.bonus=GAME.PAY.set; R.coins+=R.bonus; GAME.add(R.bonus); }
   if(R.exam && R.pending){ GAME.add(R.pending); R.pending=0; }
   GAME.note({k:'set', mode:R.mode, n:R.coins, right:R.right, won:R.won, set:R.bonus});
   var s=DB.state();
+  if(R.daily){ s.daily={day:DB.today(), right:R.right, n:n}; s.dailyCount=(s.dailyCount||0)+1; }
+  R.stars = R.blitz ? 0 : (n && R.right===n ? 3 : n && R.right/n>=0.8 ? 2 : n && R.right/n>=0.6 ? 1 : 0);
   if(R.exam){
     var p=n?R.right/n:0;
     if(!(s.examBest[R.sec]>=p)) s.examBest[R.sec]=p;
@@ -288,6 +301,20 @@ function finish(reason){
   UI.repaintView();
   window.scrollTo(0,0);
   UI.badgeToast(got);
+  /* a new level is worth stopping for */
+  var lv=GAME.level();
+  if(lv.lv>R.lv0){
+    R.levelUp=lv;
+    setTimeout(function(){ levelUpSheet(lv); }, 900);
+  }
+}
+var DAILY_PAY=10;
+function levelUpSheet(lv){
+  FX.play('badge'); FX.confetti(90);
+  UI.sheet('<div class="lvup"><div class="lvmedal"><span>'+L('Level','লেভেল')+'</span><b>'+N(lv.lv)+'</b></div>'+
+    '<h2>'+L('Level up!','লেভেল আপ!')+'</h2><p class="lvname">'+U.h(lv.name)+'</p>'+
+    (lv.to?'<p class="small">'+L(lv.left+' more right answers to the next level.','পরের লেভেলে যেতে আরও '+N(lv.left)+'টি ঠিক উত্তর।')+'</p>':'')+
+    '<button type="button" class="btn big" data-act="closeSheet">'+L('Keep going','চালিয়ে যাও')+'</button></div>');
 }
 
 /* ---------- keyboard ---------- */
@@ -361,6 +388,7 @@ var TAGS={
 function qmeta(q){
   var k=R.tags[R.i], t=TAGS[k], top=ICE.topics[q.topic];
   var o='<div class="qmeta"><span class="qtag t-'+k+'">'+L(t.en,t.bn)+'</span><span class="qtopic">'+U.h(top?ICE.tname(top):q.topic)+'</span>';
+  if(R.run>=3 && !R.exam) o+='<span class="combo" id="comboChip">'+flame()+N(R.run)+L(' in a row',' টানা')+'</span>';
   if(!R.exam && !R.blitz && R.phase==='ask' && !R.retry){
     o+='<span class="grow"></span><span class="qtime" id="qTime">'+U.secs(AB.paceOf(q))+'</span></div>'+
        '<div class="pace"><i id="qFill" style="width:100%"></i></div>'+
@@ -369,6 +397,14 @@ function qmeta(q){
   return o;
 }
 
+function flame(){
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 3c.4 3.2-1.3 4.6-2.8 6.3C8.3 10.8 7 12.4 7 14.8 7 18 9.2 21 12 21s5-2.3 5-5.4c0-2.5-1.3-4-2.3-5.2-.5 1.2-1.1 1.9-1.9 2.2.5-2.4.5-6.3-.3-9.6Z"/></svg>';
+}
+function starsBig(n){
+  var o='<div class="setstars" aria-label="'+N(n)+'/'+N(3)+'">';
+  for(var i=0;i<3;i++) o+='<i class="'+(i<n?'on':'')+'" style="--i:'+i+'"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.3l-5.8 3.1 1.2-6.5L2.6 9.4l6.5-.8z"/></svg></i>';
+  return o+'</div>';
+}
 function card(q){
   var fb = R.phase==='feedback';
   var cls = R.phase==='ask' ? (R._drawn!==R.i ? ' enter' : ' settled') : ' settled';
@@ -412,7 +448,7 @@ function optBody(q, fb){
 
 /* the power-ups, under the options: practice sets only */
 function help(q){
-  if(R.phase!=='ask' || R.exam || R.blitz) return '<div class="qhelp"><span class="hint desk-only">'+hintKeys()+'</span></div>';
+  if(R.phase!=='ask' || R.exam || R.blitz || R.daily) return '<div class="qhelp"><span class="hint desk-only">'+hintKeys()+'</span></div>';
   if(R.retry) return '';
   function b(id, label, extra){
     var n=GAME.have(id);
@@ -479,8 +515,17 @@ function results(){
   var missed=R.marks.filter(function(m){ return !m.ok; });
   var o='<div class="fbar"><button class="x" type="button" onclick="RUN.leave()" aria-label="'+L('Close','বন্ধ করো')+'">&times;</button>'+
     '<span class="cnt">'+U.h(R.title)+'</span><span class="grow"></span></div><div class="res">';
+  if(!R.blitz) o+=starsBig(R.stars||0);
   o+='<div class="score"><b id="scoreNum">'+N(right)+'</b><span>/ '+N(R.blitz?R.answered:n)+'</span></div>';
-  o+='<p class="verdict">'+verdict(pct)+'</p>';
+  o+='<p class="verdict">'+verdict(pct)+(R.bestRun>=3?' '+L('Best run: '+R.bestRun+' in a row.','সেরা দৌড়: টানা '+N(R.bestRun)+'টি।'):'')+'</p>';
+
+  /* the day and the level, side by side */
+  var g=GAME.goal(), lv=GAME.level();
+  o+='<div class="grid2 resmeta">'+
+     '<div class="card mini-goal">'+CHARTS.ring(g.p, 54, g.met?'ok':'')+'<div><div class="label">'+L('Daily goal','আজকের লক্ষ্য')+'</div><b>'+N(Math.min(g.done,g.target))+' / '+N(g.target)+'</b>'+
+       (g.met?'<span class="ok-t">'+L('met','পূরণ')+'</span>':'')+'</div></div>'+
+     '<div class="card mini-lv"><div class="label">'+L('Level ','লেভেল ')+N(lv.lv)+' &middot; '+U.h(lv.name)+'</div>'+CHARTS.bar(lv.p,'')+
+       '<span class="small">'+(lv.to?L(lv.left+' to the next',' পরের লেভেলে আর '+N(lv.left)+'টি'):L('Top level','সর্বোচ্চ লেভেল'))+'</span></div></div>';
 
   /* what it paid */
   o+='<div class="card paid"><div class="label">'+L('This set paid','এই সেটে পেলে')+'</div>'+
@@ -488,21 +533,24 @@ function results(){
      '<ul class="paidlist">'+
        '<li>'+L('Right answers','ঠিক উত্তর')+' <b>'+N(R.right)+'</b></li>'+
        (R.won?'<li>'+L('Mistakes won back','ভুল ফিরিয়ে আনা')+' <b>+'+N(R.won*GAME.PAY.won)+'</b></li>':'')+
-       (R.bonus?'<li>'+L('Finishing the set','সেট শেষ করা')+' <b>+'+N(R.bonus)+'</b></li>':'')+
+       (R.bonus?'<li>'+(R.daily?L('Today\'s five','আজকের ৫'):L('Finishing the set','সেট শেষ করা'))+' <b>+'+N(R.bonus)+'</b></li>':'')+
+       (R.goalHit?'<li>'+L('Daily goal','আজকের লক্ষ্য')+' <b>+'+N(GAME.GOAL_PAY)+'</b></li>':'')+
      '</ul></div>';
 
   /* new against review */
-  if(!R.blitz){
+  if(!R.blitz && !R.daily){
     o+='<div class="card mix"><div><b>'+N(R.newN)+'</b><span>'+L('new','নতুন')+'</span></div>'+
        '<div><b>'+N(R.reviewN)+'</b><span>'+L('seen before','আগে দেখা')+'</span></div>'+
        (R.second?'<div><b>'+N(R.second)+'</b><span>'+L('second chances','দ্বিতীয় সুযোগ')+'</span></div>':'')+'</div>';
   }
 
   /* the one button */
-  var setLike = !R.exam && !R.blitz;
+  var setLike = !R.exam && !R.blitz && !R.daily;
   var more = setLike ? L('Another '+PLAN.SET_N, 'আরও '+N(PLAN.SET_N)+'টি')
            : R.exam ? L('Sit it again','আবার পরীক্ষা দাও') : L('Another round','আরেক দফা');
-  o+='<div class="btns two"><button class="btn big" type="button" onclick="RUN.again()">'+more+'</button>'+
+  if(R.daily) o+='<div class="btns two"><button class="btn big" type="button" data-act="continueFromRun">'+L('Continue · '+PLAN.SET_N+' questions','চালিয়ে যাও · '+N(PLAN.SET_N)+'টি প্রশ্ন')+'</button>'+
+     '<button class="btn ghost" type="button" onclick="RUN.leave()">'+backLabel()+'</button></div>';
+  else o+='<div class="btns two"><button class="btn big" type="button" onclick="RUN.again()">'+more+'</button>'+
      '<button class="btn ghost" type="button" onclick="RUN.leave()">'+backLabel()+'</button></div>';
 
   /* what was missed, folded */
@@ -550,6 +598,8 @@ function afterPaint(){
   if(v) v.classList.toggle('wide', !!document.querySelector('.rcsplit'));
   if(R.phase==='ask' && R.timer) tickQ(R.timer.left());
   if(R.paper) tickPaper(R.paper.left());
+  var cc=document.getElementById('comboChip');
+  if(cc && R._comboShown!==R.run){ R._comboShown=R.run; FX.pop(cc); }
   if(R.phase==='done'){
     var el=document.getElementById('scoreNum');
     if(el && !R._counted){ R._counted=1; FX.countUp(el, R.right); }

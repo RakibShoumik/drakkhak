@@ -9,7 +9,7 @@
    network is not there. Everything the app needs is on this origin
    (the Bangla fonts included), so after one visit it runs offline.
    =========================================================== */
-var CACHE = 'drakkhak-v129';
+var CACHE = 'drakkhak-v133';
 var CORE = [
   './',
   './index.html',

@@ -43,6 +43,23 @@ bar holds two numbers: **coins** (tap for the Wallet) and the **streak**.
 
 ---
 
+## The daily layer: reasons to come back
+
+- **Start opens on today.** A greeting, your level, and a terracotta "today" card. The card has a ring
+  for the **daily goal** (16–64 questions, set in Settings; meeting it pays +10 coins, and the card turns
+  green), the **streak** with this week's seven days ticked, and the one big *চালিয়ে যাও* button.
+- **আজকের ৫ (today's five):** the same five questions for everyone that day, drawn by the date.
+  It pays +10 coins and can be done once a day.
+- **Levels** (নবিশ → বোর্ড স্ট্যান্ড, 15 of them) come from right answers alone. They come quickly at
+  first, and a level-up gets its own moment.
+- **Streak shields** (50 coins, hold up to two) cover a missed day, so one bad day does not wipe out
+  a month. New students start with one.
+- **Sets end with 1–3 stars** (60 %, 80 %, all right), the goal ring and the level bar. A run of
+  three or more right answers shows a flame counter while you play.
+- **Subject tiles** in each subject's colour, with its landmark icon, and on Progress a level card and
+  a five-week activity grid.
+- Settings can install the app to the home screen when the browser offers it.
+
 ## The question screen
 
 **Answer first, and nothing moves until you say so.** The options appear in a fresh random
