@@ -218,7 +218,7 @@ function report(track){
       box(U.round(pr.marks,1)+' / '+pr.outOf,L('predicted marks','পূর্বাভাসিত নম্বর'))+
       box(PLAN.daysText(PLAN.track('hsc').minutes),L('study left','পড়া বাকি'))+
     '</div>'+
-    '<h2>'+L('By paper','পত্র অনুযায়ী')+'</h2><table><tr><th>'+L('Paper','পত্র')+'</th><th>'+L('Answers','উত্তর')+'</th><th>'+L('Score','স্কোর')+'</th><th>'+L('Rating','রেটিং')+'</th><th>'+L('Prediction','পূর্বাভাস')+'</th></tr>'+
+    '<h2>'+L('By paper','পত্র অনুযায়ী')+'</h2><table><tr><th>'+L('Paper','পত্র')+'</th><th>'+L('Answers','উত্তর')+'</th><th>'+L('Score','স্কোর')+'</th><th>'+L('Rating','রেটিং')+'</th><th>'+L('Estimated mark (MCQ)')+'</th></tr>'+
       secs+'</table>'+
     '<h2>'+L('This week','এই সপ্তাহ')+'</h2><p>'+L(w.q+' questions on '+w.days+' days, '+Math.round(w.acc*100)+'% right, '+Math.round(w.mins)+' minutes.',
       w.days+' দিনে '+w.q+'টি প্রশ্ন, '+Math.round(w.acc*100)+'% ঠিক, '+Math.round(w.mins)+' মিনিট।')+

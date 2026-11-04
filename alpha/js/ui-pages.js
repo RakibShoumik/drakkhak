@@ -96,14 +96,15 @@ function plan(){
 var MIN_ANS=20;
 function predict(){
   var t=track(), s=DB.state(), hard=s.settings.hardPredict, b=PREDICT.hsc();
-  var o=head('progress',PROG(), L('Where you will land in the MCQ','বহুনির্বাচনিতে আপনি কোথায় নামবেন'), L('Prediction','পূর্বাভাস'),
+  var ex=ICE.edition==='ssc'?'SSC':'HSC';
+  var o=head('progress',PROG(), L('An estimate, not a result'), L('Estimated '+ex+' MCQ mark'),
     L('Built to be beaten. It starts from what your answers say, then charges for every reason the estimate might be flattering. Sit the real exam and you should be above it about nine times in ten.',
       'সংখ্যাটি ছাড়িয়ে যাওয়ার জন্যই বানানো। আপনার উত্তর যা বলে সেখান থেকে শুরু করে, তারপর যে যে কারণে অনুমানটি বাড়িয়ে বলা হতে পারে তার প্রতিটির দাম কাটা হয়। আসল পরীক্ষা দিলে দশবারে প্রায় নয়বার এর ওপরে থাকা উচিত।'));
   o+='<div class="row" style="flex-wrap:wrap"><button type="button" class="onoff'+(hard?' on':'')+'" data-act="flip" data-arg="hardPredict">'+(hard?L('On','চালু'):L('Off','বন্ধ'))+'</button>'+
      '<span class="small">'+L('Hard mode &mdash; ','কঠিন মোড &mdash; ')+(hard?L('the estimate\'s 10th percentile','অনুমানের দশম পার্সেন্টাইল'):L('the middle of the estimate; do not plan on it','অনুমানের মাঝামাঝি; এটি ধরে পরিকল্পনা করবেন না'))+'</span>'+
      '<span class="grow"></span><a href="#/settings" class="link quiet" data-go="settings">'+L('Set your target','লক্ষ্য ঠিক করুন')+' &rsaquo;</a></div>';
 
-  o+='<div class="card"><div class="label">'+L('The MCQ of all papers, together','সব পত্রের বহুনির্বাচনি, একসাথে')+'</div>'+
+  o+='<div class="card"><div class="spread"><div class="label">'+L('The MCQ of all papers, together','সব পত্রের বহুনির্বাচনি, একসাথে')+'</div><span class="esttag">'+L('Estimate')+'</span></div>'+
     '<div class="pred"><div class="pn"><b data-count="'+U.round(b.marks,1)+'" data-dec="1">'+U.round(b.marks,1)+'</b>'+
     '<span>/ '+b.outOf+' &middot; '+L('target ','লক্ষ্য ')+b.goal+'%</span></div></div>'+
     '<p style="margin-top:10px;font-size:17px;color:var(--'+(b.band.c==='ok'?'ok':b.band.c==='no'?'no':'accent')+')">'+h(b.band.t)+'</p>'+

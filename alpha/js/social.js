@@ -27,7 +27,57 @@ function post(body){
     return r.json().catch(function(){ return {error:L('Could not reach the server.','সার্ভারে পৌঁছানো গেল না।')}; });
   });
 }
-function blank(){ return {l:[0,0,0,0], me:[false,false,false,false], c:[0,0,0,0], p:[0,0,0,0]}; }
+function blank(){ return {l:[0,0,0,0], me:[false,false,false,false], c:[0,0,0,0,0], p:[0,0,0,0]}; }
+
+/* ---------- the bar under every question: comment, share, report ----------
+   Comments on the whole question (thread 4, beside the four options'
+   threads) open only once you have answered, like everything social. */
+var SHARE_IC='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>';
+var FLAG_IC='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4.5h11l-2 4 2 4H5"/></svg>';
+function qbar(q, done){
+  var id=qid(q), d=cache[id]||blank(), canCom=live() && comOn();
+  var o='<div class="qbar" data-noadvance>';
+  if(canCom) o+='<button type="button" class="qb" data-act="qComment"'+(done?'':' disabled title="'+U.h(L('Comments open after you answer, so nobody gives the answer away'))+'"')+'>'+BUBBLE+
+    '<span>'+L('Comment')+'</span><b id="qbCom">'+(done&&d.c[4]?d.c[4]:'')+'</b></button>';
+  o+='<button type="button" class="qb" data-act="qShare">'+SHARE_IC+'<span>'+L('Share')+'</span></button>';
+  o+='<button type="button" class="qb" data-act="qReport">'+FLAG_IC+'<span>'+L('Report')+'</span></button>';
+  return o+'</div>';
+}
+function plainText(html){ var d=document.createElement('div'); d.innerHTML=String(html||''); return (d.textContent||'').replace(/\s+/g,' ').trim(); }
+function shareQ(q){
+  var url=location.origin+location.pathname+'#/q/'+encodeURIComponent(qid(q));
+  var text=plainText(q.stem)+'\n'+AB.options(q).map(function(x,i){ return U.letter(i)+'. '+plainText(x); }).join('   ');
+  var data={title:'Drakkhak', text:text+'\n', url:url};
+  if(navigator.share){ navigator.share(data).catch(function(){}); return; }
+  var all=text+'\n'+url;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(all).then(function(){ UI.toast(L('Copied: the question and its link.')); }, function(){ UI.toast(U.h(url)); });
+  } else UI.toast(U.h(url));
+}
+function reportQ(q){
+  var why=window.prompt(L('What looks wrong with this question? (optional)'), '');
+  if(why===null) return;
+  SHARE.flag(qid(q), why);
+  if(live() && window.fetch) post({a:'qreport', q:qid(q), id:SITE.deviceId(), x:String(why).slice(0,280)}).catch(function(){});
+}
+function openQ(q){
+  cur=q; thread.q=q; thread.o=4;
+  var o='<div class="sc"><div class="label">'+L('Discussion &middot; the whole question')+'</div>'+
+    '<div class="sc-opt" lang="bn"><span>'+q.stem+'</span></div>'+
+    '<div class="sc-list" id="scList"><p class="small">'+L('Loading&hellip;')+'</p></div>'+
+    '<form class="sc-form" id="scForm"><textarea id="scText" maxlength="280" rows="2" placeholder="'+U.h(L('A way to remember it, a doubt, or a tip for others'))+'" aria-label="'+U.h(L('Your comment'))+'"></textarea>'+
+      '<div class="sc-send"><input id="scName" maxlength="24" value="'+U.h(handle())+'" aria-label="'+U.h(L('Name to show'))+'"><button class="btn sm" type="submit">'+L('Post')+'</button></div>'+
+      '<p class="sc-err" id="scErr" hidden></p>'+
+      '<p class="small">'+L('Everyone who answers this can read it. Never share your phone number or real address.')+'</p></form></div>';
+  var sheetEl=UI.sheet(o);
+  var form=sheetEl.querySelector('#scForm');
+  if(form) form.addEventListener('submit', function(e){ e.preventDefault(); send(4); });
+  loadThread();
+}
+function curQ(){ return window.RUN && RUN.active() ? RUN.view() : null; }
+UI.act('qComment', function(){ var q=curQ(); if(q) openQ(q); });
+UI.act('qShare', function(){ var q=curQ(); if(q) shareQ(q); });
+UI.act('qReport', function(){ var q=curQ(); if(q) reportQ(q); });
 
 /* ---------- the line under an option ---------- */
 function row(q,i){
@@ -45,6 +95,7 @@ function paint(){
   if(!cur) return;
   var d=cache[qid(cur)]; if(!d) return;
   var total=d.p[0]+d.p[1]+d.p[2]+d.p[3];
+  var qc=document.getElementById('qbCom'); if(qc && !qc.closest('[disabled]')) qc.textContent=d.c[4]||'';
   var rows=document.querySelectorAll('.osoc');
   for(var k=0;k<rows.length;k++){
     var r=rows[k], o=+r.getAttribute('data-o');
@@ -161,5 +212,5 @@ UI.act('sDel', function(c){
   post({a:'del', q:qid(thread.q), c:c, id:SITE.deviceId()}).then(function(){ loadThread(); });
 });
 
-return {row:row, pick:pick, answered:answered};
+return {row:row, pick:pick, answered:answered, qbar:qbar};
 })();

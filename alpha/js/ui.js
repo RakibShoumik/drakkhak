@@ -95,6 +95,12 @@ function focusFor(r,p){
 }
 function go(r,p){
   r=ALIAS[r]||r||'today';
+  /* a shared question: #/q/<id> opens it on its own */
+  if(r==='q'){
+    var sq=p && AB.q(p);
+    if(sq && DB.state().onboarded){ RUN.start({queue:[sq], track:track(), mode:'redo', title:L('A shared question'), back:'today', noBrief:true}); return; }
+    r='today';
+  }
   if(!VIEWS[r] || !SITE.routeOn(r) || (r==='league' && !SITE.fun('league'))) r='today';
   SITE.noteView(r);
   if(route==='run' && r!=='run'){
@@ -986,7 +992,7 @@ function progress(){
     link('map', null, L('The map','ম্যাপ'), L('Every chapter of every paper, with its stars and time left','প্রতিটি পত্রের প্রতিটি অধ্যায়, তারা আর বাকি সময়সহ'), MAP.starTotal()+' &#9733;')+
     link('plan', null, L('The whole plan','পুরো পরিকল্পনা'), L('Every chapter in order, and what is left in each','সব অধ্যায় ক্রম অনুযায়ী, প্রতিটিতে কী বাকি'), PLAN.daysText(px.minutes))+
     link('stats', null, L('Statistics','পরিসংখ্যান'), L('Time at the desk, every chapter, when you study, whether it works','টেবিলে কাটানো সময়, প্রতিটি অধ্যায়, কখন পড়েন, কাজ হচ্ছে কি না'), U.mins(DB.totalMins())+L(' logged',' জমা'))+
-    link('predict', null, L('The prediction, line by line','পূর্বাভাস, লাইন ধরে'), L('How the number came about, and what would move it','সংখ্যাটি কীভাবে এলো আর কী সেটিকে নাড়াবে'))+
+    link('predict', null, L('The estimated mark, line by line'), L('How the number came about, and what would move it','সংখ্যাটি কীভাবে এলো আর কী সেটিকে নাড়াবে'))+
     link('wrapped', null, L('This week','এই সপ্তাহ'), L('How the week went, against the week before','সপ্তাহটি যেমন গেল, আগের সপ্তাহের সাথে মিলিয়ে'))+
     link('record', null, L('Your record','আপনার রেকর্ড'), L('Level, badges, collection, shop, duels, certificate','লেভেল, ব্যাজ, সংগ্রহ, দোকান, দ্বৈরথ, সনদ'),
          'L'+LV.level+(g.chests?' &middot; '+L(g.chests+(g.chests===1?' chest':' chests'),g.chests+'টি সিন্দুক'):''), g.chests>0)+
@@ -1042,7 +1048,8 @@ function lineChart(points, opts){
 }
 function predCard(t){
   var hard=DB.state().settings.hardPredict;
-  var o='<section class="card pred"><div class="label">'+L('Prediction','পূর্বাভাস')+(hard?' &middot; '+L('hard','কঠিন'):'')+'</div>';
+  var ex=ICE.edition==='ssc'?'SSC':'HSC';
+  var o='<section class="card pred"><div class="spread"><div class="label">'+L('Estimated '+ex+' MCQ mark')+(hard?' &middot; '+L('cautious'):'')+'</div><span class="esttag">'+L('Estimate')+'</span></div>';
   var b=PREDICT.hsc(), by={};
   o+= b.ready ? '<div class="pn"><b data-count="'+U.round(b.marks,1)+'" data-dec="1" data-key="pred.hsc">'+U.round(b.marks,1)+'</b><span>/ '+b.outOf+'</span></div>'+
         '<div class="small" style="margin-top:4px">'+L(b.ready+' of '+b.readyOf+' papers have 20 answers on record.',b.readyOf+'টি পত্রের মধ্যে '+b.ready+'টিতে ২০টি উত্তর জমা হয়েছে।')+'</div>'
@@ -1051,7 +1058,7 @@ function predCard(t){
   b.papers.forEach(function(sec){ (sec.ledger.charges||[]).forEach(function(c){ by[c.label]=(by[c.label]||0)+c.amount; }); });
   var list=Object.keys(by).map(function(k){ return {label:k, a:by[k]}; }).sort(function(x,y){ return y.a-x.a; });
   var top=list.length?list[0].a:0;
-  o+='<p class="t">'+L('The number is held low on purpose. Sit the real exam and you should beat it about nine times in ten.','সংখ্যাটি ইচ্ছে করেই নিচে ধরা। আসল পরীক্ষা দিলে দশবারে প্রায় নয়বার এটিকে ছাড়িয়ে যাওয়া উচিত।')+'</p>';
+  o+='<p class="t">'+L('An estimate, not a result: it covers the MCQ half only and is held low on purpose. Sit the real exam and you should beat it about nine times in ten.')+'</p>';
   if(list.length){
     o+='<div class="label" style="margin-bottom:4px">'+L('What holds it down most','যা সবচেয়ে বেশি টেনে নামায়')+'</div>';
     list.slice(0,2).forEach(function(c){
@@ -1089,7 +1096,7 @@ function settings(){
     row(L('Sound','শব্দ'), L('A chime when right, a low tone when wrong, coins as they land.','ঠিক হলে একটি টোকা, ভুল হলে নিচু সুর, কয়েন পৌঁছালে ঝনঝন।'), onoff('sound', s.sound))+
     row(L('Question timer','প্রশ্নের টাইমার'), L('Each question gets the paper\'s own time.','প্রতিটি প্রশ্নে প্রশ্নপত্রের নিজের সময়।'), onoff('timer', s.timer))+
     row(L('Night mode','রাতের মোড'), L('Warm dark colours for late study. The app always opens in day mode for a new visitor.','দেরি করে পড়ার জন্য উষ্ণ অন্ধকার রং।'), onoff('night', s.theme==='night'))+
-    row(L('Hard prediction','কঠিন পূর্বাভাস'), L('Shows the mark you should beat nine times in ten.','যে নম্বর দশবারে নয়বার ছাড়িয়ে যাওয়া উচিত, সেটিই দেখায়।'), onoff('hardPredict', st.hardPredict))+
+    row(L('Cautious estimate'), L('The estimated mark shows the figure you should beat nine times in ten.'), onoff('hardPredict', st.hardPredict))+
     (SITE.on('stats.on') ? row(L('Anonymous statistics','বেনামি পরিসংখ্যান'), L('Counts minutes and questions, with a random number instead of your name, so the site can improve. Your answers never leave this browser.','আপনার নামের বদলে একটি এলোমেলো সংখ্যা দিয়ে মিনিট ও প্রশ্নের হিসাব রাখে, যাতে সাইটটি ভালো করা যায়। আপনার উত্তর এই ব্রাউজারের বাইরে যায় না।'), onoff('shareStats', st.shareStats!==false)) : '')+
     row(L('Keyboard shortcuts','কিবোর্ড শর্টকাট'), L('For fast practice on a laptop.','ল্যাপটপে দ্রুত অনুশীলনের জন্য।'), '<button class="btn xs ghost" data-act="shortcuts">'+L('Show','দেখুন')+'</button>')+
     '</div>';

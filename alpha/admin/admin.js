@@ -685,16 +685,28 @@ function communityPage(){
       toggle('social.hold','Comments wait for your approval','Safest. Otherwise they appear at once')+'</div>'+
       '<label class="field" style="margin-top:12px">Blocked words. Separate with spaces. A * at the end also catches longer words.<textarea class="area code" data-k="social.words" spellcheck="false">'+esc(val('social.words'))+'</textarea></label>'+
       '<p class="tiny" style="margin-top:8px">Links and phone numbers are always refused. Three reports hide a comment until you decide.</p></section>'+
+    '<section class="card"><div class="chead"><h2>Reported questions</h2></div><div id="qrepList"><div class="empty">Loading…</div></div></section>'+
     '<section class="card"><div class="chead"><h2>League this week</h2></div><div id="comLeague"><div class="empty">Loading…</div></div></section></div></div>';
 }
+function loadQReports(){
+  api('qreports').then(function(o){
+    var b=document.getElementById('qrepList'); if(!b) return;
+    b.innerHTML=o.list.length?o.list.map(function(r){
+      return '<div class="cmt"><div class="cmeta"><b>'+esc(r.q)+'</b><span>'+when(r.t)+'</span><span class="tag warn">'+r.n+(r.n===1?' report':' reports')+'</span></div>'+
+        '<p class="tiny">'+esc(r.stem||'')+'</p>'+(r.why||[]).map(function(w){ return '<p class="ctext">'+esc(w.x)+'</p>'; }).join('')+
+        '<div class="cacts"><button type="button" class="btn sm" data-qclear="'+esc(r.q)+'">Fixed, clear it</button></div></div>';
+    }).join(''):'<div class="empty"><b>Nothing reported</b>Students can report a question from the bar under it.</div>';
+  }).catch(function(){});
+}
 function loadCommunity(){
+  loadQReports();
   api('comments',undefined,'&f='+COM.f).then(function(o){
     COM.data=o;
     var k=document.getElementById('comKpis'); if(!k) return;
     var t=o.totals;
     k.innerHTML=kpi('Comments',num(t.comments),'on all options',true)+kpi('Loves',num(t.loves),'on all options')+kpi('Waiting',num(t.wait),'for your approval')+kpi('Reported',num(t.reported),'by students')+kpi('Blocked students',num(o.bans),'cannot comment or join the league');
     document.getElementById('comList').innerHTML=o.list.length?o.list.map(function(c){
-      return '<div class="cmt'+(c.hid?' hid':'')+'"><div class="cmeta"><b>'+esc(c.n)+'</b><span>'+when(c.t)+'</span><span class="tag">option '+'কখগঘ'.charAt(c.o)+'</span>'+
+      return '<div class="cmt'+(c.hid?' hid':'')+'"><div class="cmeta"><b>'+esc(c.n)+'</b><span>'+when(c.t)+'</span><span class="tag">'+(c.o===4?'the question':'option '+'কখগঘ'.charAt(c.o))+'</span>'+
         (c.hold?'<span class="tag warn">waiting</span>':'')+(c.hid?'<span class="tag warn">hidden</span>':'')+(c.rep?'<span class="tag warn">'+c.rep+' reports</span>':'')+'</div>'+
         '<p class="ctext">'+esc(c.x)+'</p><p class="tiny">'+esc(c.stem||c.q)+'</p><div class="cacts">'+
         (c.hold||c.hid||c.rep?'<button type="button" class="btn sm" data-cdo="approve" data-q="'+esc(c.q)+'" data-c="'+esc(c.i)+'">Approve</button>':'')+
@@ -741,6 +753,7 @@ document.addEventListener('click',function(e){
   }
   if(t.id==='funBtn'){ setVal('fun.on',!val('fun.on'),true); return; }
   if((a=t.getAttribute('data-comf'))){ COM.f=a; marks('data-comf',a); loadCommunity(); return; }
+  if((a=t.getAttribute('data-qclear'))){ api('qreport-clear',{q:a}).then(function(){ toast('Cleared.'); loadQReports(); }).catch(function(x){ toast(x.message); }); return; }
   if((a=t.getAttribute('data-cdo'))){
     var cdo=a, cq=t.getAttribute('data-q'), cc=t.getAttribute('data-c');
     var runIt=function(){ api('comment-do',{q:cq,c:cc,do:cdo}).then(function(){ toast('Done.'); loadCommunity(); }).catch(function(x){ toast(x.message); }); };

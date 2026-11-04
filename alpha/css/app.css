@@ -2256,3 +2256,16 @@ html[data-streak="zaprun"] .tag.combo::before{content:'\26A1  '}
 .life.item{border-style:dashed}
 @media (max-width:600px){ .bdg-sum{grid-template-columns:repeat(2,minmax(0,1fr))} }
 html.still .medal .mi,html.still .flairchip,html.still .ring-legendary{animation:none}
+
+/* the bar under every question: comment, share, report */
+.qbar{display:flex;gap:6px;margin:10px 0 4px;padding-top:10px;border-top:1px dashed var(--rule)}
+.qb{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:17px;border:1px solid var(--rule);background:var(--card);
+  font-family:var(--ui);font-size:13px;font-weight:600;color:var(--ink-2);transition:border-color .2s,color .2s,background .2s}
+.qb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.qb b{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.qb b:empty{display:none}
+.qb:hover:not([disabled]){border-color:var(--accent);color:var(--accent)}
+.qb[disabled]{opacity:.5;cursor:not-allowed}
+@media (max-width:600px){ .qbar{justify-content:space-between} .qb{flex:1;justify-content:center;padding:0 8px} }
+.esttag{font-family:var(--ui);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;
+  border:1px dashed var(--ink-3);color:var(--ink-2)}

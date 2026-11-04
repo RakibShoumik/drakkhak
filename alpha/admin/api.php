@@ -113,6 +113,25 @@ switch ($a) {
     }
     drk_json(array('list' => $list, 'totals' => $t, 'bans' => count(drk_bans()), 'league' => drk_league_board(30, '')));
 
+  case 'qreports':
+    $all = drk_read_json(drk_data() . '/question-reports.json', array());
+    uasort($all, function ($x, $y) { return ($y['n'] - $x['n']) ?: ($y['t'] - $x['t']); });
+    $list = array();
+    foreach ($all as $q => $r) {
+      if (count($list) >= 60) break;
+      $list[] = array('q' => $q, 'stem' => drk_question_line($q), 'n' => $r['n'], 't' => $r['t'], 'why' => $r['why']);
+    }
+    drk_json(array('list' => $list, 'total' => count($all)));
+
+  case 'qreport-clear':
+    if (!$post) drk_json(array('error' => 'POST only'), 405);
+    $q = isset($in['q']) ? $in['q'] : '';
+    $path = drk_data() . '/question-reports.json';
+    $all = drk_read_json($path, array());
+    unset($all[$q]);
+    drk_write_json($path, $all);
+    drk_json(array('ok' => true));
+
   case 'comment-do':
     if (!$post) drk_json(array('error' => 'POST only'), 405);
     $q = isset($in['q']) ? $in['q'] : '';

@@ -639,7 +639,7 @@ function render(){
   var q=view();
   if(!q) return results();
 
-  var body = qmeta(q) + modeBar() + card(q) + after(q) + omr();
+  var body = qmeta(q) + modeBar() + card(q) + (R.exam ? '' : SOCIAL.qbar(q, R.phase==='feedback')) + after(q) + omr();
   /* an উদ্দীপক is a scenario two questions share: it stays on screen beside
      both of them, so nobody reads the same scenario twice. */
   if(q.passage){

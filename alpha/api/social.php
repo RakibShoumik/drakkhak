@@ -12,12 +12,12 @@ if (!drk_data()) drk_json(array('error' => 'data'), 500);
 
 function drk_counts($rec, $id) {
   $key = $id !== '' ? substr($id, 0, 8) : '';
-  $l = array(); $me = array(); $c = array(0, 0, 0, 0);
+  $l = array(); $me = array(); $c = array(0, 0, 0, 0, 0);   /* 0-3 an option, 4 the whole question */
   for ($o = 0; $o < 4; $o++) {
     $l[] = count($rec['l'][$o]);
     $me[] = $key !== '' && in_array($key, $rec['l'][$o], true);
   }
-  foreach ($rec['c'] as $x) if (drk_visible($x, $id)) $c[$x['o']]++;
+  foreach ($rec['c'] as $x) if (drk_visible($x, $id) && isset($c[$x['o']])) $c[$x['o']]++;
   return array('l' => $l, 'me' => $me, 'c' => $c, 'p' => $rec['p']);
 }
 
@@ -43,7 +43,8 @@ $q = isset($in['q']) ? $in['q'] : '';
 $id = isset($in['id']) ? $in['id'] : '';
 $o = isset($in['o']) ? (int) $in['o'] : -1;
 if (!drk_valid_q($q) || !drk_valid_id($id)) drk_json(array('error' => 'shape'), 400);
-if (in_array($a, array('love', 'comment', 'pick'), true) && ($o < 0 || $o > 3)) drk_json(array('error' => 'option'), 400);
+if (in_array($a, array('love', 'pick'), true) && ($o < 0 || $o > 3)) drk_json(array('error' => 'option'), 400);
+if ($a === 'comment' && ($o < 0 || $o > 4)) drk_json(array('error' => 'option'), 400);
 $me8 = substr($id, 0, 8);
 
 switch ($a) {
@@ -100,6 +101,22 @@ switch ($a) {
         if (count($c['rep']) >= DRK_REPORTS_HIDE && empty($c['ok'])) $c['hid'] = 1;
       }
     });
+    drk_json(array('ok' => true));
+
+  /* a student says the question itself is wrong: kept for the owner in the admin panel */
+  case 'qreport':
+    if (!drk_rate('q' . $id, 30, 3600)) drk_json(array('error' => 'Too many reports for now.'), 429);
+    $why = drk_clean_text(isset($in['x']) ? $in['x'] : '', 280);
+    $path = drk_data() . '/question-reports.json';
+    $all = drk_read_json($path, array());
+    if (!isset($all[$q])) $all[$q] = array('n' => 0, 'by' => array(), 'why' => array(), 't' => 0);
+    if (!in_array($me8, $all[$q]['by'], true)) {
+      $all[$q]['by'][] = $me8; $all[$q]['n']++;
+      if ($why !== '' && count($all[$q]['why']) < 20) $all[$q]['why'][] = array('t' => time(), 'x' => $why);
+      $all[$q]['t'] = time();
+      if (count($all) > 3000) { uasort($all, function ($x, $y) { return $y['t'] - $x['t']; }); $all = array_slice($all, 0, 3000, true); }
+      drk_write_json($path, $all);
+    }
     drk_json(array('ok' => true));
 
   case 'del':
