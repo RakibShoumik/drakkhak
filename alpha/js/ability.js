@@ -153,7 +153,7 @@ function progress(qq, res){
   if(res.ok){
     it.ok++; it.okT=now;
     var inTime = !res.timed || (res.secs||0) <= paceOf(qq)*1.25;
-    if(inTime && (!it.miss || now-it.miss>=CLEAR_GAP)) it.cl=1;
+    if(inTime && !res.helped && (!it.miss || now-it.miss>=CLEAR_GAP)) it.cl=1;
   } else {
     it.miss=now; it.cl=0;
   }

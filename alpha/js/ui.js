@@ -146,6 +146,7 @@ var VIEWS={
   wrapped:function(){ return PAGES.wrapped(); },
   record:function(){ return PAGES.record(); },
   badges:function(){ return PAGES.badges(); },
+  mistakes:function(){ return PAGES.mistakes(); },
   collection:function(){ return PAGES.collection(); },
   shop:function(){ return PAGES.shop(); },
   social:function(){ return PAGES.social(); },
@@ -285,7 +286,7 @@ function paintSide(){
 }
 /* every question in the mistake bank: missed and not yet won back */
 function mistakeCount(t){
-  try{ return MISTAKES.count(t); }catch(e){ return 0; }
+  try{ return GAME.mistakeBank(t).length; }catch(e){ return 0; }
 }
 function onClick(e){
   if(!(e.target.closest && e.target.closest('#pmenu,#avatarBtn'))) closeMenu();
@@ -405,8 +406,10 @@ function paintChrome(){
   if(av){
     var nm=String(s.name||'').trim(), art=GAME.worn('avatar'), frm=GAME.worn('frame');
     av.className='avatar'+(av.classList.contains('on')?' on':'')+' ring-'+frm.id;
-    av.innerHTML=art.id!=='owl' ? '<span class="av-art">'+art.art+'</span>' : nm ? h(nm.charAt(0).toUpperCase())
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 19.5a7 7 0 0 1 14 0"/></svg>';
+    var acc=SITE.on('shop.more') ? GAME.worn('acc') : null;
+    av.innerHTML=(art.id!=='owl' ? '<span class="av-art">'+art.art+'</span>' : nm ? h(nm.charAt(0).toUpperCase())
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 19.5a7 7 0 0 1 14 0"/></svg>')+
+      (acc && acc.id!=='noacc' ? '<span class="av-acc" aria-hidden="true">'+acc.art+'</span>' : '');
     av.classList.toggle('on', route==='settings'||route==='research');
   }
 }
@@ -419,10 +422,16 @@ function profileMenu(){
   var item=function(goTo, title, sub){
     return '<a href="#/'+goTo+'" data-go="'+goTo+'" role="menuitem"><b>'+title+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</a>';
   };
-  m.innerHTML='<div class="pm-head"><span class="kicker">'+h(String(s.name||'').trim()||L('Your record','আপনার রেকর্ড'))+'</span>'+
+  var fl=SITE.on('shop.more')?GAME.worn('flair'):null, ti=SITE.on('shop.more')?GAME.worn('title'):null, pt=SITE.on('shop.more')?GAME.worn('ptheme'):null;
+  m.innerHTML='<div class="pm-head'+(pt&&pt.id!=='parchment'?' themed':'')+'"'+(pt&&pt.id!=='parchment'?' style="background:'+pt.sw+'"':'')+'>'+
+      '<span class="kicker">'+h(String(s.name||'').trim()||L('Your record','আপনার রেকর্ড'))+
+      (fl&&fl.id!=='noflair'?' <span class="flairchip fl-'+fl.id+'">'+fl.art+'</span>':'')+'</span>'+
+      (ti&&ti.id!=='none'?'<span class="pm-title">'+h(ti.name)+'</span>':'')+
       '<span class="pm-sub mono">'+tname()+' &middot; '+L('Level ','লেভেল ')+LV.level+' &middot; '+U.num(g.coins)+L(' coins',' কয়েন')+'</span></div>'+
     item('settings', L('Settings','সেটিংস'), L('Daily time, exam date, HSC or SSC','দৈনিক সময়, পরীক্ষার তারিখ, এইচএসসি বা এসএসসি'))+
     item('badges', L('Badges','ব্যাজ'), null)+
+    item('mistakes', L('Mistakes'), L('Every question you missed, free'))+
+    item('shop', L('Shop'), null)+
     item('record', L('Your record','আপনার রেকর্ড'), null)+
     item('research', L('How Drakkhak teaches','দ্রাক্ষাক কীভাবে শেখায়'), L('The research behind it','এর পেছনের গবেষণা'))+
     '<div class="pm-foot">'+L('Your answers are kept in this browser. Export a copy from Settings now and then.',
@@ -491,6 +500,9 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme', s.theme==='night'?'night':'day');
   document.documentElement.classList.toggle('still', s.settings.effects===false || !SITE.on('game.effects'));
   var skin=SITE.on('shop.more') ? GAME.worn('skin').id : 'terracotta';
+  var bar=SITE.on('shop.more') ? GAME.worn('bar').id : 'plainbar', run=SITE.on('shop.more') ? GAME.worn('streak').id : 'plainrun';
+  document.documentElement.setAttribute('data-bar', bar);
+  document.documentElement.setAttribute('data-streak', run);
   if(skin==='terracotta') document.documentElement.removeAttribute('data-skin');
   else document.documentElement.setAttribute('data-skin', skin);
   var m=document.querySelector('meta[name="theme-color"]');

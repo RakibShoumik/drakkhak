@@ -63,6 +63,8 @@ function doubleNow(){
 function points(ctx){
   var q=ctx.q, t=tierOf(q.b), pace=AB.paceOf(q);
   if(!ctx.ok) return {xp: ctx.sure===true ? -8 : 0, coins:0, tier:t, parts:[]};
+  /* an answer given after a bought look at the explanation pays nothing */
+  if(ctx.helped) return {xp:0, coins:0, tier:t, parts:[], helped:true};
   var parts=[], xp=Math.round(10*t.mult);
   parts.push({k:t.name, v:xp});
   if(ctx.timed && ctx.secs<=pace*0.5){ var q1=Math.round(xp*0.5); xp+=q1; parts.push({k:L('Quick','দ্রুত'), v:q1}); }
@@ -72,7 +74,12 @@ function points(ctx){
   if(ctx.sure===false){ xp=Math.round(xp*0.9); }
   if(ctx.golden){ xp*=5; parts.push({k:L('Golden &times;5','সোনালি &times;৫'), v:null}); }
   if(doubleNow()){ xp*=2; parts.push({k:L('Double XP','দ্বিগুণ XP'), v:null}); }
-  return {xp:xp, coins: 1 + (ctx.golden?4:0) + (t.id==='beast'?2:t.id==='hard'?1:0), tier:t, parts:parts};
+  /* coins follow XP: one coin for every 8 XP, never less than one for a
+     right answer, so everything that pays more XP (a harder question, a
+     quick answer, a run, a golden one, double XP) pays more coins too */
+  return {xp:xp, coins: coinsFor(xp), tier:t, parts:parts};
+}
+function coinsFor(xp){ return xp>0 ? Math.max(1, Math.round(xp/8)) : 0;
 }
 
 /* the week the league counts in, the same way the server writes it: 2026-W45 */
@@ -306,8 +313,82 @@ var COSMETICS=[
   {id:'hunter', kind:'title',  more:1, name:'সূত্র শিকারি', en:'Formula hunter', cost:280, lv:6, art:'&#129504;'},
   {id:'slayer', kind:'title',  more:1, name:'ভুল-সংহারী', en:'Mistake slayer', cost:380, lv:10, art:'&#9876;'},
   {id:'standar',kind:'title',  more:1, name:'স্ট্যান্ডের স্বপ্ন', en:'Board stand hopeful', cost:600, lv:16, art:'&#127942;'},
-  {id:'legend', kind:'title',  more:1, name:'কিংবদন্তি', en:'Legend', cost:1500, lv:35, art:'&#128142;'}
+  {id:'legend', kind:'title',  more:1, name:'কিংবদন্তি', en:'Legend', cost:1500, lv:35, art:'&#128142;'},
+  {id:'scholarT',  kind:'title', more:1, en:'Scholar',         cost:300,  lv:5,  art:'&#128218;'},
+  {id:'quizmaster',kind:'title', more:1, en:'Quiz Master',     cost:650,  lv:12, art:'&#127919;'},
+  {id:'elite',     kind:'title', more:1, en:'Elite Contender', cost:1000, lv:20, art:'&#9876;&#65039;'},
+
+  /* frames: gold, platinum, legendary (the last one moves) */
+  {id:'platinum', kind:'frame', more:1, en:'Platinum frame',  cost:900,  lv:15},
+  {id:'legendary',kind:'frame', more:1, en:'Legendary frame', cost:1800, lv:28},
+
+  /* accessories: a small thing worn on the avatar's shoulder */
+  {id:'noacc',  kind:'acc', more:1, en:'Nothing',      cost:0,   art:'&#8212;'},
+  {id:'flower', kind:'acc', more:1, en:'Shapla flower',cost:80,  art:'&#127804;'},
+  {id:'glasses',kind:'acc', more:1, en:'Glasses',      cost:90,  art:'&#128083;'},
+  {id:'phones', kind:'acc', more:1, en:'Headphones',   cost:120, art:'&#127911;'},
+  {id:'pencil', kind:'acc', more:1, en:'Pencil',       cost:100, art:'&#9999;&#65039;'},
+  {id:'cap',    kind:'acc', more:1, en:'Graduation cap',cost:220, lv:5, art:'&#127891;'},
+  {id:'minicrown',kind:'acc',more:1, en:'Little crown', cost:500, lv:14, art:'&#128081;'},
+
+  /* animated badges that sit beside your name */
+  {id:'noflair', kind:'flair', more:1, en:'None',    cost:0,   art:'&#8212;'},
+  {id:'spark',   kind:'flair', more:1, en:'Spark',   cost:150, art:'&#10024;'},
+  {id:'flame',   kind:'flair', more:1, en:'Flame',   cost:260, lv:6,  art:'&#128293;'},
+  {id:'comet',   kind:'flair', more:1, en:'Comet',   cost:400, lv:10, art:'&#9732;&#65039;'},
+  {id:'diamond', kind:'flair', more:1, en:'Diamond', cost:900, lv:20, art:'&#128142;'},
+
+  /* profile themes: the colour behind your name on your profile */
+  {id:'parchment',kind:'ptheme', more:1, en:'Parchment',       cost:0,   sw:'linear-gradient(135deg,#F5F4ED,#E8E6DC)'},
+  {id:'nightsky', kind:'ptheme', more:1, en:'Night sky',       cost:220, sw:'linear-gradient(135deg,#1D2747,#3B2E5A)'},
+  {id:'riverbank',kind:'ptheme', more:1, en:'Riverbank',       cost:220, sw:'linear-gradient(135deg,#2B6CA3,#7FB7C9)'},
+  {id:'sundarban',kind:'ptheme', more:1, en:'Sundarbans green',cost:300, lv:6,  sw:'linear-gradient(135deg,#1F4D3A,#5B8A4E)'},
+  {id:'bengal',   kind:'ptheme', more:1, en:'Royal Bengal',    cost:500, lv:12, sw:'linear-gradient(135deg,#B8741A,#3A2A12)'},
+
+  /* progress bar skins and streak effects */
+  {id:'plainbar', kind:'bar', more:1, en:'Plain bars',   cost:0},
+  {id:'striped',  kind:'bar', more:1, en:'Striped bars', cost:120},
+  {id:'glow',     kind:'bar', more:1, en:'Glowing bars', cost:200},
+  {id:'rainbow',  kind:'bar', more:1, en:'Rainbow bars', cost:380, lv:8},
+  {id:'plainrun', kind:'streak', more:1, en:'Plain streak',  cost:0,   art:'&#215;'},
+  {id:'flamerun', kind:'streak', more:1, en:'Flame streak',  cost:220, art:'&#128293;'},
+  {id:'zaprun',   kind:'streak', more:1, en:'Electric streak',cost:320, lv:8, art:'&#9889;'},
+
+  /* more right-answer effects */
+  {id:'confetti', kind:'burst', more:1, en:'Confetti',  cost:200, art:'&#127882;'},
+  {id:'fireworks',kind:'burst', more:1, en:'Fireworks', cost:300, lv:8,  art:'&#127878;'},
+  {id:'lightning',kind:'burst', more:1, en:'Lightning', cost:350, lv:10, art:'&#9889;'},
+
+  /* seasonal: on sale only in their season, yours for good once bought */
+  {id:'nabanna', kind:'burst', more:1, en:'Nabanna harvest', cost:240, art:'&#127806;', season:[1015,1215], when:'Hemanta, 15 Oct to 15 Dec'},
+  {id:'victory', kind:'frame', more:1, en:'Victory Day frame', cost:300, season:[1201,1231], when:'December'},
+  {id:'winterfog',kind:'ptheme',more:1, en:'Winter fog',     cost:260, sw:'linear-gradient(135deg,#DCE3E6,#9AA7AD)', season:[1215,131], when:'15 Dec to 31 Jan'},
+  {id:'basanta', kind:'frame', more:1, en:'Basanta frame',   cost:260, season:[201,315], when:'1 Feb to 15 Mar'},
+  {id:'boishakh',kind:'burst', more:1, en:'Pohela Boishakh', cost:260, art:'&#127887;', season:[401,430], when:'April'},
+  {id:'barsha',  kind:'burst', more:1, en:'Monsoon drops',   cost:240, art:'&#127783;&#65039;', season:[615,831], when:'15 Jun to 31 Aug'},
+
+  /* trophies and collectible cards: kept on your shelf, never random */
+  {id:'cupB', kind:'trophy', more:1, en:'Bronze cup',      cost:150,  art:'&#129353;'},
+  {id:'cupS', kind:'trophy', more:1, en:'Silver cup',      cost:350,  lv:6,  art:'&#129352;'},
+  {id:'cupG', kind:'trophy', more:1, en:'Gold cup',        cost:700,  lv:12, art:'&#129351;'},
+  {id:'cupX', kind:'trophy', more:1, en:'Crystal trophy',  cost:1400, lv:24, art:'&#127942;'},
+  {id:'cJCB', kind:'card', more:1, en:'Jagadish Chandra Bose', cost:160, art:'&#127793;', fact:'Showed that plants respond to stimuli, with instruments he built himself, and was a pioneer of radio waves.'},
+  {id:'cSNB', kind:'card', more:1, en:'Satyendra Nath Bose',   cost:160, art:'&#9883;&#65039;', fact:'Bose–Einstein statistics came from his work at Dhaka University; the particles called bosons are named after him.'},
+  {id:'cRok', kind:'card', more:1, en:'Begum Rokeya',          cost:160, art:'&#128214;', fact:'A pioneer of education for women in Bengal; she wrote Sultana\'s Dream in 1905.'},
+  {id:'cQK',  kind:'card', more:1, en:'Qudrat-i-Khuda',        cost:160, art:'&#9879;&#65039;', fact:'A chemist who led the first education commission of independent Bangladesh, in 1972.'},
+  {id:'cJNI', kind:'card', more:1, en:'Jamal Nazrul Islam',    cost:200, lv:5, art:'&#127756;', fact:'A mathematical physicist and cosmologist; he wrote The Ultimate Fate of the Universe (1983).'},
+  {id:'cFRK', kind:'card', more:1, en:'Fazlur Rahman Khan',    cost:200, lv:5, art:'&#127959;&#65039;', fact:'The structural engineer behind the tube design of tall buildings such as Chicago\'s Willis Tower.'},
+  {id:'cKNI', kind:'card', more:1, en:'Kazi Nazrul Islam',     cost:200, lv:5, art:'&#127932;', fact:'The national poet of Bangladesh, remembered for Bidrohi, the rebel poem.'},
+  {id:'cRT',  kind:'card', more:1, en:'Rabindranath Tagore',   cost:200, lv:5, art:'&#9997;&#65039;', fact:'Won the Nobel Prize in Literature in 1913 and wrote Amar Shonar Bangla, the national anthem.'}
 ];
+/* kinds that are kept, not worn */
+var SHELF={trophy:1, card:1};
+/* is a seasonal item on sale today? season:[MMDD from, MMDD to], wrapping the new year */
+function inSeason(c){
+  if(!c || !c.season) return true;
+  var d=new Date(), md=(d.getMonth()+1)*100+d.getDate(), a=c.season[0], b=c.season[1];
+  return a<=b ? (md>=a && md<=b) : (md>=a || md<=b);
+}
 /* for a few minutes, or against a bad day. None makes a question easier, and
    chests and lifelines still only come from the work */
 var POWERS=[
@@ -316,6 +397,50 @@ var POWERS=[
   {id:'freeze', name:'ধারা-ফ্রিজ', en:'Streak freeze', note:'একদিন না পড়লেও ধারা টিকে থাকে।', noteEn:'Keeps your streak over a missed day.', cost:180, art:'&#10052;',
    use:function(){ var s=DB.state(); if(s.freezes>=5){ UI.toast(L('You already hold the most freezes: 5.','আপনার কাছে সর্বোচ্চ ৫টি ফ্রিজ আছে।')); return false; } s.freezes++; return true; }}
 ];
+/* ---------- for one question: bought with coins, used during a set ----------
+   None of them gives marks away: a helped answer pays nothing and never
+   counts as done; extra time only moves your own clock. The explanation
+   pass is rare on purpose: three a week at most, three held at most.
+   Explanations after an answer stay free, as always. */
+var ITEMS=[
+  {id:'skip',    en:'Skip, keep the streak', art:'&#9197;&#65039;', cost:25, max:5,
+   noteEn:'Skips one question without breaking your run of right answers. The ordinary S skip still breaks it.'},
+  {id:'time15',  en:'Extra time +15 s', art:'&#9201;&#65039;', cost:15, max:9, secs:15,
+   noteEn:'Fifteen more seconds on the question in front of you.'},
+  {id:'time30',  en:'Extra time +30 s', art:'&#8987;', cost:25, max:9, secs:30,
+   noteEn:'Thirty more seconds on the question in front of you.'},
+  {id:'retry',   en:'Review: retry now', art:'&#128257;', cost:20, max:9,
+   noteEn:'After a miss, answer the same question again straight away. The retry pays nothing; the question still has to come right on a later day to count.'},
+  {id:'explain', en:'Explanation first', art:'&#128161;', cost:60, max:3, week:3, rare:1,
+   noteEn:'Read the memory line before you answer. Rare: three a week. A helped answer pays nothing and does not count as done.'}
+];
+function item(id){ for(var i=0;i<ITEMS.length;i++) if(ITEMS[i].id===id) return ITEMS[i]; return null; }
+function inv(){ var g=DB.game(); return g.inv||(g.inv={}); }
+function held(id){ return inv()[id]||0; }
+function boughtThisWeek(id){
+  var g=DB.game(), wk=weekKey();
+  if(!g.invWeek || g.invWeek.wk!==wk) g.invWeek={wk:wk};
+  return g.invWeek[id]||0;
+}
+function buyItem(id){
+  var it=item(id); if(!it) return false;
+  var g=DB.game();
+  if(held(id)>=it.max){ UI.toast(L('You already hold the most: '+it.max+'.')); return false; }
+  if(it.week && boughtThisWeek(id)>=it.week){ UI.toast(L('Sold out this week. '+it.week+' come back on Monday.')); return false; }
+  if(!spend(it.cost)){ UI.toast(L('Not enough coins &mdash; you need '+(it.cost-g.coins)+' more.')); return false; }
+  inv()[id]=held(id)+1;
+  if(it.week) g.invWeek[id]=(g.invWeek[id]||0)+1;
+  DB.save(); FX.play('coin');
+  UI.toast('<b>'+U.h(it.en)+'</b> &middot; '+L('you hold '+held(id)));
+  return true;
+}
+function useItem(id){
+  if(held(id)<=0) return false;
+  inv()[id]--; DB.save();
+  return true;
+}
+function weekLeft(id){ var it=item(id); return it && it.week ? Math.max(0, it.week-boughtThisWeek(id)) : null; }
+
 function buyPower(id){
   var p=POWERS.filter(function(x){ return x.id===id; })[0]; if(!p) return false;
   if(DB.game().coins<p.cost){ UI.toast(L('Not enough coins &mdash; you need '+(p.cost-DB.game().coins)+' more.','কয়েন যথেষ্ট নয় &mdash; আরও '+(p.cost-DB.game().coins)+'টি দরকার।')); return false; }
@@ -334,6 +459,7 @@ function randomLockedCosmetic(){
 function buy(id){
   var c=byId(id); if(!c || owns(id)) return false;
   if(lockedByLevel(c)){ UI.toast(L('This opens at level '+c.lv+'.','এটি খোলে লেভেল '+c.lv+'-এ।')); return false; }
+  if(!inSeason(c)){ UI.toast(L('On sale in its season: '+c.when+'.')); return false; }
   if(!spend(c.cost)){ UI.toast(L('Not enough coins &mdash; you need '+(c.cost-DB.game().coins)+' more.','কয়েন যথেষ্ট নয় &mdash; আরও '+(c.cost-DB.game().coins)+'টি দরকার।')); return false; }
   DB.game().own[id]=1; DB.save(); FX.play('coin');
   UI.toast('<b>'+U.h(c.name)+'</b>'+L(' is yours now.',' এখন আপনার।'));
@@ -343,10 +469,13 @@ function wear(id){
   var c=byId(id); if(!c || !owns(id)) return false;
   DB.game().wear[c.kind]=id; DB.save();
   if(c.kind==='pack') FX.setPack(id);
-  if(c.kind==='skin') UI.applyTheme();
+  if(c.kind==='skin'||c.kind==='bar'||c.kind==='streak') UI.applyTheme();
   return true;
 }
-function worn(kind){ return byId(DB.game().wear[kind]) || byId({avatar:'owl', frame:'plain', pack:'journal', skin:'terracotta', burst:'sparks', title:'none'}[kind]); }
+var WORN0={avatar:'owl', frame:'plain', pack:'journal', skin:'terracotta', burst:'sparks', title:'none',
+           acc:'noacc', flair:'noflair', ptheme:'parchment', bar:'plainbar', streak:'plainrun'};
+function worn(kind){ var c=byId(DB.game().wear[kind]); return (c && owns(c.id)) ? c : byId(WORN0[kind]); }
+function shelf(){ return COSMETICS.filter(function(c){ return SHELF[c.kind] && DB.game().own[c.id]; }); }
 
 /* ---------- what you have built ---------- */
 function storedValue(){
@@ -415,9 +544,18 @@ var BADGES=[
   {id:'goldHit',  r:'rare',   name:'সোনার খনি', en:'Gold mine',          note:'একটি সোনালি প্রশ্ন ঠিক করুন।', noteEn:'Get a golden question right.',    test:function(s,g,c){ return c.e==='answer' && c.golden && c.ok; }},
   {id:'sure20',   r:'epic',   name:'ভালো বিচারবুদ্ধি', en:'Good judgement',     note:'পরপর বিশবার "নিশ্চিত" বলে ঠিক করুন।', noteEn:'Say "sure" and be right twenty times in a row.',    secret:true, test:function(s,g){ return (g.sureRun||0)>=20; }},
   {id:'thousandth',r:'legend',name:'হাজারতম', en:'The thousandth',            note:'আপনার হাজারতম সঠিক উত্তর।', noteEn:'Your thousandth correct answer.',        secret:true, test:function(s,g){ return g.correct>=1000; }},
+  {id:'star1',    r:'common', en:'First star',          noteEn:'Earn a star in any chapter.',       test:function(){ for(var id in ICE.topics){ if(stars(id).n>=1) return true; } return false; }},
+  {id:'threeStar1',r:'rare',  en:'Three-star chapter',  noteEn:'Earn three stars in one chapter.',  test:function(){ for(var id in ICE.topics){ if(stars(id).n===3) return true; } return false; }},
+  {id:'allSubj',  r:'rare',   en:'All-rounder',         noteEn:'A star in every one of the seven subjects.', test:function(){
+     return ICE.subjects.every(function(sj){ return sj.secs.some(function(sk){ return ICE.topicsOf(sk).some(function(tp){ return stars(tp.id).n>=1; }); }); }); }},
+  {id:'shelf3',   r:'rare',   en:'Collector\'s shelf', noteEn:'Keep three trophies or cards on your shelf.', test:function(){ return shelf().length>=3; }},
   {id:'allstars', r:'legend', name:'তিন তারা', en:'Three stars',           note:'দশটি অধ্যায়ে তিন তারা।', noteEn:'Three stars in ten chapters.',             test:function(){
      var n=0; for(var id in ICE.topics){ if(stars(id).n===3) n++; } return n>=10; }}
 ];
+/* the interface is English only: every name and note the game shows is the English one */
+[TIERS, COSMETICS, POWERS, BADGES, ITEMS].forEach(function(list){
+  list.forEach(function(x){ if(x.en) x.name=x.en; if(x.noteEn) x.note=x.noteEn; });
+});
 function badge(id){ for(var i=0;i<BADGES.length;i++) if(BADGES[i].id===id) return BADGES[i]; return null; }
 function rarityRank(r){ return {common:0, rare:1, epic:2, legend:3}[r]||0; }
 function check(ev, ctx){
@@ -555,7 +693,8 @@ return {
   stars:stars, STAR_AT:STAR_AT, starNeed:starNeed, markHintUsed:markHintUsed,
   unlockTrick:unlockTrick, unlockTopicCard:unlockTopicCard, collection:collection,
   earnChest:earnChest, openChest:openChest,
-  COSMETICS:COSMETICS, owns:owns, buy:buy, wear:wear, worn:worn, cosmetic:byId,
+  COSMETICS:COSMETICS, owns:owns, buy:buy, wear:wear, worn:worn, cosmetic:byId, inSeason:inSeason, shelf:shelf, SHELF:SHELF,
+  ITEMS:ITEMS, item:item, held:held, buyItem:buyItem, useItem:useItem, weekLeft:weekLeft, coinsFor:coinsFor,
   POWERS:POWERS, buyPower:buyPower, lockedByLevel:lockedByLevel, weekKey:weekKey,
   storedValue:storedValue,
   BADGES:BADGES, badge:badge, rarityRank:rarityRank, check:check,

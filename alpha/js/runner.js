@@ -114,7 +114,7 @@ function alarmOn(){ return timerOn() && DB.state().settings.alarm!==false; }
 function tick(){
   if(!R || R.phase!=='ask') return;
   var q=view(); if(!q) return;
-  var s=(Date.now()-R.askedAt)/1000, pace=AB.paceOf(q), left=pace-s;
+  var s=(Date.now()-R.askedAt)/1000, pace=AB.paceOf(q)+(R.extra||0), left=pace-s;
   var box=document.getElementById('qTimer');
   if(box){
     box.innerHTML = left>=0 ? 'time <b>'+U.secs(left)+'</b>' : 'over <b>+'+U.secs(-left)+'</b>';
@@ -164,6 +164,20 @@ function submit(){
   var pace=AB.paceOf(q);
   var timed=timerOn();
 
+  /* a bought retry: the same question again, marked but never recorded or paid */
+  if(R.retrying){
+    R.result={ok:res.ok, partial:res.partial, secs:R.elapsed, slow:false, retry:true};
+    R.retrying=false; R.retried=true;
+    R.phase='feedback'; R.showWhy=false; R.pts=null;
+    UI.repaintView();
+    var rEl=document.querySelector(res.ok?'.opt.right':'.opt.wrong')||document.querySelector('.qcard');
+    if(res.ok) FX.verdictCorrect({el:rEl, streak:0}); else FX.verdictWrong({el:rEl});
+    armAdvance();
+    return;
+  }
+  /* extra time bought for this question moves your own clock, nothing else */
+  if(R.extra) R.elapsed=Math.max(0, R.elapsed-R.extra);
+
   R.result={ok:res.ok, partial:res.partial, secs:R.elapsed, slow:timed && R.elapsed>pace};
   R.answered++;
   R.times.push(R.elapsed);
@@ -177,7 +191,7 @@ function submit(){
   var prev=DB.state().items[orig.id];
   R._wasMissed=!!(prev && prev.miss && !prev.cl);
 
-  AB.record(orig, {ok:res.ok, secs:R.elapsed, timed:timed});
+  AB.record(orig, {ok:res.ok, secs:R.elapsed, timed:timed, helped:!!R.peek});
   scoreAnswer(orig, q, res, timed);
 
   SOCIAL.pick(q, R.resp, !prev);
@@ -263,7 +277,7 @@ function scoreAnswer(orig, q, res, timed){
 
   R._before={xp:g.xp, coins:g.coins};
   var pts=GAME.points({q:q, ok:res.ok, secs:R.elapsed, timed:timed,
-                       combo:R.combo, golden:R.golden, sure:R.sure});
+                       combo:R.combo, golden:R.golden, sure:R.sure, helped:!!R.peek});
   R.pts=pts;
   R.xp+=Math.max(0,pts.xp); R.coins+=pts.coins;
   GAME.addXP(pts.xp); GAME.addCoins(pts.coins);
@@ -353,7 +367,7 @@ function endRun(info){
 }
 function runStreak(){
   var n=0;
-  for(var i=R.marks.length-1;i>=0;i--){ if(R.marks[i].ok) n++; else break; }
+  for(var i=R.marks.length-1;i>=0;i--){ if(R.marks[i].kept) continue; if(R.marks[i].ok) n++; else break; }
   return n;
 }
 
@@ -397,6 +411,7 @@ function next(){
   R.i++; R.resp=null; R.result=null; R.phase='ask'; R.showWhy=false;
   R.alarmed=false; R.alarmOff=false; R._blank=0;
   R.sure=null; R.fifty=null; R.hinted=false; R.pts=null;
+  R.extra=0; R.peek=false; R.retrying=false; R.retried=false;
   if(R.i>=R.queue.length && !liftEnd()) return finish();
   R.golden=MODES.rollGolden(R);
   R.view=AB.present(R.queue[R.i]);
@@ -423,15 +438,51 @@ function liftEnd(){
   return true;
 }
 
-function skip(){
+function skip(keep){
   if(!R||R.phase!=='ask') return;
-  R.marks.push({q:current(), v:view(), ok:false, secs:(Date.now()-R.askedAt)/1000, skipped:true});
+  if(R.retrying) return;
+  R.marks.push({q:current(), v:view(), ok:false, secs:(Date.now()-R.askedAt)/1000, skipped:true, kept:!!keep});
   R.answered++;
+  if(!keep) R.combo=0;                 /* an ordinary skip breaks the run */
   clearTimers();
   FX.alarmStop();
   R.i++; R.resp=null; R.phase='ask'; R.alarmed=false; R.alarmOff=false; R._blank=0;
+  R.extra=0; R.peek=false; R.fifty=null; R.hinted=false; R.sure=null;
   if(R.i>=R.queue.length) return finish();
   R.view=AB.present(R.queue[R.i]);
+  UI.repaintView();
+}
+/* ---------- the items bought in the shop ---------- */
+function useSkip(){
+  if(!R||R.phase!=='ask'||R.retrying) return;
+  if(!GAME.useItem('skip')) return UI.toast(L('No skip passes left. They are in the shop.'));
+  FX.play('whoosh');
+  UI.toast(L('Skipped &mdash; your streak is kept.'));
+  skip(true);
+}
+function useTime(id){
+  if(!R||R.phase!=='ask'||!timerOn()) return;
+  var it=GAME.item(id); if(!it) return;
+  if(!GAME.useItem(id)) return UI.toast(L('None left. They are in the shop.'));
+  R.extra=(R.extra||0)+it.secs;
+  if(R.alarmed){ R.alarmed=false; FX.alarmStop(); showAlarm(false); }
+  FX.play('coin');
+  UI.repaintView();
+}
+function usePeek(){
+  if(!R||R.phase!=='ask'||R.peek) return;
+  if(!GAME.useItem('explain')) return UI.toast(L('No explanation passes left. They are rare: three a week in the shop.'));
+  R.peek=true;
+  FX.play('whoosh');
+  UI.repaintView();
+}
+function useRetry(){
+  if(!R||R.phase!=='feedback'||!R.result||R.result.ok||R.retried||R.exam) return;
+  if(!GAME.useItem('retry')) return UI.toast(L('No retries left. They are in the shop.'));
+  disarmAdvance();
+  R.retrying=true; R.resp=null; R.result=null; R.phase='ask'; R.showWhy=false;
+  R.view=AB.present(current());
+  R.askedAt=Date.now();
   UI.repaintView();
 }
 function finish(){
@@ -806,8 +857,20 @@ function help(q){
     ' title="'+L('Removes all but one wrong option','একটি ভুল অপশন ছাড়া বাকিগুলো সরিয়ে দেয়')+'">50:50<i>'+g.lifelines.fifty+'</i></button>';
   if(tk && !R.hinted) o+='<button type="button" class="life" onclick="RUN.useTrick()"'+(g.lifelines.trick>0?'':' disabled')+
     ' title="'+L('Shows this question\'s card','এই প্রশ্নের কার্ডটি দেখায়')+'">'+L('Show the card','কার্ড দেখুন')+'<i>'+g.lifelines.trick+'</i></button>';
+  if(SITE.on('shop.more') && !R.retrying){
+    var item=function(id, fn, label){
+      var n=GAME.held(id); if(!n) return '';
+      return '<button type="button" class="life item" onclick="'+fn+'" title="'+U.h(GAME.item(id).note)+'">'+label+'<i>'+n+'</i></button>';
+    };
+    o+=item('skip', 'RUN.useSkip()', L('Skip, keep streak'));
+    if(timerOn()){ o+=item('time15', 'RUN.useTime(\'time15\')', '+15 s'); o+=item('time30', 'RUN.useTime(\'time30\')', '+30 s'); }
+    if(!R.peek && q.fast) o+=item('explain', 'RUN.usePeek()', L('Explanation first'));
+  }
+  if(R.retrying) o+='<span class="tag combo">'+L('Retry &middot; not recorded, not paid')+'</span>';
+  if(R.extra) o+='<span class="tag gold">+'+R.extra+L(' s on the clock')+'</span>';
   o+='<span class="grow"></span><span class="hint">'+L('A&ndash;D answer &middot; S skip','A&ndash;D উত্তর &middot; S বাদ')+'</span></div>';
   if(R.hinted && tk) o+='<div class="hintbox"><span class="k">'+U.h(tk.name)+'</span>'+(tk.one||'')+'</div>';
+  if(R.peek && q.fast) o+='<div class="hintbox peek"><span class="k">'+L('Explanation first &middot; this answer pays nothing')+'</span><div lang="bn">'+q.fast+'</div></div>';
   return o;
 }
 
@@ -815,7 +878,7 @@ function help(q){
 function after(q){
   if(R.phase!=='feedback') return '';
   var ok=R.result.ok, slow=R.result.slow;
-  var o='<div class="vrow"><span class="v '+(ok?'good':'bad')+'">'+(ok?L('Right','ঠিক'):L('Not right','হয়নি'))+
+  var o='<div class="vrow"><span class="v '+(ok?'good':'bad')+'">'+(R.result.retry?L('Retry: '):'')+(ok?L('Right','ঠিক'):L('Not right','হয়নি'))+
     '<span>'+(ok ? (slow?L('but outside the paper\'s time','তবে প্রশ্নপত্রের বাঁধা সময়ের বাইরে'):'') : L('answer ','উত্তর ')+shortAnswer(q))+'</span></span>'+
     '<span class="t">'+U.secs(R.result.secs)+(timerOn()?' / '+U.secs(AB.paceOf(q)):'')+'</span></div>';
   if(R.pts && !R.exam){
@@ -826,6 +889,8 @@ function after(q){
       o+='<div class="xpline"><b class="neg">'+R.pts.xp+' XP</b>'+L('you said you were sure','আপনি বলেছিলেন নিশ্চিত')+'</div>';
     }
   }
+  if(R.result.retry) o+='<div class="redeem">'+L(ok?'Good. It still has to come right on a later day to count as done.':'Not yet. It comes back on a later day.')+'</div>';
+  if(R.pts && R.pts.helped) o+='<div class="redeem">'+L('Answered after the explanation, so it pays nothing and does not count as done yet.')+'</div>';
   if(!ok && R._redeemAt===R.i) o+='<div class="redeem">'+L('The next question is the same idea, one step easier.','পরের প্রশ্নটি একই বিষয়, এক ধাপ সহজ।')+'</div>';
   if(R.showWhy) o+=explanation(q);
   return '<div class="'+(R._fbFor===R.i?'settled':'')+'">'+o+'</div>';
@@ -835,7 +900,9 @@ function actions(){
   var last = R.i+1>=R.queue.length;
   return '<div class="actions'+(R._fbFor===R.i?' settled':'')+'">'+
     '<button type="button" class="btn" onclick="RUN.next()">'+(R.ended||last?L('See the result','ফলাফল দেখুন'):L('Next question','পরের প্রশ্ন'))+'</button>'+
-    '<button type="button" class="btn ghost" onclick="RUN.toggleWhy()">'+(R.showWhy?L('Hide explanation','ব্যাখ্যা লুকান'):L('Explanation','ব্যাখ্যা'))+'</button></div>';
+    '<button type="button" class="btn ghost" onclick="RUN.toggleWhy()">'+(R.showWhy?L('Hide explanation','ব্যাখ্যা লুকান'):L('Explanation','ব্যাখ্যা'))+'</button>'+
+    (R.result && !R.result.ok && !R.retried && !R.exam && GAME.held('retry') ? '<button type="button" class="btn ghost" onclick="RUN.useRetry()">'+L('Retry now')+' <span class="mono">('+GAME.held('retry')+')</span></button>' : '')+
+    '</div>';
 }
 function shortAnswer(q){ return '<b>'+U.letter(q.ans)+'</b>'; }
 function explanation(q){
@@ -1067,5 +1134,6 @@ return {start:start, begin:begin, leave:leave, stop:stop, render:render, afterPa
         again:again, redoWrong:redoWrong, current:current, view:view, setResp:setResp,
         toggleWhy:toggleWhy, stopAlarm:stopAlarm, toggleTimer:toggleTimer,
         bet:bet, useFifty:useFifty, useTrick:useTrick, flag:flag, shareSet:shareSet,
+        useSkip:useSkip, useTime:useTime, usePeek:usePeek, useRetry:useRetry,
         endRun:endRun, state:function(){ return R; }};
 })();

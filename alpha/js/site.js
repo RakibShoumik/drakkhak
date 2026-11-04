@@ -34,7 +34,7 @@ var DEFAULTS={
   'def.challenge':'exam','def.alarm':true,'def.redemption':true,'def.confidence':false,'def.breaks':true,'def.pushAt':0,
   'rule.newShare':75,
   'social.love':true,'social.comment':true,'social.hold':false,'shop.more':true,
-  'fun.on':false,'fun.today':true,'fun.spin':true,'fun.combo':true,'fun.lucky':true,'fun.crowd':true,'fun.league':true,'fun.finish':true,'fun.motion':true,
+  'fun.on':false,'fun.today':true,'fun.spin':false,'fun.combo':true,'fun.lucky':false,'fun.crowd':true,'fun.league':true,'fun.finish':true,'fun.motion':true,
   'stats.on':true
 };
 var CACHE='drakkhak.site', RELOADS=['ed.hsc','ed.ssc','ed.default','subj.hide'];

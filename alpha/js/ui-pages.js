@@ -256,25 +256,129 @@ function seasonCard(){
   return o+'</div></section>';
 }
 
+/* ============================================================
+   BADGES — a place of its own: what is earned, what is close,
+   and the shelf of trophies and cards bought with coins
+   ============================================================ */
 function badges(){
   var g=DB.game(), order=['legend','epic','rare','common'];
-  var RN={legend:L('legend','কিংবদন্তি'), epic:L('epic','অসাধারণ'), rare:L('rare','দুর্লভ'), common:L('common','সাধারণ')};
-  var o=head('record',REC(), L(Object.keys(g.badges).length+' of '+GAME.BADGES.length+' earned',GAME.BADGES.length+'-এ '+Object.keys(g.badges).length+'টি পাওয়া'), L('Achievements','অর্জন'),
-    L('The secret ones stay hidden until you stumble on them. Not one can be bought.','গোপনগুলো লুকিয়ে থাকে, হঠাৎ পেয়ে গেলেই দেখা যায়। একটিও কেনা যায় না।'));
+  var RN={legend:'Legend', epic:'Epic', rare:'Rare', common:'Common'};
+  var got=Object.keys(g.badges).length, all=GAME.BADGES.length;
+  var o='<div class="phead"><span class="kicker">'+L(got+' of '+all+' earned')+'</span><h1>'+L('Badges')+'</h1>'+
+    '<p class="lede">'+L('Earned by the work, never bought. The secret ones stay hidden until you stumble on them.')+'</p></div>';
+  o+='<div class="bdg-sum">'+order.map(function(r){
+      var list=GAME.BADGES.filter(function(b){ return b.r===r; }), n=list.filter(function(b){ return g.badges[b.id]; }).length;
+      return '<div class="bs '+r+'"><b>'+n+'<small> / '+list.length+'</small></b><span>'+RN[r]+'</span></div>';
+    }).join('')+'</div>';
+  /* the newest three, as a moment */
+  var recent=GAME.BADGES.filter(function(b){ return g.badges[b.id]; }).sort(function(x,y){ return g.badges[y.id]-g.badges[x.id]; }).slice(0,3);
+  if(recent.length){
+    o+='<div><div class="seclabel">'+L('Latest')+'</div><div class="bdg-row">'+recent.map(function(b){
+      return '<div class="medal '+b.r+'"><span class="mi">&#9733;</span><span><b>'+h(b.name)+'</b><small>'+h(b.note)+' &middot; '+U.ago(g.badges[b.id])+'</small></span></div>';
+    }).join('')+'</div></div>';
+  }
+  /* the shelf */
+  var shelf=GAME.shelf();
+  o+='<div><div class="seclabel">'+L('Your shelf &middot; trophies and cards')+'</div>'+
+     (shelf.length ? '<div class="shelf">'+shelf.map(function(c){
+        return '<div class="shelfitem '+c.kind+'" title="'+h(c.fact||c.name)+'"><span class="art">'+c.art+'</span><b>'+h(c.name)+'</b>'+(c.fact?'<small>'+h(c.fact)+'</small>':'')+'</div>';
+      }).join('')+'</div>'
+      : '<p class="small" style="margin-top:8px">'+L('Empty for now. Trophies and collectible cards are in the ')+'<a href="#/shop" data-go="shop">'+L('shop')+'</a>.</p>')+'</div>';
   order.forEach(function(r){
     var list=GAME.BADGES.filter(function(b){ return b.r===r; });
     if(!list.length) return;
     o+='<div><div class="rar '+r+'">'+RN[r]+'</div><div class="grid-auto">';
     list.forEach(function(b, i){
-      var got=g.badges[b.id], hide=b.secret && !got;
-      o+='<div class="badge '+(got?'got ':'')+r+(hide?' secret':'')+'" style="--i:'+i+'"><span class="bi">'+(got?'&#9733;':hide?'?':'&#9734;')+'</span>'+
-         '<b>'+(hide?L('Secret','গোপন'):h(b.name))+'</b><span class="small">'+(hide?L('Earned by doing something out of the ordinary.','অন্যরকম কিছু করে ফেললে পাওয়া যায়।'):h(b.note))+'</span>'+
-         (got?'<span class="small" style="display:block;margin-top:6px">'+U.ago(got)+'</span>':'')+'</div>';
+      var gotAt=g.badges[b.id], hide=b.secret && !gotAt;
+      o+='<div class="badge '+(gotAt?'got ':'')+r+(hide?' secret':'')+'" style="--i:'+i+'"><span class="bi">'+(gotAt?'&#9733;':hide?'?':'&#9734;')+'</span>'+
+         '<b>'+(hide?L('Secret'):h(b.name))+'</b><span class="small">'+(hide?L('Earned by doing something out of the ordinary.'):h(b.note))+'</span>'+
+         (gotAt?'<span class="small" style="display:block;margin-top:6px">'+U.ago(gotAt)+'</span>':'')+'</div>';
     });
     o+='</div></div>';
   });
   return wrap(o);
 }
+
+/* ============================================================
+   MISTAKES — every question you got wrong and have not won back.
+   Free, always: the whole point of the bank is the second go.
+   ============================================================ */
+var mFilter='all', mShow=60;
+function plain(html){ return String(html||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim(); }
+function mistakes(){
+  var t=track(), s=DB.state(), bank=GAME.mistakeBank(t), now=Date.now();
+  var due=AB.dueItems(t).length, fixed=GAME.storedValue().fixed;
+  var bySj={};
+  bank.forEach(function(q){ var k=PLAN.subjOf(q._sec); bySj[k]=(bySj[k]||0)+1; });
+  if(mFilter!=='all' && !bySj[mFilter]) mFilter='all';
+  var list=bank.filter(function(q){ return mFilter==='all' || PLAN.subjOf(q._sec)===mFilter; });
+  list.sort(function(a,b){ return ((s.items[b.id]||{}).miss||0)-((s.items[a.id]||{}).miss||0); });
+
+  var o='<div class="phead"><span class="kicker">'+L('Free, always')+'</span><h1>'+L('Mistakes')+'</h1>'+
+    '<p class="lede">'+L('Every question you got wrong and have not yet won back. A right answer on a later day takes it out.')+'</p></div>';
+  o+='<div class="grid3">'+
+    stat(L('In the bank'), '<span data-count="'+bank.length+'">'+bank.length+'</span>', L('waiting to be won back'))+
+    stat(L('Due today'), '<span data-count="'+due+'">'+due+'</span>', L('back on their schedule'))+
+    stat(L('Won back'), '<span data-count="'+fixed+'">'+fixed+'</span>', L('once wrong, now done'))+'</div>';
+  o+='<div class="btns">'+
+    '<button class="btn" data-act="mxSet"'+(list.length?'':' disabled')+'>'+L('Practise '+Math.min(list.length, s.settings.setSize)+' from '+(mFilter==='all'?'the bank':ICE.subjname(ICE.subject(mFilter))))+'</button>'+
+    (due?'<button class="btn ghost" data-act="reviewDue">'+L('Win back the '+due+' due today')+'</button>':'')+'</div>';
+  if(bank.length){
+    o+='<div class="mx-filter">'+
+      '<button type="button" class="mchip'+(mFilter==='all'?' on':'')+'" data-act="mxFilter" data-arg="all">'+L('All')+' <b>'+bank.length+'</b></button>'+
+      ICE.subjects.filter(function(sj){ return bySj[sj.id]; }).map(function(sj){
+        return '<button type="button" class="mchip'+(mFilter===sj.id?' on':'')+'" data-act="mxFilter" data-arg="'+sj.id+'" style="--sc:var(--s-'+sj.id+')"><i></i>'+h(ICE.subjname(sj))+' <b>'+bySj[sj.id]+'</b></button>';
+      }).join('')+'</div>';
+    o+='<div class="mx-list">';
+    list.slice(0, mShow).forEach(function(q){
+      var it=s.items[q.id]||{}, tp=ICE.topics[q.topic], wrongN=Math.max(1,(it.n||1)-(it.ok||0));
+      o+='<div class="mx" style="--sc:var(--s-'+PLAN.subjOf(q._sec)+')">'+
+        '<div class="mx-top"><span class="mx-where">'+h(ICE.sname(q._sec))+' &middot; '+L('Ch. ')+(tp?tp.n:'')+'</span>'+
+          '<span class="mx-when">'+L('missed ')+(it.miss?U.ago(it.miss):'')+(wrongN>1?' &middot; '+L(wrongN+' times'):'')+'</span></div>'+
+        '<div class="mx-stem" lang="bn">'+h(plain(q.stem))+'</div>'+
+        '<div class="mx-ans" lang="bn"><span class="label">'+L('Answer')+'</span> '+AB.answerText(q)+'</div>'+
+        '<div class="mx-act"><button class="btn xs" data-act="mxOne" data-arg="'+h(q.id)+'">'+L('Retry')+'</button>'+
+          '<button class="btn xs ghost" data-act="mxWhy" data-arg="'+h(q.id)+'">'+L('Explanation')+'</button>'+
+          '<a href="#/topic/'+encodeURIComponent(q.topic)+'" data-go="topic" data-p="'+h(q.topic)+'" class="link quiet">'+L('The chapter')+' &rsaquo;</a></div>'+
+      '</div>';
+    });
+    o+='</div>';
+    if(list.length>mShow) o+='<button class="btn ghost" data-act="mxMore">'+L('Show '+Math.min(60, list.length-mShow)+' more')+'</button>';
+  } else {
+    o+='<section class="card"><h3 style="font-size:21px">'+L('Nothing owed')+'</h3><p class="muted">'+L('Every question you missed has been won back. New mistakes land here on their own.')+'</p></section>';
+  }
+  return wrap(o);
+}
+function mistakeWhy(id){
+  var q=AB.q(id); if(!q) return;
+  var opts=AB.options(q), o='<div class="mx-sheet">';
+  if(q.passage){ var p=AB.passage(q.passage); if(p) o+='<div class="rcpassage" lang="bn">'+p.text+'</div>'; }
+  o+='<div class="qstem" lang="bn">'+q.stem+'</div>';
+  if(q.type==='mcomp' && q.sts){
+    o+='<ol class="stlist">'+q.sts.map(function(x,i){ return '<li><b>'+['i','ii','iii'][i]+'.</b><span>'+x+'</span></li>'; }).join('')+'</ol>';
+  }
+  o+='<div class="mx-opts" lang="bn">'+opts.map(function(x,i){
+    return '<div class="mx-opt'+(i===q.ans?' right':'')+'"><b>'+U.letter(i)+'</b><span>'+x+'</span></div>'; }).join('')+'</div>';
+  var why=q.why && q.why[q.ans];
+  if(why) o+='<p class="mx-why" lang="bn">'+why+'</p>';
+  if(q.fast) o+='<div class="fastbox"><span class="k">'+L('The fast route')+'</span><div lang="bn">'+q.fast+'</div></div>';
+  o+='<div class="btns" style="margin-top:12px"><button class="btn" data-close data-act="mxOne" data-arg="'+h(id)+'">'+L('Retry it now')+'</button></div></div>';
+  UI.sheet(o);
+}
+UI.act('mxFilter', function(k){ mFilter=k||'all'; mShow=60; UI.render(); });
+UI.act('mxMore', function(){ mShow+=60; UI.render(); });
+UI.act('mxWhy', function(id){ mistakeWhy(id); });
+UI.act('mxOne', function(id){
+  var q=AB.q(id); if(!q) return;
+  UI.closeSheet(true);
+  RUN.start({queue:[q], track:track(), mode:'redo', title:L('Mistakes'), back:'mistakes', noBrief:true});
+});
+UI.act('mxSet', function(){
+  var t=track(), qs=GAME.mistakeBank(t).filter(function(q){ return mFilter==='all' || PLAN.subjOf(q._sec)===mFilter; });
+  if(!qs.length) return;
+  RUN.start({queue:U.sample(qs, Math.min(qs.length, DB.state().settings.setSize)), track:t, mode:'redo', title:L('Mistakes'), back:'mistakes'});
+});
+
 function collection(){
   var t=track(), c=GAME.collection(t), g=DB.game();
   var o=head('record',REC(), ICE.edition==='ssc'?'SSC':'HSC', L('Collection','সংগ্রহ'),
@@ -303,43 +407,104 @@ function collection(){
   }
   return wrap(o);
 }
+/* ============================================================
+   THE SHOP — coins come only from answering (about one for every
+   8 XP). No money, no prize wheels, no random boxes for sale.
+   ============================================================ */
+var SHELVES=[
+  {k:'items',   en:'For a question'},
+  {k:'power',   en:'Power-ups'},
+  {k:'season',  en:'In season'},
+  {k:'frame',   en:'Profile frames'},
+  {k:'avatar',  en:'Avatars'},
+  {k:'acc',     en:'Accessories'},
+  {k:'title',   en:'Titles'},
+  {k:'flair',   en:'Badges beside your name'},
+  {k:'ptheme',  en:'Profile themes'},
+  {k:'skin',    en:'Site colours'},
+  {k:'bar',     en:'Progress bars'},
+  {k:'streak',  en:'Streak effects'},
+  {k:'burst',   en:'Right-answer effects'},
+  {k:'pack',    en:'Sound packs'},
+  {k:'trophy',  en:'Trophies'},
+  {k:'card',    en:'Collectible cards'},
+  {k:'compete', en:'Competition'}
+];
+function coinsTag(n){ return '<svg class="ci" viewBox="0 0 32 32" aria-hidden="true"><use href="#coinSym"/></svg>'+U.num(n); }
+function artOf(c){
+  if(c.kind==='skin') return '<i class="skinchip" style="background:'+c.sw+'"></i>';
+  if(c.kind==='ptheme') return '<i class="skinchip wide" style="background:'+c.sw+'"></i>';
+  if(c.kind==='frame') return '<i class="framechip frame-'+c.id+'"></i>';
+  if(c.kind==='bar') return '<span class="barchip bar-'+c.id+'"><i></i></span>';
+  if(c.kind==='flair') return '<span class="flairchip fl-'+c.id+'">'+c.art+'</span>';
+  return c.art||'&#9835;';
+}
+function cosmeticCard(c, g){
+  var keep=GAME.SHELF[c.kind], owned=GAME.owns(c.id), on=!keep && (g.wear[c.kind]===c.id || (!g.wear[c.kind] && c.cost===0));
+  var locked=!owned && GAME.lockedByLevel(c), off=!owned && !GAME.inSeason(c);
+  var foot = on ? '<span class="kicker acc">'+L('in use')+'</span>'
+    : owned ? (keep ? '<span class="kicker ok">'+L('on your shelf')+'</span>' : '<button class="btn xs ghost" data-act="wear" data-arg="'+c.id+'">'+L('Use')+'</button>')
+    : off ? '<span class="lvtag">'+L('On sale ')+h(c.when)+'</span>'
+    : locked ? '<span class="lvtag">'+L('Level '+c.lv)+' &middot; '+coinsTag(c.cost)+'</span>'
+    : '<button class="btn xs" data-act="buy" data-arg="'+c.id+'">'+coinsTag(c.cost)+'</button>';
+  return '<div class="shopitem'+(on?' on':'')+(locked||off?' locked':'')+(c.season?' seasonal':'')+'"'+(c.fact?' title="'+h(c.fact)+'"':'')+'>'+
+    '<span class="art">'+artOf(c)+'</span><b>'+h(c.name)+'</b>'+(c.fact?'<span class="small fact">'+h(c.fact)+'</span>':'')+foot+'</div>';
+}
 function shop(){
-  var g=DB.game();
-  var o=head('record',REC(), L(g.coins+' coins',g.coins+'টি কয়েন'), L('Shop','দোকান'),
-    L('Coins come from right answers, quests and chests. Nothing here costs money, and nothing makes any question easier.','কয়েন আসে ঠিক উত্তর, কোয়েস্ট আর সিন্দুক থেকে। এখানে কিছুতেই টাকা লাগে না, আর কিছুই কোনো প্রশ্ন সহজ করে দেয় না।'));
-  var kinds=SITE.on('shop.more') ? ['power','avatar','frame','skin','burst','title','pack'] : ['avatar','frame','pack'];
-  kinds.forEach(function(kind){
-    if(kind==='power'){
-      o+='<div><div class="seclabel">'+L('Power-ups','পাওয়ার-আপ')+'</div><div class="grid-auto" style="margin-top:12px">';
-      GAME.POWERS.forEach(function(p){
+  var g=DB.game(), more=SITE.on('shop.more');
+  var o='<div class="phead"><span class="kicker">'+coinsTag(g.coins)+' '+L('coins')+'</span><h1>'+L('Shop')+'</h1>'+
+    '<p class="lede">'+L('Coins come only from answering: about one coin for every 8 XP, so harder and quicker answers pay more. Nothing here costs money, and there are no prize wheels or random boxes.')+'</p></div>';
+  var shelves=more ? SHELVES : SHELVES.filter(function(x){ return x.k==='avatar'||x.k==='frame'||x.k==='pack'; });
+  o+='<nav class="shop-nav">'+shelves.map(function(x){
+    return '<button type="button" class="mchip" onclick="var e=document.getElementById(\'shelf-'+x.k+'\');if(e)e.scrollIntoView({behavior:\'smooth\',block:\'start\'})">'+x.en+'</button>';
+  }).join('')+'</nav>';
+  shelves.forEach(function(x){
+    var k=x.k, body='';
+    if(k==='items'){
+      body=GAME.ITEMS.map(function(it){
+        var n=GAME.held(it.id), wl=GAME.weekLeft(it.id);
+        return '<div class="shopitem'+(it.rare?' rare':'')+'"><span class="art">'+it.art+'</span><b>'+h(it.name)+'</b>'+
+          '<span class="small note">'+h(it.note)+'</span>'+
+          '<span class="small mono">'+L('you hold '+n+' of '+it.max)+(wl!==null?' &middot; '+L(wl+' left this week'):'')+'</span>'+
+          '<button class="btn xs" data-act="buyItem" data-arg="'+it.id+'"'+(n>=it.max||wl===0?' disabled':'')+'>'+coinsTag(it.cost)+'</button></div>';
+      }).join('');
+    } else if(k==='power'){
+      body=GAME.POWERS.map(function(p){
         var live=p.id==='double' && (g.doubleUntil||0)>Date.now();
-        o+='<div class="shopitem"><span class="art">'+p.art+'</span><b>'+h(p.name)+'</b><span class="small" style="display:block;margin:-6px 0 10px">'+
-           (live?L(Math.ceil((g.doubleUntil-Date.now())/6e4)+' min left',Math.ceil((g.doubleUntil-Date.now())/6e4)+' মিনিট বাকি')
-                :p.id==='freeze'?L('You hold '+DB.state().freezes,'আপনার আছে '+DB.state().freezes+'টি'):h(p.note))+'</span>'+
-           '<button class="btn xs" data-act="buyPower" data-arg="'+p.id+'">'+L(p.cost+' coins',p.cost+'টি কয়েন')+'</button></div>';
-      });
-      o+='</div></div>';
-      return;
+        return '<div class="shopitem"><span class="art">'+p.art+'</span><b>'+h(p.name)+'</b><span class="small note">'+
+           (live?L(Math.ceil((g.doubleUntil-Date.now())/6e4)+' min left'):p.id==='freeze'?L('You hold '+DB.state().freezes):h(p.note))+'</span>'+
+           '<button class="btn xs" data-act="buyPower" data-arg="'+p.id+'">'+coinsTag(p.cost)+'</button></div>';
+      }).join('');
+    } else if(k==='season'){
+      var list=GAME.COSMETICS.filter(function(c){ return c.season; });
+      list.sort(function(a,b){ return (GAME.inSeason(b)?1:0)-(GAME.inSeason(a)?1:0); });
+      body=list.map(function(c){ return cosmeticCard(c, g); }).join('');
+    } else if(k==='compete'){
+      var soon=[['&#127942;','Weekly contest entry','A seat in this week\'s contest, ranked on active study time.'],
+                ['&#9876;&#65039;','Challenge a friend','A duel on the same questions, with a friend from Community.'],
+                ['&#128226;','Leaderboard spotlight','Your name highlighted on the leaderboard for 24 hours.'],
+                ['&#128737;&#65039;','Rank shield','Keeps your rank in ranked mode through one bad day.']];
+      body=soon.map(function(x){
+        return '<div class="shopitem locked"><span class="art">'+x[0]+'</span><b>'+L(x[1])+'</b><span class="small note">'+L(x[2])+'</span>'+
+          '<span class="lvtag">'+L('With your Community account')+'</span></div>';
+      }).join('');
+    } else {
+      body=GAME.COSMETICS.filter(function(c){ return c.kind===k && !c.season && (!c.more || more); })
+        .map(function(c){ return cosmeticCard(c, g); }).join('');
     }
-    var name={avatar:L('Avatars','অবতার'), frame:L('Frames','ফ্রেম'), pack:L('Sound packs','শব্দের সেট'), skin:L('Site colours','সাইটের রং'),
-              burst:L('Right-answer bursts','সঠিক উত্তরের ঝলক'), title:L('Titles','উপাধি')}[kind];
-    o+='<div><div class="seclabel">'+name+'</div><div class="grid-auto" style="margin-top:12px">';
-    GAME.COSMETICS.filter(function(c){ return c.kind===kind && (!c.more || SITE.on('shop.more')); }).forEach(function(c){
-      var owned=GAME.owns(c.id), on=g.wear[kind]===c.id || (!g.wear[kind] && c.cost===0), locked=!owned && GAME.lockedByLevel(c);
-      var art=c.sw ? '<i class="skinchip" style="background:'+c.sw+'"></i>' : (c.art||(kind==='frame'?'<i class="framechip frame-'+c.id+'"></i>':'&#9835;'));
-      o+='<div class="shopitem'+(on?' on':'')+(locked?' locked':'')+'"><span class="art">'+art+'</span><b>'+h(c.name)+'</b>'+
-         (on?'<span class="kicker acc">'+L('in use','চালু আছে')+'</span>'
-            : owned?'<button class="btn xs ghost" data-act="wear" data-arg="'+c.id+'">'+L('Use','চালু করুন')+'</button>'
-            : locked?'<span class="lvtag">'+L('Level '+c.lv,'লেভেল '+c.lv)+' &middot; '+L(c.cost+' coins',c.cost+'টি')+'</span>'
-            :'<button class="btn xs" data-act="buy" data-arg="'+c.id+'">'+L(c.cost+' coins',c.cost+'টি কয়েন')+'</button>')+'</div>';
-    });
-    o+='</div></div>';
+    if(!body) return;
+    o+='<section class="shelfsec" id="shelf-'+k+'"><div class="seclabel">'+x.en+
+      (k==='items'?' <span class="faint">&middot; '+L('used during a set')+'</span>':'')+
+      (k==='season'?' <span class="faint">&middot; '+L('on sale only in their season, yours for good')+'</span>':'')+
+      (k==='compete'?' <span class="faint">&middot; '+L('opens when Learn and Community share one sign-in')+'</span>':'')+
+      '</div><div class="grid-auto" style="margin-top:12px">'+body+'</div></section>';
   });
-  o+='<div class="grid2">'+stat(L('50:50 lifelines','৫০:৫০ লাইফলাইন'), String(g.lifelines.fifty), L('removes options','অপশন সরিয়ে দেয়'))+
-     stat(L('Card lifelines','কার্ড লাইফলাইন'), String(g.lifelines.trick), L('shows the method','পদ্ধতিটি দেখায়'))+'</div>'+
-     '<p class="small">'+L('Lifelines come from chests, never from the shop &mdash; a lifeline you can buy is no longer earned.','লাইফলাইন আসে সিন্দুক থেকে, দোকান থেকে কখনও নয় &mdash; যে লাইফলাইন কেনা যায়, সেটি আর অর্জন করা হয় না।')+'</p>';
+  o+='<div class="grid2">'+stat(L('50:50 lifelines'), String(g.lifelines.fifty), L('removes options'))+
+     stat(L('Card lifelines'), String(g.lifelines.trick), L('shows the method'))+'</div>'+
+     '<p class="small">'+L('Lifelines and chests come from the work, never from the shop.')+'</p>';
   return wrap(o);
 }
+UI.act('buyItem', function(id){ if(GAME.buyItem(id)) UI.render(); });
 function social(){
   var g=DB.game(), t=track();
   var o=head('record',REC(), L('Only what you send','কেবল যা আপনি পাঠান'), L('Duels and cards','দ্বৈরথ ও কার্ড'),
@@ -836,7 +1001,7 @@ UI.act('theirResult', function(i){
   UI.render();
 });
 
-return {plan:plan, predict:predict, wrapped:wrapped, record:record, badges:badges, collection:collection, shop:shop,
+return {plan:plan, predict:predict, wrapped:wrapped, record:record, badges:badges, collection:collection, shop:shop, mistakes:mistakes,
         social:social, modes:modes, quests:quests, tricks:tricks, trick:trick, mock:mock,
         section:section, topic:topic, doQotd:doQotd, saveNote:saveNote, trickDrill:trickDrill,
         startMock:startMock};

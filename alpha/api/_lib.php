@@ -144,9 +144,9 @@ function drk_opts() {
 
     'fun.on'     => array('bool', false),
     'fun.today'  => array('bool', true),
-    'fun.spin'   => array('bool', true),
+    'fun.spin'   => array('bool', false),
     'fun.combo'  => array('bool', true),
-    'fun.lucky'  => array('bool', true),
+    'fun.lucky'  => array('bool', false),
     'fun.crowd'  => array('bool', true),
     'fun.league' => array('bool', true),
     'fun.finish' => array('bool', true),
