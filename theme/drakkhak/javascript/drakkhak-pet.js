@@ -166,9 +166,11 @@ function head(hx,hy,o){
   else if(eye==='wide'){ s.push(P(ex,ey-1,'e')); s.push(P(ex+1,ey-1,'w')); s.push(P(ex,ey,'e')); s.push(P(ex+1,ey,'e')); s.push(P(ex,ey+1,'e')); s.push(P(ex+1,ey+1,'e')); }
   else if(eye==='closed'){ s.push(P(ex,ey+1,'o')); s.push(P(ex+1,ey+1,'o')); }
   else if(eye==='happy'){ s.push(P(ex-1,ey+1,'o')); s.push(P(ex,ey,'o')); s.push(P(ex+1,ey,'o')); s.push(P(ex+2,ey+1,'o')); }
+  else if(eye==='squeeze'){ s.push(P(ex-1,ey,'o')); s.push(P(ex,ey+1,'o')); s.push(P(ex+1,ey+1,'o')); }
   else if(eye==='half'){ s.push(P(ex,ey+1,'e')); s.push(P(ex+1,ey+1,'e')); s.push(P(ex,ey,'o')); s.push(P(ex+1,ey,'o')); }
   s.push(P(Math.floor(hx+4.4),Math.floor(hy+0.6),'n'));   /* nose */
-  if(o.mouth!=='none') s.push(P(Math.floor(hx+3.6),Math.floor(hy+2.2),o.mouth==='open'?'p':'o'));
+  if(o.mouth==='yawn'){ var mx=Math.floor(hx+3.2), my=Math.floor(hy+1.8); s.push(P(mx,my,'o')); s.push(P(mx+1,my,'o')); s.push(P(mx,my+1,'p')); s.push(P(mx+1,my+1,'p')); s.push(P(mx,my+2,'o')); }
+  else if(o.mouth!=='none') s.push(P(Math.floor(hx+3.6),Math.floor(hy+2.2),o.mouth==='open'?'p':'o'));
   return s;
 }
 
@@ -314,6 +316,7 @@ var POSES={
   blink:function(){ return sitPose({eye:'closed'}); },
   happy:function(){ return sitPose({eye:'happy', mouth:'open'}); },
   sad:function(){ return sitPose({eye:'half', ears:'flat', tail:-0.6}); },
+  yawn:function(){ return sitPose({eye:'squeeze', mouth:'yawn', tail:0.6}); },
   groom0:function(){ return sitPose({eye:'closed', headDown:1, paw:[20.6,9.6]}); },
   groom1:function(){ return sitPose({eye:'closed', headDown:1, paw:[21.0,8.6], lick:1}); },
   walk0:function(){ return walkPose(0); }, walk1:function(){ return walkPose(1); },
@@ -360,7 +363,7 @@ window.DKPET_DRAW={frame:frame, POSES:POSES, COATS:COATS, HATS:HATS, GW:GW, GH:G
    WHAT IS KEPT: one record, shared by Learn and the community
    ============================================================ */
 var DEF={v:1, on:true, name:'Mishti', coat:'ginger', hat:'none', hats:[], stay:false, quiet:false, x:0.82, love:0, seen:0, napping:false, met:0, played:0,
-         day:'', mile:0, greeted:0, studied:'', mins:0, nudged:''};
+         day:'', mile:0, greeted:0, studied:'', mins:0, nudged:'', nightDay:''};
 var store=load();
 function load(){
   var j=null;
@@ -416,11 +419,17 @@ function measure(now){
   if(f && f!==document.body){ var r3=f.getBoundingClientRect(); if(r3.left<=4 && r3.width<w*0.4 && r3.height>h*0.4) env.minX=Math.max(env.minX, r3.right+W*0.5+4); }
   if(env.maxX<env.minX+40){ env.minX=W*0.5+6; env.maxX=w-W*0.5-6; }
   var de=document.documentElement;
+  var wasNight=env.night;
   env.night = de.getAttribute('data-theme')==='night' || !!document.getElementById('night-mode-css');
+  if(root && env.night && wasNight===false && env.ready && store.nightDay!==localDay()){
+    store.nightDay=localDay(); save();
+    setTimeout(function(){ say(new Date().getHours()>=21 ? 'Late study? I will keep you company.' : 'Cosy.', false); }, 400);
+  }
   env.still = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || de.classList.contains('still');
   env.question = !!(document.body && document.body.getAttribute('data-route')==='run' && document.querySelector('.qcard .opt:not([disabled])'));
   var a=document.activeElement;
   env.typing = !!(a && (a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable) && !(menuEl && menuEl.contains(a)));
+  env.ready=true;
   if(root){
     root.classList.toggle('night', env.night);
     root.style.zIndex = env.community ? 990 : 58;
@@ -545,7 +554,7 @@ function decide(){
     return;
   }
   var r=Math.random();
-  if(r<sleepy){ setState('sleep', rnd(25000,60000)); return; }
+  if(r<sleepy){ nap(rnd(25000,60000)); return; }
   r=Math.random();
   if(r<0.30){ var gx=calmX(C.surf); if(gx!==null){ walkTo(gx); return; } }
   if(r<0.58 && tryPerch()) return;
@@ -709,9 +718,10 @@ function news(t){
 /* ---------- reactions ---------- */
 function happy(ms){ if(C.st==='held'||C.st==='jump'||C.st==='fall') return; C.hop=0.0001; setState('happy', ms||900); hearts(1); }
 function sad(){ if(C.st==='held'||C.st==='jump'||C.st==='fall') return; setState('sad', 1500); }
+function nap(ms){ C.next=function(){ setState('sleep', ms||0); }; setState('yawn', 900); }
 function wake(){
   if(C.st!=='sleep' && C.st!=='quiet') return;
-  if(C.st==='sleep'){ setState('stretch', 1100); if(chance(0.3)) say('Yawn...'); }
+  if(C.st==='sleep'){ C.next=function(){ setState('stretch', 1000); }; setState('yawn', 800); if(chance(0.3)) say('Yawn...'); }
 }
 
 /* ============================================================
@@ -794,8 +804,11 @@ function tick(ts){
     case 'stretch': case 'groom': case 'happy': case 'sad':
       if(t>C.until) setState('idle', rnd(2000,5000));
       break;
+    case 'yawn':
+      if(t>C.until){ if(C.next){ var yn=C.next; C.next=null; yn(); } else setState('idle', rnd(2000,4000)); }
+      break;
     default: /* idle */
-      if(idleLong && !store.stay && chance(dt*0.2)) { setState('sleep'); break; }
+      if(idleLong && !store.stay && chance(dt*0.2)) { nap(); break; }
       if(C.until && t>C.until) decide();
       /* never sit on something that can be pressed */
       if(C.t>1.2 && Math.floor(C.t*2)!==Math.floor((C.t-dt)*2) && blocked(C.x, C.y)){
@@ -836,6 +849,7 @@ function pick(t){
     case 'held': return 'held'+(Math.floor(t/260)%2);
     case 'sleep': return 'sleep'+(Math.floor(t/1400)%2);
     case 'stretch': return 'stretch';
+    case 'yawn': return 'yawn';
     case 'groom': return 'groom'+(Math.floor(t/380)%2);
     case 'happy': return 'happy';
     case 'sad': return 'sad';
