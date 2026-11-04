@@ -111,6 +111,7 @@ function spend(n){ var g=DB.game(); if(g.coins<n) return false; g.coins-=n; DB.s
 
 function onLevel(L, why){
   FX.play('levelup');
+  try{ window.dispatchEvent(new CustomEvent('dk:level', {detail:{level:L}})); }catch(e){}
   var un=unlockedAt(L);
   if(un){ DB.game().unlocked[un.id]=Date.now(); DB.save(); }
   /* the shell shows a proper moment for it — straight away, or at the end
@@ -569,6 +570,7 @@ function check(ev, ctx){
     if(ok){ g.badges[b.id]=Date.now(); earned.push(b); }
   }
   if(earned.length){
+    try{ window.dispatchEvent(new CustomEvent('dk:badge', {detail:{name:earned[0].name}})); }catch(e){}
     DB.save();
     FX.play('badge');
     if(earned.some(function(b){ return rarityRank(b.r)>=2; })) FX.confetti(70);

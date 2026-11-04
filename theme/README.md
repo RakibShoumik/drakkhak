@@ -40,6 +40,11 @@ each student's browser, as before.
 
 ## What is different from Sunshine
 
+- **The pixel cat.** The same cat as in Learn walks the community pages, sits on posts and cards,
+  and hops when you like something. Tap, drag, or hold it for its menu. It is
+  `javascript/drakkhak-pet.js` (a copy of Learn's `js/pet.js`), loaded at the end of
+  `layout/container.phtml`. To switch it off for everyone, delete that one script line.
+
 - **No permission prompts on arrival.** Sunshine asked for notifications on every page load and for
   location on most pages. Now OneSignal never auto-prompts (its bell still works when tapped), the
   browser notification prompt is gone, and location is read only if the visitor already allowed it.

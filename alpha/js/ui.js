@@ -1098,6 +1098,9 @@ function settings(){
     row(L('Night mode','রাতের মোড'), L('Warm dark colours for late study. The app always opens in day mode for a new visitor.','দেরি করে পড়ার জন্য উষ্ণ অন্ধকার রং।'), onoff('night', s.theme==='night'))+
     row(L('Cautious estimate'), L('The estimated mark shows the figure you should beat nine times in ten.'), onoff('hardPredict', st.hardPredict))+
     (SITE.on('stats.on') ? row(L('Anonymous statistics','বেনামি পরিসংখ্যান'), L('Counts minutes and questions, with a random number instead of your name, so the site can improve. Your answers never leave this browser.','আপনার নামের বদলে একটি এলোমেলো সংখ্যা দিয়ে মিনিট ও প্রশ্নের হিসাব রাখে, যাতে সাইটটি ভালো করা যায়। আপনার উত্তর এই ব্রাউজারের বাইরে যায় না।'), onoff('shareStats', st.shareStats!==false)) : '')+
+    (window.DKPET ? row(L('Pixel cat'), L('A small cat who lives on the site, in Learn and in Community. Tap it to pet it, drag it to move it, hold it for its name and coat.'),
+        '<span class="row" style="gap:8px">'+'<button type="button" class="onoff'+(DKPET.on()?' on':'')+'" data-act="petOn" aria-pressed="'+(DKPET.on()?'true':'false')+'">'+(DKPET.on()?L('On'):L('Off'))+'</button>'+
+        '<button class="btn xs ghost" data-act="petMenu">'+L('Name and coat')+'</button></span>') : '')+
     row(L('Keyboard shortcuts','কিবোর্ড শর্টকাট'), L('For fast practice on a laptop.','ল্যাপটপে দ্রুত অনুশীলনের জন্য।'), '<button class="btn xs ghost" data-act="shortcuts">'+L('Show','দেখুন')+'</button>')+
     '</div>';
 
@@ -1372,6 +1375,8 @@ var ACT={
   edition:function(e){ if(e!==ICE.edition) ICE.setEdition(e); },
   quickStart:quickStart, reviewDue:reviewDue, weakSet:weakSet, revenge:revenge, resumeLoop:resumeLoop,
   subjectSet:function(sj){ subjectSet(sj); },
+  petOn:function(){ if(window.DKPET){ DKPET.setOn(!DKPET.on()); render(); } },
+  petMenu:function(){ if(window.DKPET) DKPET.menu(); },
   secSet:function(sk){ secSet(sk,'adaptive'); },
   secWeak:function(sk){ secSet(sk,'weak'); },
   secSpeed:function(sk){ speedDrill(sk); },

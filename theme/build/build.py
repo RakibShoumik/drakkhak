@@ -324,6 +324,7 @@ def build(src, out):
             shutil.copy2(srcf, dst)
     patch_prompts(out)
     patch_register(out)
+    patch_pet(out)
     print('Drakkhak theme written to', out)
 
 
@@ -488,6 +489,29 @@ def patch_register(out):
     write(p, s)
 
 
+# ---------------------------------------------------------------- 8. the pixel cat
+PET_SRC = os.path.join(HERE, '..', '..', 'alpha', 'js', 'pet.js')
+PET_TAG = ('    <!-- Drakkhak: the pixel cat. The same file as Learn\'s js/pet.js, so it is one cat on the whole site. -->\n'
+           '    <script src="<?php echo $wo[\'config\'][\'theme_url\'];?>/javascript/drakkhak-pet.js?version=<?php echo $wo[\'config\'][\'version\']; ?>" defer></script>\n')
+
+
+def patch_pet(out):
+    """Copy Learn's pet.js into the theme and load it on every page."""
+    src = os.path.normpath(PET_SRC)
+    if os.path.isfile(src):
+        shutil.copy2(src, os.path.join(out, 'javascript', 'drakkhak-pet.js'))
+        shutil.copy2(src, os.path.join(OVERLAY, 'javascript', 'drakkhak-pet.js')) if os.path.isdir(os.path.join(OVERLAY, 'javascript')) else None
+    p = os.path.join(out, 'layout', 'container.phtml')
+    s = read(p)
+    if 'drakkhak-pet.js' in s:
+        return
+    i = s.rfind('</body>')
+    if i < 0:
+        sys.exit('build: could not find </body> in container.phtml')
+    s = s[:i] + PET_TAG + '   ' + s[i:]
+    write(p, s)
+
+
 def patch_night_toggle(out):
     """WoWonder's night-mode switch appends dark.css with jQuery; wherever it
     does, add drakkhak-night.css right after it, and remove both together."""
@@ -553,6 +577,7 @@ if __name__ == '__main__':
         for out in args:
             patch_prompts(out)
             patch_register(out)
+            patch_pet(out)
             for dp, _, fs in os.walk(os.path.join(OVERLAY, 'dk')):
                 for f in fs:
                     dst = os.path.join(out, 'dk', f)

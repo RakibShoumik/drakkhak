@@ -23,7 +23,10 @@ items (GAME.ITEMS) and many cosmetic kinds at the owner's request, but never che
 anything random, and a helped answer never pays or counts as done; the daily spin and lucky drops
 are off by default; under every question is Comment · Share · Report (question thread is option 4
 in api/social.php; reports go to drakkhak-data/question-reports.json and the admin panel); the
-prediction is always labelled an estimate.
+prediction is always labelled an estimate. The pixel cat is `js/pet.js` (standalone, no
+dependencies; Learn tells it about answers with `dk:answer`, `dk:setdone`, `dk:level`, `dk:badge`
+window events); the WoWonder theme carries a copy as `javascript/drakkhak-pet.js` (build.py
+`patch_pet` copies it), so after changing pet.js run `python3 theme/build/build.py --patch theme/drakkhak theme/drakkhak-study`.
 Each chapter's **Learn** sheet is built from its questions' `fast` lines and first non-page tag
 (the sub-topic), so keep writing both carefully.
 

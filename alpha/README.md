@@ -191,6 +191,23 @@ challenge a friend, leaderboard spotlight, rank shield) are shown but open only 
 the community share one sign-in. Chests and lifelines still come only from the work, and the
 daily prize wheel and random lucky drops are off by default.
 
+## The pixel cat
+
+A small pixel cat (`js/pet.js`, no images: drawn from shapes on a 28 × 22 grid) lives on the site.
+It walks along the bottom of the window, jumps up to sit on the cards and rides them as you
+scroll, grooms, stretches, naps when you stop for a while, turns to look at your pointer, and
+hops with a heart when you get a question right (a bubble at 5, 10, 15 in a row; a cheer when a
+set ends; a sparkle for a new level or badge). Tap it to pet it, drag it anywhere, and hold it
+(or right-click) for its menu: name, five coats, *stay in one place*, *no speech bubbles*, *nap
+here*, *hide*. Settings → Pixel cat turns it on and off.
+
+It never gets in the way: it never stops on a button, link or field (and walks off if one
+appears under it), prefers empty space to text, goes to a corner and keeps quiet while a
+question is on screen, never speaks during one, and stays still with reduced motion. Nothing is
+ever lost: it never gets hungry or ill and needs nothing. The community side loads the same file
+from the theme (`javascript/drakkhak-pet.js`), and because Learn at `/learn/` and the community
+are one origin, it is the same cat, with the same name, coat and place, on the whole site.
+
 **Under every question** sits a bar: *Comment* (a moderated discussion of the whole question,
 open once you have answered), *Share* (the question and a `#/q/<id>` link) and *Report* (kept
 for you, and sent to the admin panel's Reported questions).

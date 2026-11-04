@@ -18,6 +18,9 @@ var RUN = (function(){
 var R=null;
 var tickT=null, armT=null, modeT=null;
 
+/* the pixel cat (js/pet.js) and anything else listening hear about answers and sets */
+function emit(name, detail){ try{ window.dispatchEvent(new CustomEvent(name, {detail:detail})); }catch(e){} }
+
 /* ---------- lifecycle ---------- */
 function start(o){
   stop();
@@ -222,6 +225,7 @@ function submit(){
     FX.verdictWrong({el:optEl});
   }
   FUN.answered(res.ok, R.combo, optEl, MODES.auto(R));
+  emit('dk:answer', {ok:res.ok, combo:R.combo});
 
   if(R.ended){ setTimeout(function(){ if(R&&R.phase==='feedback') finish(); }, 1500); return; }
   if(MODES.auto(R)){ setTimeout(function(){ if(R&&R.phase==='feedback') next(); }, res.ok?560:1600); return; }
@@ -507,6 +511,7 @@ function finish(){
   PLAN.stamp();
   R.leftEnd=PLAN.track(R.track).minutes;
   FX.play('done');
+  emit('dk:setdone', {right:R.right, n:R.answered});
   UI.render({enter:true});
   window.scrollTo(0,0);
   UI.flushCelebrations();
