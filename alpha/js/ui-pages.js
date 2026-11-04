@@ -427,12 +427,14 @@ var SHELVES=[
   {k:'streak',  en:'Streak effects'},
   {k:'burst',   en:'Right-answer effects'},
   {k:'pack',    en:'Sound packs'},
+  {k:'cathat',  en:'Hats for your cat'},
   {k:'trophy',  en:'Trophies'},
   {k:'card',    en:'Collectible cards'},
   {k:'compete', en:'Competition'}
 ];
 function coinsTag(n){ return '<svg class="ci" viewBox="0 0 32 32" aria-hidden="true"><use href="#coinSym"/></svg>'+U.num(n); }
 function artOf(c){
+  if(c.kind==='cathat'){ try{ return '<img class="cathatpic" alt="" src="'+DKPET.preview(c.hat)+'">'; }catch(e){ return '&#128049;'; } }
   if(c.kind==='skin') return '<i class="skinchip" style="background:'+c.sw+'"></i>';
   if(c.kind==='ptheme') return '<i class="skinchip wide" style="background:'+c.sw+'"></i>';
   if(c.kind==='frame') return '<i class="framechip frame-'+c.id+'"></i>';
@@ -442,6 +444,7 @@ function artOf(c){
 }
 function cosmeticCard(c, g){
   var keep=GAME.SHELF[c.kind], owned=GAME.owns(c.id), on=!keep && (g.wear[c.kind]===c.id || (!g.wear[c.kind] && c.cost===0));
+  if(c.kind==='cathat') on = !!(window.DKPET && owned && DKPET.hat()===c.hat);
   var locked=!owned && GAME.lockedByLevel(c), off=!owned && !GAME.inSeason(c);
   var foot = on ? '<span class="kicker acc">'+L('in use')+'</span>'
     : owned ? (keep ? '<span class="kicker ok">'+L('on your shelf')+'</span>' : '<button class="btn xs ghost" data-act="wear" data-arg="'+c.id+'">'+L('Use')+'</button>')
@@ -480,6 +483,8 @@ function shop(){
       var list=GAME.COSMETICS.filter(function(c){ return c.season; });
       list.sort(function(a,b){ return (GAME.inSeason(b)?1:0)-(GAME.inSeason(a)?1:0); });
       body=list.map(function(c){ return cosmeticCard(c, g); }).join('');
+    } else if(k==='cathat' && !window.DKPET){
+      body='';
     } else if(k==='compete'){
       var soon=[['&#127942;','Weekly contest entry','A seat in this week\'s contest, ranked on active study time.'],
                 ['&#9876;&#65039;','Challenge a friend','A duel on the same questions, with a friend from Community.'],

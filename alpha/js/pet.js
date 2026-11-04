@@ -28,7 +28,7 @@
 if(window.DKPET) return;
 
 var KEY='drakkhak.pet.v1';
-var GW=30, GH=24;                       /* the sprite grid: poses are drawn on 28 x 22, with a pixel of room for the outline */
+var GW=30, GH=27;                       /* the sprite grid: poses are drawn on 28 x 22, with room for the outline and three rows for a hat */
 var S=(window.innerWidth||0)>=1200 ? 3 : 2;   /* screen pixels per grid pixel: bigger on a wide screen */
 
 /* ---------- coats ---------- */
@@ -39,7 +39,8 @@ var COATS={
   cream: {name:'Cream',      b:'#F2E4C8', s:'#D9C39C', l:'#FFF9EE', k:'#DFC9A1', m:'#DFC9A1', o:'#5B4834', e:'#4F7FA8', n:'#E9A0A0'},
   calico:{name:'Calico',     b:'#F7F2EA', s:'#DED5C6', l:'#FFFFFF', k:'#E08A3E', m:'#3A3438', o:'#2E2620', e:'#3F7A4A', n:'#E79A9A', patches:1}
 };
-var FIXED={p:'#EBA3A3', w:'#FFFFFF', c:'#D97757', g:'#F0BE3C'};
+var FIXED={p:'#EBA3A3', w:'#FFFFFF', c:'#D97757', g:'#F0BE3C',
+           r:'#D9483B', q:'#A3302A', u:'#3E7FD6', y:'#F6CF4A', d:'#2A2A30', f:'#F28DB5', v:'#FFFFFF'};
 
 /* ============================================================
    DRAWING: shapes on the grid, then an outline
@@ -97,7 +98,7 @@ function raster(shapes, coat){
       if(a.t==='patch' && !coat.patches) continue;
     }
     for(y=0;y<GH;y++) for(x=0;x<GW;x++){
-      var cur=g[y][x], px=x-0.5, py=y-0.5;
+      var cur=g[y][x], px=x-0.5, py=y-3.5;
       if(a.t==='stripes'){
         if((cur==='b') && px>=a.x0 && px<=a.x1 && py>=a.y0 && py<=a.y1 && ((x-1+(a.off||0))%3===0)) g[y][x]='k';
         continue;
@@ -148,7 +149,7 @@ function P(x,y,c){ return {t:'px',x:x,y:y,c:c}; }
 /* a head, placed by its centre: ears, muzzle, eye, nose, mouth */
 function head(hx,hy,o){
   o=o||{};
-  var s=[], ears=o.ears||'up';
+  var s=[{t:'head', hx:hx, hy:hy}], ears=o.ears||'up';
   if(ears==='up'){
     s.push(T([[hx-3.3,hy-1.6],[hx-2.0,hy-5.9],[hx+0.1,hy-2.9]],'b'));
     s.push(T([[hx+0.1,hy-2.9],[hx+2.1,hy-6.0],[hx+3.1,hy-1.4]],'b'));
@@ -232,6 +233,7 @@ function sleepPose(f){
   s.push({t:'patch',cx:15,cy:13.8,rx:2.6,ry:1.8,c:'m'});
   s.push(Cv([[4.6,18.6],[5.2,21.6],[15.5,21.0]],2.4,1.8,'s'));                     /* tail round the front */
   var hx=21.0, hy=16.0;
+  s.push({t:'head', hx:hx, hy:hy+0.4});
   s.push(T([[hx-3.2,hy-1.2],[hx-2.1,hy-6.0],[hx+0.2,hy-2.4]],'b'));
   s.push(T([[hx+0.2,hy-2.4],[hx+2.2,hy-5.8],[hx+3.2,hy-1.0]],'b'));
   s.push(T([[hx-2.5,hy-1.8],[hx-2.0,hy-4.6],[hx-0.8,hy-2.2]],'p'));
@@ -295,6 +297,17 @@ function heldPose(f){
   return s.concat(head(15.6,5,{eye:'wide'}));
 }
 
+/* hats, drawn round the head's centre; bought in Learn's shop */
+var HATS={
+  none:    {name:'No hat', short:'None'},
+  bow:     {name:'Ribbon bow', short:'Bow', draw:function(x,y){ return [T([[x+1.0,y-3.0],[x+2.6,y-4.4],[x+2.4,y-2.2]],'r'), T([[x+4.3,y-4.8],[x+2.6,y-3.5],[x+4.1,y-2.1]],'r'), P(Math.floor(x+2.6),Math.floor(y-3.3),'q')]; }},
+  flower:  {name:'Shapla flower', short:'Flower', draw:function(x,y){ var cx=Math.floor(x+2.5), cy=Math.floor(y-3.6); return [P(cx,cy,'y'),P(cx-1,cy,'f'),P(cx+1,cy,'f'),P(cx,cy-1,'f'),P(cx,cy+1,'f')]; }},
+  gamchha: {name:'Boishakh gamchha', short:'Gamchha', draw:function(x,y){ return [Ln([x-4.4,y-1.6],[x+3.4,y-2.8],1.5,'r',{clip:1}), Ln([x-4.2,y-1.8],[x-5.8,y-0.2],1.1,'r'), Ln([x-4.2,y-1.6],[x-5.4,y+0.6],1.0,'q'),
+                                                      P(Math.floor(x-2),Math.floor(y-2.2),'v'), P(Math.floor(x),Math.floor(y-2.5),'v'), P(Math.floor(x+2),Math.floor(y-2.8),'v')]; }},
+  party:   {name:'Party hat', short:'Party', draw:function(x,y){ return [T([[x-1.8,y-3.2],[x+0.3,y-8.8],[x+2.2,y-3.2]],'u'), Ln([x-1.1,y-4.9],[x+1.6,y-5.4],1.0,'y',{on:['u']}), Ln([x-0.4,y-6.8],[x+1.0,y-7.0],0.9,'y',{on:['u']}), E(x+0.3,y-9.1,1.0,0.9,'y')]; }},
+  cap:     {name:'Graduation cap', short:'Cap', draw:function(x,y){ return [{t:'rect',x:x-1.9,y:y-4.6,w:3.9,h:1.4,c:'d'}, {t:'rect',x:x-3.4,y:y-5.6,w:7.0,h:1.1,c:'d'}, Ln([x+3.3,y-5.1],[x+3.7,y-2.3],0.9,'y'), P(Math.floor(x+3.6),Math.floor(y-2.0),'y')]; }},
+  crown:   {name:'Little crown', short:'Crown', draw:function(x,y){ return [{t:'rect',x:x-2.3,y:y-4.9,w:4.8,h:1.4,c:'y'}, T([[x-2.3,y-4.7],[x-2.1,y-6.8],[x-0.8,y-4.7]],'y'), T([[x-0.9,y-4.7],[x+0.1,y-7.4],[x+1.1,y-4.7]],'y'), T([[x+1.0,y-4.7],[x+2.4,y-6.8],[x+2.5,y-4.7]],'y'), P(Math.floor(x),Math.floor(y-4.4),'r')]; }}
+};
 var POSES={
   sit0:function(){ return sitPose({}); },
   sit1:function(){ return sitPose({tail:1.2}); },
@@ -311,9 +324,14 @@ var POSES={
   held0:function(){ return heldPose(0); }, held1:function(){ return heldPose(1); }
 };
 var cache={};
-function frame(name, coatId){
-  var k=coatId+':'+name;
-  if(!cache[k]){ var coat=COATS[coatId]||COATS.ginger; cache[k]=toImage(raster(POSES[name](), coat), coat); }
+function frame(name, coatId, hat){
+  hat=HATS[hat]&&HATS[hat].draw ? hat : 'none';
+  var k=coatId+':'+hat+':'+name;
+  if(!cache[k]){
+    var coat=COATS[coatId]||COATS.ginger, sh=POSES[name]();
+    if(hat!=='none'){ for(var i=0;i<sh.length;i++) if(sh[i].t==='head'){ sh=sh.concat(HATS[hat].draw(sh[i].hx, sh[i].hy)); break; } }
+    cache[k]=toImage(raster(sh, coat), coat);
+  }
   return cache[k];
 }
 
@@ -336,12 +354,12 @@ function bit(name){
 }
 
 /* expose the drawing for previews */
-window.DKPET_DRAW={frame:frame, POSES:POSES, COATS:COATS, GW:GW, GH:GH};
+window.DKPET_DRAW={frame:frame, POSES:POSES, COATS:COATS, HATS:HATS, GW:GW, GH:GH};
 
 /* ============================================================
    WHAT IS KEPT: one record, shared by Learn and the community
    ============================================================ */
-var DEF={v:1, on:true, name:'Mishti', coat:'ginger', stay:false, quiet:false, x:0.82, love:0, seen:0, napping:false, met:0};
+var DEF={v:1, on:true, name:'Mishti', coat:'ginger', hat:'none', hats:[], stay:false, quiet:false, x:0.82, love:0, seen:0, napping:false, met:0, played:0};
 var store=load();
 function load(){
   var j=null;
@@ -349,6 +367,9 @@ function load(){
   var o={}, k;
   for(k in DEF) o[k]=(j && j[k]!==undefined) ? j[k] : DEF[k];
   if(!COATS[o.coat]) o.coat='ginger';
+  if(!Array.isArray(o.hats)) o.hats=[];
+  o.hats=o.hats.filter(function(h){ return HATS[h] && h!=='none'; });
+  if(!HATS[o.hat] || (o.hat!=='none' && o.hats.indexOf(o.hat)<0)) o.hat='none';
   o.name=String(o.name||DEF.name).slice(0,16);
   return o;
 }
@@ -486,6 +507,7 @@ function land(surf){
   C.surf=surf||null;
   if(surf) C.dx=C.x-surf.getBoundingClientRect().left;
   C.y=surfY(C.surf); C.vy=0; C.squash=0.14;
+  if(ball && !ball.done && !C.surf){ setState('chase'); return; }
   setState('idle', rnd(2500,6000));
   remember();
 }
@@ -573,6 +595,80 @@ function goQuiet(){
   setState('quiet');
 }
 
+/* ---------- a ball of yarn to chase ---------- */
+var ball=null, BR=5*S;                          /* the ball's radius on screen */
+function yarnCanvas(){
+  var n=11, cv=document.createElement('canvas'); cv.width=n; cv.height=n;
+  var cx=cv.getContext('2d'), x, y;
+  for(y=0;y<n;y++) for(x=0;x<n;x++){
+    var dx=x-5, dy=y-5, d=Math.sqrt(dx*dx+dy*dy);
+    if(d>5.2) continue;
+    cx.fillStyle = d>4.3 ? '#5A1E2A' : ((x+y*2)%5===0 || (x*2-y)%7===0) ? '#F28DA0' : '#D9485E';
+    cx.fillRect(x,y,1,1);
+  }
+  cx.fillStyle='#FFD3DB'; cx.fillRect(3,3,1,1); cx.fillRect(4,2,1,1);
+  return cv;
+}
+function play(){
+  if(!root || env.question || env.still) return;
+  closeMenu();
+  removeBall(true);
+  var el=yarnCanvas();
+  el.className='dkp-ball';
+  el.style.zIndex=root.style.zIndex;
+  document.body.appendChild(el);
+  var side = C.x<innerWidth/2 ? 1 : -1;
+  ball={el:el, x:Math.max(BR+4, Math.min(innerWidth-BR-4, C.x+side*rnd(140,220))), y:env.top+BR+30, vx:-side*rnd(40,90), vy:0, rot:0, t0:now(), bats:0, done:0};
+  el.addEventListener('pointerdown', function(e){
+    e.preventDefault(); e.stopPropagation(); lastAct=now();
+    if(!ball) return;
+    ball.vx=(ball.x>=e.clientX?1:-1)*rnd(260,460); ball.vy=-rnd(240,380); ball.t0=now()-2000; ball.done=0;
+  });
+  store.played=(store.played||0)+1; save();
+  if(C.surf || C.st==='sleep' || C.st==='quiet'){ C.surf=null; fall(); }
+  if(C.st!=='fall') setState('chase');
+  say(chance(0.5)?'Yarn!':'Mine!', true);
+}
+function removeBall(now_){
+  if(!ball) return;
+  var el=ball.el; ball=null;
+  if(now_){ if(el.parentNode) el.parentNode.removeChild(el); return; }
+  el.style.transition='opacity .5s'; el.style.opacity='0';
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 520);
+}
+function ballTick(dt){
+  if(!ball) return;
+  var b=ball, fl=env.floor;
+  b.vy+=1700*dt; b.x+=b.vx*dt; b.y+=b.vy*dt;
+  if(b.y>fl-BR){ b.y=fl-BR; b.vy = Math.abs(b.vy)>90 ? -b.vy*0.42 : 0; b.vx-=b.vx*Math.min(1,1.5*dt); }
+  if(b.x<BR+2){ b.x=BR+2; b.vx=Math.abs(b.vx)*0.6; }
+  if(b.x>innerWidth-BR-2){ b.x=innerWidth-BR-2; b.vx=-Math.abs(b.vx)*0.6; }
+  b.rot+=b.vx*dt/BR;
+  b.el.style.transform='translate3d('+Math.round(b.x-BR)+'px,'+Math.round(b.y-BR)+'px,0) rotate('+b.rot.toFixed(2)+'rad)';
+  /* the game ends after six bats, or fifteen seconds */
+  if(!b.done && (b.bats>=6 || now()-b.t0>15000)){
+    b.done=now();
+    if(C.st==='chase'||C.st==='bat'){ happy(1300); hearts(2); say(['That was fun!','Again tomorrow?','I win.'][Math.floor(Math.random()*3)], true); }
+  }
+  if(b.done && now()-b.done>4000) removeBall();
+}
+function chaseTick(dt){
+  if(!ball || ball.done){ setState('idle', rnd(2000,4000)); return; }
+  var b=ball, side = C.x<=b.x ? 1 : -1, target=b.x - side*(W*0.42+BR*0.6);
+  C.face=side;
+  var gap=target-C.x, onFloor=b.y>env.floor-BR-14;
+  if(Math.abs(gap)<10 && onFloor && Math.abs(b.vx)<160){
+    setState('bat', 320);
+    b.vx=side*rnd(240,470); b.vy=-rnd(150,330); b.bats++;
+    if(chance(0.3)) hearts(1);
+    return;
+  }
+  var sp=Math.min(Math.abs(gap), 170*dt);
+  C.x+=sp*(gap>0?1:-1);
+  C.x=Math.max(W/2, Math.min(innerWidth-W/2, C.x));
+  C.speed=170;
+}
+
 /* ---------- reactions ---------- */
 function happy(ms){ if(C.st==='held'||C.st==='jump'||C.st==='fall') return; C.hop=0.0001; setState('happy', ms||900); hearts(1); }
 function sad(){ if(C.st==='held'||C.st==='jump'||C.st==='fall') return; setState('sad', 1500); }
@@ -609,7 +705,7 @@ function tick(ts){
   }
 
   /* a question has appeared or gone */
-  if(env.question && C.st!=='quiet' && C.st!=='held' && C.st!=='happy' && C.st!=='sad') goQuiet();
+  if(env.question && C.st!=='quiet' && C.st!=='held' && C.st!=='happy' && C.st!=='sad'){ removeBall(true); goQuiet(); }
   if(!env.question && C.st==='quiet') setState('idle', 1200);
 
   var idleLong = t-lastAct>75000;
@@ -643,6 +739,12 @@ function tick(ts){
       break;
     case 'held':
       break;
+    case 'chase':
+      chaseTick(dt);
+      break;
+    case 'bat':
+      if(t>C.until) setState('chase');
+      break;
     case 'sleep':
       if(!store.napping && C.until && t>C.until && !idleLong) setState('stretch', 1100);
       if(t-C.zAt>1800){ C.zAt=t; particle('zed'); }
@@ -662,6 +764,8 @@ function tick(ts){
         if(cx!==null && Math.abs(cx-C.x)>3) walkTo(cx); else if(C.surf) hopDown();
       }
   }
+  ballTick(dt);
+  if(ball && env.question){ removeBall(true); }
   C.t+=dt;
   if(C.squash>0) C.squash-=dt;
   if(C.st==='happy') C.hop+=dt;
@@ -674,6 +778,8 @@ var shown='';
 function pick(t){
   switch(C.st){
     case 'walk': case 'enter': return 'walk'+(Math.floor(t/(C.speed>80?90:150))%4);
+    case 'chase': return 'walk'+(Math.floor(t/80)%4);
+    case 'bat': return 'jump';
     case 'jump': return C.jump && C.jump.crouch>0 ? 'sit0' : 'jump';
     case 'fall': return 'jump';
     case 'held': return 'held'+(Math.floor(t/260)%2);
@@ -689,12 +795,12 @@ function pick(t){
   return C.tail ? 'sit1' : 'sit0';
 }
 function draw(t){
-  var name=pick(t), key=store.coat+':'+name;
+  var name=pick(t), key=store.coat+':'+store.hat+':'+name;
   if(key!==shown){
     shown=key;
     var cx=cat.getContext('2d');
     cx.clearRect(0,0,GW,GH);
-    cx.drawImage(frame(name, store.coat),0,0);
+    cx.drawImage(frame(name, store.coat, store.hat),0,0);
   }
   var hop = C.st==='happy' ? Math.max(0, Math.sin(Math.min(1,C.hop/0.45)*Math.PI))*14 : 0;
   var sq = C.squash>0 ? 0.9 : (C.st==='jump' && C.jump && C.jump.crouch>0 ? 0.88 : 1);
@@ -777,7 +883,12 @@ function onUp(e){
   var p=press; press=null;
   if(p.moved){ fall(); if(chance(0.35)) say('Mrrp.'); return; }
   if(p.menu) return;
-  if(now()-p.t<500) pet();
+  if(now()-p.t<500){
+    /* a double tap brings out the yarn */
+    if(now()-(onUp.last||0)<380 && !ball){ onUp.last=0; play(); return; }
+    onUp.last=now();
+    pet();
+  }
 }
 function pet(){
   store.love=(store.love||0)+1; save();
@@ -785,7 +896,7 @@ function pet(){
   else happy(1200);
   hearts(2+(store.love%3===0?1:0));
   mrrp();
-  if(store.love===1) say('Purr... I am '+store.name+'. Hold me for my menu.', true);
+  if(store.love===1) say('Purr... I am '+store.name+'. Hold me for my menu, or tap twice for yarn.', true);
   else if(store.love%12===0) say(store.name+' likes you a lot.', true);
   else if(chance(0.25)) say(['Purr...','Mrrp!','More, please.','Again!'][Math.floor(Math.random()*4)]);
   showHandle();
@@ -800,9 +911,9 @@ function showHandle(){
 /* ============================================================
    THE CAT'S MENU
    ============================================================ */
-function coatPreview(id){
+function coatPreview(id, hat){
   var cv=document.createElement('canvas'); cv.width=GW; cv.height=GH;
-  cv.getContext('2d').drawImage(frame('sit0', id),0,0);
+  cv.getContext('2d').drawImage(frame('sit0', id, hat===undefined?store.hat:hat),0,0);
   cv.className='dkp-coatpic';
   return cv;
 }
@@ -815,9 +926,11 @@ function openMenu(){
       '<input id="dkpName" maxlength="16" autocomplete="off" spellcheck="false"></div>'+
       '<button type="button" class="dkp-x" data-k="close" aria-label="Close">&times;</button></div>'+
     '<div class="dkp-l">Coat</div><div class="dkp-coats"></div>'+
+    '<div class="dkp-l">Hat</div><div class="dkp-hats"></div>'+
     '<label class="dkp-row"><input type="checkbox" data-k="stay"> Stay in one place</label>'+
     '<label class="dkp-row"><input type="checkbox" data-k="quiet"> No speech bubbles</label>'+
-    '<div class="dkp-btns"><button type="button" data-k="nap"></button><button type="button" data-k="hide">Hide the cat</button></div>'+
+    '<div class="dkp-btns"><button type="button" data-k="play">Play with yarn</button><button type="button" data-k="nap"></button></div>'+
+    '<div class="dkp-btns"><button type="button" data-k="hide">Hide the cat</button><button type="button" data-k="close">Done</button></div>'+
     '<p class="dkp-foot"></p>';
   document.body.appendChild(m);
   menuEl=m;
@@ -829,6 +942,7 @@ function openMenu(){
     b.appendChild(coatPreview(id)); var s=document.createElement('span'); s.textContent=COATS[id].name; b.appendChild(s);
     box.appendChild(b);
   });
+  paintHats(m);
   m.querySelector('.dkp-mpic').appendChild(coatPreview(store.coat));
   m.querySelector('[data-k="stay"]').checked=!!store.stay;
   m.querySelector('[data-k="quiet"]').checked=!!store.quiet;
@@ -836,19 +950,46 @@ function openMenu(){
   m.addEventListener('click', function(e){
     var t=e.target.closest('[data-coat],[data-k]'); if(!t) return;
     var c=t.getAttribute('data-coat'), k=t.getAttribute('data-k');
+    var hh=t.getAttribute('data-hat');
     if(c){ store.coat=c; save(); shown=''; var pic=m.querySelector('.dkp-mpic'); pic.innerHTML=''; pic.appendChild(coatPreview(c));
-      var all=m.querySelectorAll('.dkp-coat'); for(var i=0;i<all.length;i++) all[i].classList.toggle('on', all[i].getAttribute('data-coat')===c); happy(700); }
+      var all=m.querySelectorAll('.dkp-coat'); for(var i=0;i<all.length;i++) all[i].classList.toggle('on', all[i].getAttribute('data-coat')===c); paintHats(m); happy(700); }
+    else if(hh){ setHat(hh); var pic2=m.querySelector('.dkp-mpic'); pic2.innerHTML=''; pic2.appendChild(coatPreview(store.coat)); paintHats(m); }
     else if(k==='close') closeMenu();
     else if(k==='stay'){ store.stay=t.checked; save(); }
     else if(k==='quiet'){ store.quiet=t.checked; save(); }
     else if(k==='nap'){ store.napping=!store.napping; save(); if(store.napping) setState('sleep'); else setState('stretch', 1000); paintMenu(); }
     else if(k==='hide'){ closeMenu(); setOn(false); }
+    else if(k==='play'){ closeMenu(); store.napping=false; save(); play(); }
   });
   /* place it beside the cat, inside the window */
   var mw=Math.min(300, innerWidth-24), mh=m.offsetHeight||320;
   var left=Math.max(12, Math.min(innerWidth-mw-12, C.x-mw/2)), top=Math.max(12, Math.min(innerHeight-mh-12, C.y-H-mh-10));
   m.style.width=mw+'px'; m.style.left=left+'px'; m.style.top=top+'px';
   setTimeout(function(){ document.addEventListener('pointerdown', outside, true); document.addEventListener('keydown', escKey, true); }, 0);
+}
+function paintHats(m){
+  var box=m.querySelector('.dkp-hats'); if(!box) return;
+  box.innerHTML='';
+  var list=['none'].concat(store.hats);
+  if(list.length<2){
+    var p=document.createElement('p'); p.className='dkp-hint';
+    p.innerHTML='Hats for '+esc(store.name)+' are in the <a href="'+shopLink()+'">Learn shop</a>.';
+    box.appendChild(p); return;
+  }
+  list.forEach(function(h){
+    var b=document.createElement('button'); b.type='button'; b.className='dkp-coat'+(store.hat===h?' on':''); b.setAttribute('data-hat',h); b.title=HATS[h].name;
+    b.appendChild(coatPreview(store.coat, h)); var s=document.createElement('span'); s.textContent=HATS[h].short; b.appendChild(s);
+    box.appendChild(b);
+  });
+}
+function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+/* Learn's shop: here if this is Learn, otherwise Learn at /learn/ */
+function shopLink(){ return window.UI && window.UI.go ? '#/shop' : '/learn/#/shop'; }
+function setHat(h){
+  if(!HATS[h]) return;
+  if(h!=='none' && store.hats.indexOf(h)<0) return;
+  store.hat=h; save(); shown='';
+  if(root) happy(700);
 }
 function paintMenu(){
   if(!menuEl) return;
@@ -883,6 +1024,7 @@ var CSS=
 '.dkp-handle{position:absolute;right:-14px;top:-6px;width:24px;height:24px;border-radius:12px;border:1.5px solid var(--rule-2,#CFCBBE);'+
   'background:var(--card,#FAF9F5);color:var(--ink,#141413);font:700 14px/1 system-ui;pointer-events:auto;cursor:pointer;padding:0}'+
 '.dkpet:hover .dkp-handle{display:block!important}'+
+'.dkp-ball{position:fixed;left:0;top:0;width:'+(BR*2)+'px;height:'+(BR*2)+'px;image-rendering:pixelated;cursor:pointer;touch-action:none;will-change:transform}'+
 '.dkp-bit{position:absolute;width:14px;image-rendering:pixelated;pointer-events:none;animation:dkpUp 1.4s ease-out forwards}'+
 '.dkp-bit.zed{width:10px;animation-name:dkpZ}'+
 '@keyframes dkpUp{0%{opacity:0;transform:translate(-50%,6px) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(-50%,-34px) scale(1.1)}}'+
@@ -893,13 +1035,16 @@ var CSS=
 '.dkp-menu.night{background:#1D1C16;color:#EDE9DC;border-color:#332F26}'+
 '.dkp-mh{display:flex;align-items:center;gap:10px;margin-bottom:10px}'+
 '.dkp-mh>div{flex:1;min-width:0}'+
-'.dkp-mpic canvas{width:60px;height:48px;image-rendering:pixelated;display:block}'+
+'.dkp-mpic canvas{width:60px;height:auto;image-rendering:pixelated;display:block}'+
 '.dkp-l{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.65;margin:0 0 4px}'+
 '#dkpName{width:100%;height:34px;padding:0 10px;border-radius:9px;border:1.5px solid var(--rule,#E0DDD2);background:transparent;color:inherit;font:600 15px "Hind Siliguri",system-ui,sans-serif}'+
 '.dkp-x{align-self:flex-start;width:28px;height:28px;border:0;background:none;color:inherit;font-size:22px;line-height:1;cursor:pointer;opacity:.7}'+
 '.dkp-coats{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px}'+
 '.dkp-coat{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border-radius:10px;border:1.5px solid transparent;background:none;color:inherit;cursor:pointer;font:600 10.5px/1.1 system-ui}'+
-'.dkp-coat canvas{width:45px;height:36px;image-rendering:pixelated}'+
+'.dkp-coat canvas{width:45px;height:auto;image-rendering:pixelated}'+
+'.dkp-hats{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px}'+
+'.dkp-hint{grid-column:1/-1;margin:0 0 4px;font-size:12.5px;opacity:.8}'+
+'.dkp-hint a{color:var(--accent-press,#C6613F);font-weight:600}'+
 '.dkp-coat.on{border-color:var(--accent,#D97757);background:var(--accent-soft,#F6E6DE)}'+
 '.dkp-menu.night .dkp-coat.on{background:#2F241D}'+
 '.dkp-row{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer}'+
@@ -1022,13 +1167,26 @@ window.DKPET={
   on:function(){ return !!store.on; },
   setOn:setOn,
   menu:function(){ if(!store.on) setOn(true); setTimeout(openMenu, 50); },
+  play:function(){ if(!store.on) setOn(true); setTimeout(play, 60); },
   name:function(){ return store.name; },
+  hat:function(){ return store.hat; },
+  setHat:setHat,
+  addHat:function(h){ if(HATS[h] && h!=='none' && store.hats.indexOf(h)<0){ store.hats.push(h); save(); } },
+  hats:HATS,
+  preview:function(hat, coat){ return frame('sit0', coat||store.coat, hat).toDataURL(); },
   say:function(t){ say(t, true); },
   _state:function(){ return {st:C.st, x:Math.round(C.x), y:Math.round(C.y), surf:!!C.surf, face:C.face, fade:C.fade, floor:env.floor, top:env.top, minX:env.minX, maxX:env.maxX, perches:perches.length, question:env.question}; },
   _do:function(what){ if(what==='perch') return tryPerch(); if(what==='walk'){ var e=ext(C.surf); walkTo(rnd(e[0],e[1])); } if(what==='sleep') setState('sleep', 60000); if(what==='decide') decide(); }
 };
 
-function start(){ if(store.on) build(); }
+function syncLearn(){
+  try{
+    if(!(window.GAME && GAME.COSMETICS && GAME.owns)) return;
+    GAME.COSMETICS.forEach(function(c){ if(c.kind==='cathat' && c.hat && c.hat!=='none' && GAME.owns(c.id) && store.hats.indexOf(c.hat)<0) store.hats.push(c.hat); });
+    save();
+  }catch(e){}
+}
+function start(){ syncLearn(); if(store.on) build(); }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
 
 })();

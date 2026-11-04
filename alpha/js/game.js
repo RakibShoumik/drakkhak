@@ -368,6 +368,14 @@ var COSMETICS=[
   {id:'boishakh',kind:'burst', more:1, en:'Pohela Boishakh', cost:260, art:'&#127887;', season:[401,430], when:'April'},
   {id:'barsha',  kind:'burst', more:1, en:'Monsoon drops',   cost:240, art:'&#127783;&#65039;', season:[615,831], when:'15 Jun to 31 Aug'},
 
+  /* hats for the pixel cat (js/pet.js): bought here, worn on the whole site */
+  {id:'hatbow',   kind:'cathat', more:1, hat:'bow',     en:'Ribbon bow',       cost:90},
+  {id:'hatflower',kind:'cathat', more:1, hat:'flower',  en:'Shapla flower',    cost:110},
+  {id:'hatgam',   kind:'cathat', more:1, hat:'gamchha', en:'Boishakh gamchha', cost:160},
+  {id:'hatparty', kind:'cathat', more:1, hat:'party',   en:'Party hat',        cost:200, lv:4},
+  {id:'hatcap',   kind:'cathat', more:1, hat:'cap',     en:'Graduation cap',   cost:320, lv:8},
+  {id:'hatcrown', kind:'cathat', more:1, hat:'crown',   en:'Little crown',     cost:600, lv:15},
+
   /* trophies and collectible cards: kept on your shelf, never random */
   {id:'cupB', kind:'trophy', more:1, en:'Bronze cup',      cost:150,  art:'&#129353;'},
   {id:'cupS', kind:'trophy', more:1, en:'Silver cup',      cost:350,  lv:6,  art:'&#129352;'},
@@ -463,11 +471,13 @@ function buy(id){
   if(!inSeason(c)){ UI.toast(L('On sale in its season: '+c.when+'.')); return false; }
   if(!spend(c.cost)){ UI.toast(L('Not enough coins &mdash; you need '+(c.cost-DB.game().coins)+' more.','কয়েন যথেষ্ট নয় &mdash; আরও '+(c.cost-DB.game().coins)+'টি দরকার।')); return false; }
   DB.game().own[id]=1; DB.save(); FX.play('coin');
+  if(c.kind==='cathat' && window.DKPET){ DKPET.addHat(c.hat); DKPET.setHat(c.hat); }
   UI.toast('<b>'+U.h(c.name)+'</b>'+L(' is yours now.',' এখন আপনার।'));
   return true;
 }
 function wear(id){
   var c=byId(id); if(!c || !owns(id)) return false;
+  if(c.kind==='cathat'){ if(window.DKPET){ DKPET.addHat(c.hat); DKPET.setHat(c.hat); } return true; }
   DB.game().wear[c.kind]=id; DB.save();
   if(c.kind==='pack') FX.setPack(id);
   if(c.kind==='skin'||c.kind==='bar'||c.kind==='streak') UI.applyTheme();

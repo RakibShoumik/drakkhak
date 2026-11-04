@@ -198,8 +198,11 @@ It walks along the bottom of the window, jumps up to sit on the cards and rides 
 scroll, grooms, stretches, naps when you stop for a while, turns to look at your pointer, and
 hops with a heart when you get a question right (a bubble at 5, 10, 15 in a row; a cheer when a
 set ends; a sparkle for a new level or badge). Tap it to pet it, drag it anywhere, and hold it
-(or right-click) for its menu: name, five coats, *stay in one place*, *no speech bubbles*, *nap
-here*, *hide*. Settings → Pixel cat turns it on and off.
+(or right-click) for its menu: name, five coats, its hats, *play with yarn* (or tap it twice: a
+ball of yarn drops in, the cat chases it and bats it along, and you can tap the ball to kick it),
+*stay in one place*, *no speech bubbles*, *nap here*, *hide*. Hats (ribbon bow, shapla flower,
+Boishakh gamchha, party hat, graduation cap, little crown) are on the shop's *Hats for your cat*
+shelf and the cat wears them on the whole site. Settings → Pixel cat turns it on and off.
 
 It never gets in the way: it never stops on a button, link or field (and walks off if one
 appears under it), prefers empty space to text, goes to a corner and keeps quiet while a
