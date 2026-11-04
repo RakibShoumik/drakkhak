@@ -74,7 +74,7 @@ function drk_opts() {
     'notice.tone'    => array('choice', 'accent', array('accent', 'info', 'warn')),
     'notice.dismiss' => array('bool', true),
 
-    'layout.nav'     => array('choice', 'top', array('top', 'left', 'mini', 'right', 'dock')),
+    'layout.nav'     => array('choice', 'left', array('top', 'left', 'mini', 'right', 'dock')),
     'layout.start'   => array('choice', 'classic', array('classic', 'list', 'road', 'subjects', 'columns', 'split', 'tabs', 'strip', 'focus', 'custom')),
     'layout.order'   => array('list', array('hero', 'road', 'nudge', 'mistakes', 'ahead', 'weeks', 'subjects'), array('hero', 'road', 'nudge', 'mistakes', 'ahead', 'weeks', 'subjects')),
     'layout.hide'    => array('list', array(), array('road', 'nudge', 'mistakes', 'ahead', 'weeks', 'subjects')),

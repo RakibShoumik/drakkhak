@@ -306,7 +306,7 @@ var SECTIONS=[
      what:'প্রতিটি অধ্যায় শুরু হয় তার নিজের প্রশ্ন থেকে বানানো একটি রিভিশন শিট দিয়ে: প্রতিটি অংশের মূল কথা আর একটি উদাহরণ। তারপর অনুশীলন।',
      why:'নতুন বিষয়ে আগে একটি সমাধান করা উদাহরণ দেখলে অপচয় কমে, শেখা দ্রুত হয়।'}),
   S(10,10,{t:'An honest countdown: days left, stars and the map',
-     what:'The top bar shows the days of study left for the whole syllabus at your daily time (1 hr 59 min unless you change it). Each done question takes a step off it. Chapters earn stars at one third, two thirds and all of their questions done, and the map shows the whole climb.',
+     what:'The top bar shows the days of study left for the whole syllabus at your daily time (1 hr 59 min unless you change it). Each done question takes a step off it. Chapters earn stars at half, three quarters and nine tenths of their questions done, and the map shows the whole climb.',
      why:'People work harder as a goal comes into view, and progress that is visible and measured in real work keeps effort going. A countdown only helps if it is honest, so it is built from the work itself — not from minutes on the page.',
      src:['Hull, C. L. (1932). The goal-gradient hypothesis and maze learning. <i>Psychological Review</i>, 39(1).','Kivetz, R., Urminsky, O., & Zheng, Y. (2006). The goal-gradient hypothesis resurrected. <i>Journal of Marketing Research</i>, 43(1).']},
     {t:'সৎ কাউন্টডাউন: বাকি দিন, তারা আর ম্যাপ',

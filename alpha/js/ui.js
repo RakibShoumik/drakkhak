@@ -41,6 +41,18 @@ var TAB_ICONS={
   progress:'M4 20V10M10 20V4M16 20v-7M21 20H3',
   settings:'M4 7h10M18 7h2M4 17h2M10 17h10M16 4.5v5M8 14.5v5'
 };
+/* the left sidebar: every place, including the ones that sit inside
+   Progress on a phone, each with an icon in the WoWonder sidebar's manner */
+var SIDE=[
+  {id:'today',    en:'Start'},
+  {id:'map',      en:'Map'},
+  {id:'practice', en:'Practice'},
+  {id:'mistakes', en:'Mistakes', ic:'M6 3h12v18l-6-4-6 4zM9.5 8.5l5 5M14.5 8.5l-5 5'},
+  {id:'badges',   en:'Badges',   ic:'M12 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM8.5 13.3 7 21l5-2.6 5 2.6-1.5-7.7'},
+  {id:'shop',     en:'Shop',     ic:'M5 8h14l-1.2 12H6.2zM9 8V6.5a3 3 0 0 1 6 0V8'},
+  {id:'progress', en:'Progress'},
+  {id:'settings', en:'Settings'}
+];
 /* every inner page belongs to one of the places, and that one stays lit */
 var PARENT={
   today:'today', welcome:'today',
@@ -49,8 +61,10 @@ var PARENT={
   mock:'practice', quests:'practice', section:'practice', run:'practice',
   progress:'progress', plan:'progress', stats:'progress', predict:'progress', wrapped:'progress',
   record:'progress', badges:'progress', collection:'progress', shop:'progress', social:'progress',
-  settings:'settings', research:'research', league:'progress'
+  settings:'settings', research:'research', league:'progress', mistakes:'progress'
 };
+/* the sidebar lights its own entry for the pages it lists */
+var SIDE_OWN={mistakes:1, badges:1, shop:1};
 /* older names for places still arrive from the engine and old links */
 var ALIAS={home:'today', start:'today', track:'practice', chapter:'topic'};
 
@@ -234,12 +248,44 @@ function buildNav(){
   });
   el('nav').innerHTML=nav;
   el('tabbar').innerHTML=tab;
+  buildSide();
   el('tabbar').style.setProperty('--tabs', shown.length);
   SITE.paintBrand();
   SITE.prune(el('top'));
   var si=el('tsearchIn'); if(si) si.placeholder=L('Find a chapter','অধ্যায় খুঁজুন');
   var ws=document.querySelectorAll('.worlds a span');
   if(ws.length===2){ ws[0].textContent=L('Learn','শিখুন'); ws[1].textContent=L('Community','কমিউনিটি'); }
+}
+function buildSide(){
+  var box=el('lside'); if(!box) return;
+  var o='<nav class="ls-nav">';
+  SIDE.forEach(function(t){
+    if(!SITE.routeOn(t.id) || !VIEWS[t.id]) return;
+    o+='<a href="#/'+t.id+'" data-go="'+t.id+'" data-side="'+t.id+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+(t.ic||TAB_ICONS[t.id])+'"/></svg>'+
+       '<span class="nm">'+t.en+'</span><span class="tk"></span></a>';
+  });
+  o+='</nav><div class="ls-subj" id="subjBox"></div>'+
+     '<a class="ls-foot" href="#/research" data-go="research"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/></svg>'+
+     '<span><b>How Drakkhak teaches</b><small>The research behind it</small></span></a>';
+  box.innerHTML=o;
+}
+function paintSide(){
+  var box=el('lside'); if(!box) return;
+  var cur=SIDE_OWN[route]?route:(PARENT[route]||'today'), t=track(), g=DB.game();
+  var due=AB.dueItems(t).length, bank=mistakeCount(t), earned=(g.badges?Object.keys(g.badges).length:0);
+  var ticks={practice:due?(due>99?'99+':due):'', mistakes:bank?(bank>99?'99+':bank):'', badges:earned||'', shop:U.num(g.coins)};
+  var links=box.querySelectorAll('a[data-side]');
+  for(var i=0;i<links.length;i++){
+    var a=links[i], k=a.getAttribute('data-side'), tk=a.querySelector('.tk');
+    a.classList.toggle('on', k===cur);
+    tk.textContent=ticks[k]||'';
+    tk.className='tk'+((k==='practice'&&due)||(k==='mistakes'&&bank)?' acc':'')+(k==='shop'?' coin':'');
+  }
+  var rf=box.querySelector('.ls-foot'); if(rf) rf.classList.toggle('on', route==='research');
+}
+/* every question in the mistake bank: missed and not yet won back */
+function mistakeCount(t){
+  try{ return MISTAKES.count(t); }catch(e){ return 0; }
 }
 function onClick(e){
   if(!(e.target.closest && e.target.closest('#pmenu,#avatarBtn'))) closeMenu();
@@ -269,6 +315,7 @@ function refreshNav(){
     }
   });
   paintSubjects();
+  paintSide();
   moveInd();
 }
 /* the white pill slides behind the place you are on */
@@ -374,7 +421,7 @@ function profileMenu(){
   };
   m.innerHTML='<div class="pm-head"><span class="kicker">'+h(String(s.name||'').trim()||L('Your record','আপনার রেকর্ড'))+'</span>'+
       '<span class="pm-sub mono">'+tname()+' &middot; '+L('Level ','লেভেল ')+LV.level+' &middot; '+U.num(g.coins)+L(' coins',' কয়েন')+'</span></div>'+
-    item('settings', L('Settings','সেটিংস'), L('Daily time, exam date, language, HSC or SSC','দৈনিক সময়, পরীক্ষার তারিখ, ভাষা, এইচএসসি বা এসএসসি'))+
+    item('settings', L('Settings','সেটিংস'), L('Daily time, exam date, HSC or SSC','দৈনিক সময়, পরীক্ষার তারিখ, এইচএসসি বা এসএসসি'))+
     item('badges', L('Badges','ব্যাজ'), null)+
     item('record', L('Your record','আপনার রেকর্ড'), null)+
     item('research', L('How Drakkhak teaches','দ্রাক্ষাক কীভাবে শেখায়'), L('The research behind it','এর পেছনের গবেষণা'))+
@@ -530,7 +577,7 @@ var welcomeMore=false;
 function welcome(){
   var o='<div class="welcome">'+
     '<div class="wbar"><span class="brand" style="border:0;margin:0;padding:0;width:auto">'+
-      '<svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#logoSym"/></svg>'+
+      '<svg class="brand-mark" viewBox="0 0 112 28" aria-hidden="true"><use href="#logoSym"/></svg>'+
       '<span><span class="brand-name">Drakkhak</span><span class="brand-sub">'+(ICE.edition==='ssc'?'SSC':'HSC')+'</span></span></span>'+
       '<button class="link quiet" data-act="welcomeMore">'+L('I have used it before','আগে ব্যবহার করেছি')+'</button></div>'+
     '<div class="stack s">'+
@@ -600,25 +647,29 @@ function heroSet(t, now, set){
       '<div class="t-go"><button class="btn lg" data-go="mock">'+L('Sit a full paper','একটি পূর্ণ পত্র দিন')+'</button>'+
       '<a href="#/map" data-go="map" class="t-alt">'+L('Open the map','ম্যাপ খুলুন')+'</a></div></div>';
   }
-  var tp=now.x.topic, id=now.id, name=ICE.tname(tp);
-  var unseen=0;
-  for(var i=0;i<ICE.Q.length;i++){ var q=ICE.Q[i]; if(q.topic===id && AB.untouched(q)) unseen++; }
+  /* every set mixes the subjects: say which chapter each one is on */
+  var fr=PLAN.frontier(t), unseen=0, i;
+  fr.forEach(function(f){ AB.inTopic(f.step.id).forEach(function(q){ if(AB.untouched(q)) unseen++; }); });
   var due=AB.dueItems(t).length;
   var nNew=Math.min(unseen, due ? AB.newShare(set) : set), nBack=set-nNew;
   var pips='';
   for(i=0;i<set;i++) pips+='<i class="'+(i<nNew?'n':'b')+'" style="--i:'+i+'"></i>';
-  var size=name.length>46?' xl3':name.length>28?' xl2':'';
+  var rows=fr.map(function(f){
+    var tp=f.step.x.topic;
+    return '<a class="t-mix" href="#/topic/'+encodeURIComponent(f.step.id)+'" data-go="topic" data-p="'+h(f.step.id)+'" style="--sc:var(--s-'+f.sj.id+')">'+
+      '<i></i><b>'+h(ICE.subjname(f.sj))+'</b><span>'+L('Ch. ')+tp.n+' &middot; '+h(ICE.tname(tp))+'</span></a>';
+  }).join('');
   return '<div class="t-hero">'+
-    '<div class="kicker acc">'+greeting()+' &middot; '+L('today\'s set is ready','আজকের সেট তৈরি')+'</div>'+
-    '<div><div class="t-where">'+h(ICE.sname(tp.sec))+' &middot; '+L('Chapter ','অধ্যায় ')+tp.n+'</div>'+
-      '<div class="t-title'+size+'">'+h(name)+'</div></div>'+
+    '<div class="kicker acc">'+greeting()+' &middot; '+L('today\'s set is ready')+'</div>'+
+    '<div><div class="t-where">'+L(fr.length+(fr.length===1?' subject':' subjects')+', mixed in one set')+'</div>'+
+      '<div class="t-title xl2">'+L('A set from every subject')+'</div></div>'+
     '<div class="t-set"><div class="pips" style="--n:'+set+'" aria-hidden="true">'+pips+'</div>'+
-      '<div class="t-legend"><span><i class="n"></i>'+L(nNew+' new',nNew+'টি নতুন')+'</span>'+
-      (nBack?'<span><i class="b"></i>'+L(nBack+' coming back',nBack+'টি ফিরে আসছে')+'</span>':'')+
-      '<span>'+L('about '+set+' minutes','প্রায় '+set+' মিনিট')+'</span>'+starMarks(GAME.stars(id).n)+'</div></div>'+
-    '<p class="t-why">'+whyLine(t, now)+'</p>'+
-    '<div class="t-go"><button class="btn lg" data-act="quickStart">'+L('Start the set','সেট শুরু করুন')+'</button>'+
-      '<a href="#/topic/'+encodeURIComponent(id)+'" data-go="topic" data-p="'+h(id)+'" class="t-alt">'+L('Read the chapter first','আগে অধ্যায়টি পড়ুন')+'</a></div>'+
+      '<div class="t-legend"><span><i class="n"></i>'+L(nNew+' new')+'</span>'+
+      (nBack?'<span><i class="b"></i>'+L(nBack+' coming back')+'</span>':'')+
+      '<span>'+L('about '+set+' minutes')+'</span></div></div>'+
+    '<div class="t-mixes">'+rows+'</div>'+
+    '<div class="t-go"><button class="btn lg" data-act="quickStart">'+L('Start the set')+'</button>'+
+      '<a href="#/map" data-go="map" class="t-alt">'+L('Or pick a chapter or subject on the map')+'</a></div>'+
   '</div>';
 }
 /* the road ahead in this paper: where you are, the next two, the paper's end */
@@ -1027,9 +1078,6 @@ function settings(){
     row(L('Question timer','প্রশ্নের টাইমার'), L('Each question gets the paper\'s own time.','প্রতিটি প্রশ্নে প্রশ্নপত্রের নিজের সময়।'), onoff('timer', s.timer))+
     row(L('Night mode','রাতের মোড'), L('Warm dark colours for late study. The app always opens in day mode for a new visitor.','দেরি করে পড়ার জন্য উষ্ণ অন্ধকার রং।'), onoff('night', s.theme==='night'))+
     row(L('Hard prediction','কঠিন পূর্বাভাস'), L('Shows the mark you should beat nine times in ten.','যে নম্বর দশবারে নয়বার ছাড়িয়ে যাওয়া উচিত, সেটিই দেখায়।'), onoff('hardPredict', st.hardPredict))+
-    row(L('Language','ভাষা'), L('Menus and buttons. Questions stay in the language of the book.','মেনু আর বাটনের ভাষা। প্রশ্ন বইয়ের ভাষাতেই থাকে।'),
-        '<span class="seg2"><button type="button" class="'+(st.lang==='bn'?'':'on')+'" data-act="lang" data-arg="en">English</button>'+
-        '<button type="button" lang="bn" class="'+(st.lang==='bn'?'on':'')+'" data-act="lang" data-arg="bn">বাংলা</button></span>')+
     (SITE.on('stats.on') ? row(L('Anonymous statistics','বেনামি পরিসংখ্যান'), L('Counts minutes and questions, with a random number instead of your name, so the site can improve. Your answers never leave this browser.','আপনার নামের বদলে একটি এলোমেলো সংখ্যা দিয়ে মিনিট ও প্রশ্নের হিসাব রাখে, যাতে সাইটটি ভালো করা যায়। আপনার উত্তর এই ব্রাউজারের বাইরে যায় না।'), onoff('shareStats', st.shareStats!==false)) : '')+
     row(L('Keyboard shortcuts','কিবোর্ড শর্টকাট'), L('For fast practice on a laptop.','ল্যাপটপে দ্রুত অনুশীলনের জন্য।'), '<button class="btn xs ghost" data-act="shortcuts">'+L('Show','দেখুন')+'</button>')+
     '</div>';
@@ -1124,7 +1172,13 @@ function moreSettings(){
    ACTIONS — everything a button can do
    ============================================================ */
 function quickStart(){
-  RUN.start({track:track(), mode:'plan', n:DB.state().settings.setSize, title:L('The plan','পরিকল্পনা'), back:'today'});
+  RUN.start({track:track(), mode:'plan', n:DB.state().settings.setSize, title:'Mixed set · every subject', back:'today'});
+}
+/* a subject's name on the map: a set from that subject only, its chapters in order */
+function subjectSet(sjId){
+  var sj=ICE.subject(sjId); if(!sj) return;
+  RUN.start({track:track(), mode:'plan', subject:sjId, n:DB.state().settings.setSize,
+             title:ICE.subjname(sj)+' · subject practice', back:'map', backParam:sjId});
 }
 function reviewDue(){
   var due=AB.dueItems(track(), 20).map(function(d){ return d.q; });
@@ -1298,6 +1352,7 @@ var ACT={
   profileMenu:profileMenu,
   edition:function(e){ if(e!==ICE.edition) ICE.setEdition(e); },
   quickStart:quickStart, reviewDue:reviewDue, weakSet:weakSet, revenge:revenge, resumeLoop:resumeLoop,
+  subjectSet:function(sj){ subjectSet(sj); },
   secSet:function(sk){ secSet(sk,'adaptive'); },
   secWeak:function(sk){ secSet(sk,'weak'); },
   secSpeed:function(sk){ speedDrill(sk); },
@@ -1369,7 +1424,7 @@ return {
   celebrate:celebrate, flushCelebrations:flushCelebrations,
   applyTheme:applyTheme, paintChrome:paintChrome, holdChrome:holdChrome, holding:holding,
   setTrack:setTrack, readHash:readHash, buildNav:buildNav,
-  quickStart:quickStart, reviewDue:reviewDue, weakSet:weakSet, secSet:secSet, topicSet:topicSet,
+  quickStart:quickStart, subjectSet:subjectSet, reviewDue:reviewDue, weakSet:weakSet, secSet:secSet, topicSet:topicSet,
   speedDrill:speedDrill, revenge:revenge, openChest:openChest, flip:flip, markTrickRead:markTrickRead,
   act:act, h:h, stat:stat, link:link, starMarks:starMarks, lineChart:lineChart, plural:plural,
   dShort:dShort, dLong:dLong, noteComeback:noteComeback, shortcuts:shortcuts, donut:donut,

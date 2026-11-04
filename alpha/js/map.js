@@ -15,12 +15,13 @@
    perspective transform is applied to the page itself, so text stays
    sharp and every tap lands where the eye expects.
 
-   The star rules sit in a panel on the right that stays in view the
-   whole time (on a phone, one tap away).
+   The map takes the whole width between the bars. Its head carries the
+   seven subjects: a subject's name starts a set from that subject only.
+   The star rules are one tap away, kept short.
    =========================================================== */
 var MAP = (function(){
 
-var STEP=118, GATE=196, PAD_TOP=150, PAD_BOT=120, AMP=27;
+var STEP=118, GATE=214, PAD_TOP=150, PAD_BOT=120, AMP=30;
 
 function h(s){ return U.h(s); }
 
@@ -106,14 +107,15 @@ function gateNode(it, H){
   var sec=it.sec, ps=PLAN.section(it.sk), tops=ICE.topicsOf(it.sk);
   var got=0, avail=0, written=0;
   tops.forEach(function(tp){ var x=PLAN.topic(tp.id); got+=GAME.stars(tp.id).n; if(!x.est){ avail+=3; written++; } });
-  return '<button type="button" class="mgate" id="gate-'+sec.id+'" data-subj="'+subjOf(sec)+'" style="left:50%;top:'+(H-it.y)+'px;--sc:var(--s-'+subjOf(sec)+')" '+
-    'data-go="section" data-p="'+h(it.sk)+'">'+
+  var sj=ICE.subject(subjOf(sec));
+  return '<div class="mgate" id="gate-'+sec.id+'" data-subj="'+subjOf(sec)+'" style="left:50%;top:'+(H-it.y)+'px;--sc:var(--s-'+subjOf(sec)+')">'+
     '<span class="gpost"></span>'+
-    '<span class="gflag"><span class="gk">'+L('Paper','পত্র')+' '+(it.pi+1)+' &middot; '+tops.length+L(' chapters',' অধ্যায়')+'</span>'+
+    '<button type="button" class="gflag" data-go="section" data-p="'+h(it.sk)+'"><span class="gk">'+L('Paper','পত্র')+' '+(it.pi+1)+' &middot; '+tops.length+L(' chapters',' অধ্যায়')+'</span>'+
       '<span class="gn">'+h(ICE.sname(sec))+'</span>'+
       '<span class="gs"><b>'+PLAN.daysText(ps.minutes)+'</b>'+L(' left for all its chapters',' বাকি, সব অধ্যায় মিলিয়ে')+'</span>'+
-      '<span class="gs2">&#9733; '+got+' / '+(avail||tops.length*3)+(written<tops.length?' &middot; '+L(written+' of '+tops.length+' written',tops.length+'-এর '+written+'টি লেখা হয়েছে'):'')+'</span></span>'+
-  '</button>';
+      '<span class="gs2">&#9733; '+got+' / '+(avail||tops.length*3)+(written<tops.length?' &middot; '+L(written+' of '+tops.length+' written',tops.length+'-এর '+written+'টি লেখা হয়েছে'):'')+'</span></button>'+
+    (sj?'<button type="button" class="gpractise" data-act="subjectSet" data-arg="'+sj.id+'">&#9654; '+L('Practise '+ICE.subjname(sj))+'</button>':'')+
+  '</div>';
 }
 function bandEl(it, H){
   var b=it.band, top=H-b.y1, height=b.y1-b.y0;
@@ -136,60 +138,48 @@ function decorSvg(kind){
   return '<svg viewBox="0 0 24 40"><ellipse cx="6" cy="37" rx="6" ry="2" class="shd"/><rect x="5" y="4" width="2" height="33" class="trunk"/><path d="M7 5 L22 10 L7 15 Z" class="pennant"/></svg>';
 }
 
-/* ---------- the star rules: the same words wherever they appear ---------- */
+/* ---------- the star rules: short, the same words wherever they appear ---------- */
 function rules(){
-  var dm=PLAN.dailyMin();
   return '<section class="card rules">'+
-    '<div class="label">'+L('How stars are earned','তারা যেভাবে পাওয়া যায়')+'</div>'+
+    '<div class="label">'+L('How stars are earned')+'</div>'+
     '<ul class="rulelist">'+
-      '<li>'+starRow(1)+'<span><b>'+L('One star','এক তারা')+'</b> &mdash; '+L('a third of the chapter\'s questions done.','অধ্যায়ের এক-তৃতীয়াংশ প্রশ্ন শেষ।')+'</span></li>'+
-      '<li>'+starRow(2)+'<span><b>'+L('Two stars','দুই তারা')+'</b> &mdash; '+L('two thirds done.','দুই-তৃতীয়াংশ শেষ।')+'</span></li>'+
-      '<li>'+starRow(3)+'<span><b>'+L('Three stars','তিন তারা')+'</b> &mdash; '+L('every question done.','প্রতিটি প্রশ্ন শেষ।')+'</span></li>'+
+      '<li>'+starRow(1)+'<span>'+L('half of the chapter\'s questions done')+'</span></li>'+
+      '<li>'+starRow(2)+'<span>'+L('three quarters done')+'</span></li>'+
+      '<li>'+starRow(3)+'<span>'+L('nine tenths done')+'</span></li>'+
     '</ul>'+
-    '<p class="small"><b>'+L('"Done"','"শেষ"')+'</b> '+L('means answered right inside the question\'s time (a quarter of slack is allowed). A question you once got wrong counts only when you get it right again on a later day &mdash; at least 16 hours after the miss. Right straight after seeing the answer is memory, not learning.',
-      'মানে প্রশ্নের বাঁধা সময়ের ভিতরে ঠিক উত্তর (এক-চতুর্থাংশ বাড়তি সময় ধরা হয়)। যে প্রশ্ন একবার ভুল হয়েছে, সেটি গোনা হয় কেবল পরের কোনো দিনে আবার ঠিক করলে &mdash; ভুলের অন্তত ১৬ ঘণ্টা পরে। উত্তর দেখার সাথে সাথে পারা মানে স্মৃতি, শেখা নয়।')+'</p>'+
-    '<p class="small">'+L('Nothing else moves a star: not speed, not lifelines, not coins. A star is earned by exactly the work that shortens your days left.',
-      'আর কিছুতেই তারা নড়ে না: গতি, লাইফলাইন বা কয়েন নয়। তারা আসে ঠিক সেই কাজ থেকে, যা আপনার বাকি দিন কমায়।')+'</p>'+
-    '<div class="label" style="margin-top:14px">'+L('The time under each chapter','প্রতিটি অধ্যায়ের নিচের সময়')+'</div>'+
-    '<p class="small">'+L('Its unfinished questions at your own hit-rate, plus its unread Learn points, in days of '+U.mins(dm)+'. Chapters marked <i class="soon-tag">soon</i> are not written yet and are costed from their page count.',
-      'অসমাপ্ত প্রশ্ন আপনার নিজের হিট-রেটে, সাথে না-পড়া শেখার পয়েন্ট, দিনে '+U.mins(dm)+' হিসাবে। <i class="soon-tag">শিগগির</i> চিহ্নিত অধ্যায় এখনও লেখা হয়নি; তার হিসাব পৃষ্ঠাসংখ্যা থেকে।')+'</p>'+
+    '<p class="small">'+L('<b>Done</b> means right inside the question\'s time. A question you missed counts again once you get it right on a later day. Nothing else moves a star.')+'</p>'+
   '</section>';
 }
 function legend(){
-  return '<section class="card mlegend"><div class="label">'+L('On the road','রাস্তায়')+'</div>'+
-    '<div class="lg"><span class="mini st-now"><i></i></span>'+L('where you are now','আপনি এখন যেখানে')+'</div>'+
-    '<div class="lg"><span class="mini st-open"><i></i></span>'+L('open to practise','অনুশীলনের জন্য খোলা')+'</div>'+
-    '<div class="lg"><span class="mini st-done"><i></i></span>'+L('three stars','তিন তারা')+'</div>'+
-    '<div class="lg"><span class="mini st-soon"><i></i></span>'+L('questions coming soon','প্রশ্ন শিগগির আসছে')+'</div>'+
-    '<div class="lg"><span class="mini gate"><i></i></span>'+L('a paper begins: its days left for all chapters','একটি পত্র শুরু: সব অধ্যায় মিলিয়ে বাকি দিন')+'</div>'+
-  '</section>';
-}
-function summary(){
-  var px=PLAN.track('hsc'), got=starTotal(), av=starsAvailable();
-  return '<section class="card msum">'+
-    '<div class="spread"><span class="label">'+L('Stars','তারা')+'</span><b class="mono">'+got+' / '+av+'</b></div>'+
-    '<div class="bar thin" style="margin:8px 0 12px"><i style="width:'+Math.max(1,av?100*got/av:0)+'%;background:var(--gold)"></i></div>'+
-    '<div class="spread"><span class="label">'+L('Days left, all subjects','বাকি দিন, সব বিষয়')+'</span><b class="mono">'+PLAN.daysShort(px.minutes)+'</b></div>'+
-    '<p class="small" style="margin-top:8px">'+L(av/3+' of '+Object.keys(ICE.topics).length+' chapters have questions today; each new one adds three stars to win.',
-      'আজ '+Object.keys(ICE.topics).length+'টির মধ্যে '+(av/3)+'টি অধ্যায়ে প্রশ্ন আছে; প্রতিটি নতুন অধ্যায় জেতার মতো আরও তিনটি তারা আনে।')+'</p>'+
+  return '<section class="card mlegend"><div class="label">'+L('On the road')+'</div>'+
+    '<div class="lg"><span class="mini st-now"><i></i></span>'+L('where you are now')+'</div>'+
+    '<div class="lg"><span class="mini st-open"><i></i></span>'+L('open to practise')+'</div>'+
+    '<div class="lg"><span class="mini st-done"><i></i></span>'+L('three stars')+'</div>'+
+    '<div class="lg"><span class="mini st-soon"><i></i></span>'+L('questions coming soon')+'</div>'+
   '</section>';
 }
 
-/* ---------- the page ---------- */
+/* ---------- the page: the whole width between the bars ---------- */
 function view(param){
   var lay=layout(), H=lay.H, items=lay.items;
   var road=roadPath(items.filter(function(it){ return it.kind!=='band'; }), H);
+  var px=PLAN.track('hsc'), got=starTotal(), av=starsAvailable();
   var o='<div class="mapwrap">'+
-    '<div class="mapmain">'+
-      '<div class="phead"><span class="kicker">'+L((ICE.edition==='ssc'?'SSC':'HSC')+' &middot; Map',(ICE.edition==='ssc'?'এসএসসি':'এইচএসসি')+' &middot; ম্যাপ')+'</span><h1>'+L('The map','ম্যাপ')+'</h1>'+
-      '<p class="lede">'+L('All '+Object.keys(ICE.topics).length+' chapters of all the papers, climbing from the first page at the bottom to the last at the top. Each stop shows its stars and the time it still needs. Tap one to learn it and drill it.',
-        'এগারোটি পত্রের '+Object.keys(ICE.topics).length+'টি অধ্যায়, নিচে প্রথম পাতা থেকে ওপরে শেষ পাতা পর্যন্ত। প্রতিটি থামায় তার তারা আর বাকি সময়। ছুঁয়ে দেখুন, শিখুন, অনুশীলন করুন।')+'</p>'+
-      '<div class="mjump">'+ICE.subjects.map(function(sj){
-          return '<button type="button" class="mchip" data-act="mapJump" data-arg="'+sj.id+'" style="--sc:var(--s-'+sj.id+')"><i></i>'+h(ICE.subjname(sj))+'</button>';
-        }).join('')+
-        '<button type="button" class="mchip here" data-act="mapJump" data-arg="now">'+L('Where I am','আমি কোথায়')+'</button>'+
-        '<button type="button" class="mchip rules-btn phone-only" data-act="mapRules">&#9733; '+L('Star rules','তারার নিয়ম')+'</button></div></div>'+
-      '<div class="scene" id="mapScene" style="height:'+H+'px">';
+    '<div class="mhead">'+
+      '<div class="mh-t"><h1>'+L('The map')+'</h1>'+
+        '<span class="mh-facts mono"><b>'+Object.keys(ICE.topics).length+'</b> '+L('chapters')+' &middot; <b class="gold">&#9733; '+got+'</b> / '+av+' &middot; <b>'+PLAN.daysShort(px.minutes)+'</b> '+L('days left')+'</span></div>'+
+      '<div class="mh-subj" role="group" aria-label="'+h(L('Practise one subject'))+'">'+
+        '<span class="mh-hint">'+L('Practise a subject')+'</span>'+
+        ICE.subjects.map(function(sj){
+          var x=PLAN.subject(sj.id), pct=x.total?x.cleared/x.total:0;
+          return '<button type="button" class="mchip" data-act="subjectSet" data-arg="'+sj.id+'" style="--sc:var(--s-'+sj.id+')" title="'+
+            h(L('A set from '+ICE.subjname(sj)+' only, its chapters in order'))+'">'+UI.donut(pct, 18, 'mini')+h(ICE.subjname(sj))+'</button>';
+        }).join('')+'</div>'+
+      '<div class="mh-tools">'+
+        '<button type="button" class="mchip here" data-act="mapJump" data-arg="now">'+L('Where I am')+'</button>'+
+        '<button type="button" class="mchip rules-btn" data-act="mapRules">&#9733; '+L('Star rules')+'</button></div>'+
+    '</div>'+
+    '<div class="scene" id="mapScene" style="height:'+H+'px">';
   items.forEach(function(it){ if(it.kind==='band') o+=bandEl(it, H); });
   o+='<svg class="road" viewBox="0 0 1000 '+H+'" preserveAspectRatio="none" aria-hidden="true">'+
        '<path class="r-shadow" d="'+road+'" vector-effect="non-scaling-stroke" transform="translate(0 9)"/>'+
@@ -197,15 +187,13 @@ function view(param){
        '<path class="r-top" d="'+road+'" vector-effect="non-scaling-stroke"/>'+
        '<path class="r-line" d="'+road+'" vector-effect="non-scaling-stroke"/>'+
      '</svg>';
-  o+='<div class="mend top" style="top:'+(PAD_TOP-110)+'px"><span>'+L('The exam hall','পরীক্ষার হল')+'</span></div>';
-  o+='<div class="mend bottom" style="top:'+(H-PAD_BOT+40)+'px"><span>'+L('Start here','এখান থেকে শুরু')+'</span></div>';
+  o+='<div class="mend top" style="top:'+(PAD_TOP-110)+'px"><span>'+L('The exam hall')+'</span></div>';
+  o+='<div class="mend bottom" style="top:'+(H-PAD_BOT+40)+'px"><span>'+L('Start here')+'</span></div>';
   items.forEach(function(it){
     if(it.kind==='gate') o+=gateNode(it, H);
     else if(it.kind==='ch') o+=chapterNode(it, H);
   });
-  o+='</div></div>'+
-    '<aside class="maprules" id="mapRules">'+rules()+legend()+summary()+'</aside>'+
-  '</div>';
+  o+='</div></div>';
   return o;
 }
 

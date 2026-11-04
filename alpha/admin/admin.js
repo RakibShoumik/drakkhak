@@ -572,7 +572,6 @@ function studyPage(){
       numRow('def.dailyMin','Study minutes a day','Every "days left" comes from this. 119 is 1 hr 59 min.',15,600)+
       numRow('def.dailyQ','Questions a day','The daily target on Start.',5,200)+
       segRow('def.challenge','Difficulty','How hard a set aims',[['flow','Gentle'],['exam','Exam'],['brutal','Brutal']])+
-      segRow('def.lang','Language','The interface. Questions stay in their own language.',[['en','English'],['bn','বাংলা']])+
       segRow('def.theme','Day or night','Your rule: the site opens in day.',[['day','Day'],['night','Night']])+
       toggle('def.sound','Sound')+toggle('def.timer','Question timer')+toggle('def.alarm','Ring when time runs out')+
       toggle('def.redemption','Second chance after a miss','A second question on the same idea')+

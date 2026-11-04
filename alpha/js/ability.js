@@ -460,17 +460,16 @@ function mockSet(opts){
 /* an উদ্দীপক must not be split across a set, or you read the same
    scenario twice and answer its pair an hour apart */
 function regroupPassages(list){
-  var withP=[], without=[], seenP={}, i;
+  /* each scenario's questions sit together where the first of them was,
+     so a set mixed across subjects stays mixed */
+  var groups={}, placed={}, out=[], i, q;
+  for(i=0;i<list.length;i++){ q=list[i]; if(q.passage) (groups[q.passage]=groups[q.passage]||[]).push(q); }
   for(i=0;i<list.length;i++){
-    if(list[i].passage){
-      if(!seenP[list[i].passage]){ seenP[list[i].passage]=[]; withP.push(list[i].passage); }
-      seenP[list[i].passage].push(list[i]);
-    } else without.push(list[i]);
+    q=list[i];
+    if(!q.passage) out.push(q);
+    else if(!placed[q.passage]){ placed[q.passage]=1; out=out.concat(groups[q.passage]); }
   }
-  if(!withP.length) return list;
-  var out=[];
-  for(i=0;i<withP.length;i++) out=out.concat(seenP[withP[i]]);
-  return out.concat(without);
+  return out;
 }
 
 /* ---------- marking ----------

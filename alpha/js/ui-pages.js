@@ -731,7 +731,7 @@ function drillPanel(id, tp, x, s, bank, st){
   var sc=AB.score({topic:id}), pace=AB.medianPace({topic:id}, 90), target=ICE.pace(tp.sec), tricks=AB.tricksFor(id), cred=MODES.credited(id);
   var o='<section class="card drillcard">'+
     '<div class="kicker acc">'+(x.cleared>=x.total?L('Every question done','প্রতিটি প্রশ্ন শেষ'):L('Until every question is done','প্রতিটি প্রশ্ন শেষ না হওয়া পর্যন্ত'))+'</div>'+
-    '<h3 style="font-size:23px">'+(x.cleared>=x.total?L('Three stars. Keep it warm.','তিন তারা। এবার ধরে রাখুন।'):L('Drill this chapter','এই অধ্যায় অনুশীলন করুন'))+'</h3>'+
+    '<h3 style="font-size:23px">'+(s.n>=3?L('Three stars. Keep it warm.','তিন তারা। এবার ধরে রাখুন।'):L('Drill this chapter','এই অধ্যায় অনুশীলন করুন'))+'</h3>'+
     '<p class="muted" style="font-size:16.5px">'+L('Sets of '+n+' from this chapter only. While any are unseen, at least '+AB.newShare(n)+' of them are new; the rest are questions you missed, back on a later day.',
       'কেবল এই অধ্যায় থেকে '+n+'টির সেট। না-দেখা প্রশ্ন থাকলে তার অন্তত '+AB.newShare(n)+'টি নতুন; বাকিগুলো ভুল করা প্রশ্ন, পরের কোনো দিনে ফিরে আসা।')+'</p>'+
     '<div class="drillstats">'+
@@ -748,9 +748,9 @@ function drillPanel(id, tp, x, s, bank, st){
   o+='<section class="card"><div class="spread" style="align-items:center;flex-wrap:wrap;gap:10px"><div class="label">'+L('Stars in this chapter','এই অধ্যায়ের তারা')+'</div>'+
      '<a href="#" class="link quiet" data-act="mapRules">'+L('The star rules','তারার নিয়ম')+' &rsaquo;</a></div>'+
      '<div class="small" style="line-height:1.9;margin-top:8px">'+
-       '<div class="'+(s.n>=1?'ok':'')+'">'+(s.n>=1?'&#9733;':'&#9734;')+' '+L('a third done &mdash; '+Math.ceil(s.total/3)+' questions','এক-তৃতীয়াংশ শেষ &mdash; '+Math.ceil(s.total/3)+'টি প্রশ্ন')+'</div>'+
-       '<div class="'+(s.n>=2?'ok':'')+'">'+(s.n>=2?'&#9733;':'&#9734;')+' '+L('two thirds done &mdash; '+Math.ceil(2*s.total/3)+' questions','দুই-তৃতীয়াংশ শেষ &mdash; '+Math.ceil(2*s.total/3)+'টি প্রশ্ন')+'</div>'+
-       '<div class="'+(s.n>=3?'ok':'')+'">'+(s.n>=3?'&#9733;':'&#9734;')+' '+L('every question done &mdash; '+s.total,'প্রতিটি প্রশ্ন শেষ &mdash; '+s.total+'টি')+'</div></div>'+
+       '<div class="'+(s.n>=1?'ok':'')+'">'+(s.n>=1?'&#9733;':'&#9734;')+' '+L('half done &mdash; '+GAME.starNeed(s.total,1)+' questions')+'</div>'+
+       '<div class="'+(s.n>=2?'ok':'')+'">'+(s.n>=2?'&#9733;':'&#9734;')+' '+L('three quarters done &mdash; '+GAME.starNeed(s.total,2)+' questions')+'</div>'+
+       '<div class="'+(s.n>=3?'ok':'')+'">'+(s.n>=3?'&#9733;':'&#9734;')+' '+L('nine tenths done &mdash; '+GAME.starNeed(s.total,3)+' questions')+'</div></div>'+
      (cred?'<p class="small" style="margin-top:12px">'+L('Passed the skip test, so this chapter is out of your days left.','বাদ দেওয়ার পরীক্ষায় পাস, তাই এটি বাকি দিনের হিসাবের বাইরে।')+' <a href="#" data-act="uncredit" data-arg="'+h(id)+'">'+L('Bring it back','আবার ফিরিয়ে আনুন')+'</a>.</p>'
           : bank.length>=5?'<p class="small" style="margin-top:12px">'+L('Know it already? ','এটি আগেই জানা? ')+'<a href="#" data-act="mode" data-arg="skiptest|'+h(id)+'">'+L('Take the skip test','বাদ দেওয়ার পরীক্ষা দিন')+'</a> &mdash; '+
             L('the five hardest; four right takes it out of the plan.','সবচেয়ে কঠিন পাঁচটি, চারটি ঠিক হলেই এটি পরিকল্পনা থেকে বাদ।')+'</p>':'')+

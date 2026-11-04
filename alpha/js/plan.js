@@ -166,19 +166,46 @@ function types(t){
   return out.sort(function(a,b){ return b.total-a.total; });
 }
 
+/* which of the seven subjects a paper belongs to */
+function subjOf(sec){
+  for(var i=0;i<ICE.subjects.length;i++) if(ICE.subjects[i].secs.indexOf(sec)>=0) return ICE.subjects[i].id;
+  return sec;
+}
+/* every subject's front: the first unfinished, written chapter of each */
+function frontier(t, sjId){
+  var seen={}, out=[];
+  path(t).forEach(function(s){
+    if(s.status==='done' || s.status==='soon') return;
+    var k=subjOf(s.x.topic.sec);
+    if(sjId && k!==sjId) return;
+    if(seen[k]) return;
+    if(!AB.inTopic(s.id).length) return;
+    seen[k]=1; out.push({sj:ICE.subject(k)||{id:k, en:k, bn:k}, step:s});
+  });
+  return out;
+}
+
 /* ---------- the next set: the optimal order, made concrete ----------
-   New ground first: while any question in the bank is still unanswered,
-   more than three quarters of a set is new (13 of 16), taken from the
-   first three unfinished chapters on the path and weighted toward the
-   first. The rest is review: anything due back (questions you missed,
-   returning on schedule), and — once a chapter is finished — one
-   question from it now and then so it does not quietly decay. */
-function nextSet(t, n){
+   Every set mixes all the subjects (owner's rule since the merge with the
+   community side): the new questions are dealt round the seven subjects
+   in turn, each from that subject's first unfinished chapter (and the
+   next one once that runs dry), so one set of 16 carries two or three
+   questions of every subject. Inside a subject the book's chapter order
+   still holds. While any question is unanswered, more than three quarters
+   of a set is new (13 of 16). The rest is review: anything due back
+   (questions you missed, returning on schedule), and — once a chapter is
+   finished — one question from it now and then so it does not decay.
+   o.subject keeps the whole set inside one subject (a subject's name on
+   the map); a chapter of its own goes through AB.buildSet instead. */
+function nextSet(t, n, o){
+  o=o||{};
   n=n||DB.state().settings.setSize||16;
   var taken={}, out=[], i;
   var steps=path(t);
+  if(o.subject) steps=steps.filter(function(s){ return subjOf(s.x.topic.sec)===o.subject; });
   var live=steps.filter(function(s){ return s.status!=='done' && s.status!=='soon'; });
   var done=steps.filter(function(s){ return s.status==='done'; });
+  var inScope=function(q){ return !o.subject || subjOf(q._sec)===o.subject; };
 
   /* every unanswered question, in path order */
   var fresh=[];
@@ -186,37 +213,44 @@ function nextSet(t, n){
   var needNew=Math.min(AB.newShare(n), fresh.length);
   var room=n-needNew;                                   /* what review may use */
 
-  AB.dueItems(t, Math.min(Math.ceil(n*0.25), room)).forEach(function(d){
+  AB.dueItems(t).filter(function(d){ return inScope(d.q); }).slice(0, Math.min(Math.ceil(n*0.25), room)).forEach(function(d){
     if(!taken[d.q.id]){ taken[d.q.id]=1; out.push(d.q); }
   });
   var reviewSlots = done.length ? Math.min(Math.max(1, Math.round(n/8)), Math.max(0, room-out.length)) : 0;
 
-  /* the new questions: front chapters by weight, then onward along the path */
-  var front=live.filter(function(s){ return AB.inTopic(s.id).some(AB.untouched); }).slice(0,3);
-  var weights=[0.55,0.28,0.17];
-  var pools=front.map(function(s){ return AB.inTopic(s.id).filter(AB.untouched); });
-  var got=0;
-  while(got<needNew){
-    var pick=null;
-    if(pools.length){
-      var r=Math.random(), acc=0, which=0, wsum=0, j;
-      for(j=0;j<pools.length;j++) wsum+=weights[j];
-      for(j=0;j<pools.length;j++){ acc+=weights[j]/wsum; if(r<=acc){ which=j; break; } }
-      pick=AB.pickOne(pools[which], taken, 0.6) || AB.pickOne([].concat.apply([], pools), taken, 0.6);
-    }
-    if(!pick) pick=AB.pickOne(fresh.slice(0,400), taken, 0.6);
-    if(!pick) break;
-    taken[pick.id]=1; out.push(pick); got++;
+  /* the new questions: one lane per subject, its chapters in book order,
+     dealt round the lanes from a random first subject */
+  var lanes={}, order=[];
+  live.forEach(function(s){
+    var qs=AB.inTopic(s.id).filter(AB.untouched); if(!qs.length) return;
+    var k=subjOf(s.x.topic.sec);
+    if(!lanes[k]){ lanes[k]=[]; order.push(k); }
+    if(lanes[k].length<2) lanes[k].push(qs);           /* the front chapter and the one after */
+  });
+  var fresh0=[], got=0, at=order.length?Math.floor(Math.random()*order.length):0, dry=0;
+  while(got<needNew && order.length && dry<order.length){
+    var k=order[at%order.length], chs=lanes[k], pick=null;
+    for(var c=0;c<chs.length && !pick;c++) pick=AB.pickOne(chs[c], taken, 0.6);
+    at++;
+    if(!pick){ dry++; continue; }
+    dry=0; taken[pick.id]=1; fresh0.push(pick); got++;
   }
+  while(got<needNew){
+    var fp=AB.pickOne(fresh.slice(0,400), taken, 0.6);
+    if(!fp) break;
+    taken[fp.id]=1; fresh0.push(fp); got++;
+  }
+  out=out.concat(fresh0);
   for(i=0;i<reviewSlots;i++){
     var ds=done[Math.floor(Math.random()*done.length)];
     var rp=AB.pickOne(AB.inTopic(ds.id), taken, 0.7);
     if(rp){ taken[rp.id]=1; out.push(rp); }
   }
   /* anything still short: unfinished questions, then anything at all */
+  var scope=AB.inTrack(t).filter(inScope);
   while(out.length<n){
-    var more=AB.pickOne(AB.inTrack(t).filter(function(q){ return !AB.cleared(q.id); }), taken, 0.6)
-          || AB.pickOne(AB.inTrack(t), taken, 0.6);
+    var more=AB.pickOne(scope.filter(function(q){ return !AB.cleared(q.id); }), taken, 0.6)
+          || AB.pickOne(scope, taken, 0.6);
     if(!more) break;
     taken[more.id]=1; out.push(more);
   }
@@ -287,7 +321,7 @@ function finishDate(t){
 
 return {build:build, topic:topic, track:track, section:section, path:path, types:types,
         subject:subject, subjects:subjects, estQuestions:estQuestions,
-        nextSet:nextSet, days:days, daysText:daysText, daysShort:daysShort, trackDays:trackDays, pct:pct,
+        nextSet:nextSet, frontier:frontier, subjOf:subjOf, days:days, daysText:daysText, daysShort:daysShort, trackDays:trackDays, pct:pct,
         perDay:perDay, dailyMin:dailyMin, invalidate:invalidate,
         stamp:stamp, entry:entry, history:history, cutSince:cutSince,
         cutToday:cutToday, cutWeek:cutWeek, finishDate:finishDate};

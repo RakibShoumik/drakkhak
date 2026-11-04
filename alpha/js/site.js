@@ -19,7 +19,7 @@ var DEFAULTS={
   'maintenance.on':false,'maintenance.title':'We will be back soon',
   'maintenance.message':'Drakkhak is being improved. Your progress is safe in this browser.',
   'notice.on':false,'notice.text':'','notice.link':'','notice.tone':'accent','notice.dismiss':true,
-  'layout.nav':'top','layout.start':'classic',
+  'layout.nav':'left','layout.start':'classic',
   'layout.order':['hero','road','nudge','mistakes','ahead','weeks','subjects'],'layout.hide':[],
   'layout.width':'normal','layout.density':'normal','layout.corners':'soft','layout.text':100,
   'look.accent':'','look.css':'',

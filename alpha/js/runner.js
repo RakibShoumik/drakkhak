@@ -21,7 +21,7 @@ var tickT=null, armT=null, modeT=null;
 /* ---------- lifecycle ---------- */
 function start(o){
   stop();
-  var queue = o.queue || (o.mode==='plan' ? PLAN.nextSet(o.track, o.n) : AB.buildSet(o));
+  var queue = o.queue || (o.mode==='plan' ? PLAN.nextSet(o.track, o.n, {subject:o.subject}) : AB.buildSet(o));
   if(!queue.length){
     UI.toast(L('There are no questions in the bank for this yet.','এর জন্য এখনও ব্যাংকে কোনো প্রশ্ন নেই।'));
     return;
@@ -31,7 +31,7 @@ function start(o){
     back:o.back||'practice',
     backParam:o.backParam||null,
     track:o.track||(queue[0]&&queue[0]._track),
-    sec:o.sec||null, topic:o.topic||null,
+    sec:o.sec||null, topic:o.topic||null, subject:o.subject||null,
     mode:o.mode||'adaptive',
     code:o.code||null,                /* a duel carries its code */
     exam:!!o.exam,                    /* a mock: nothing marked until the end */
@@ -1009,7 +1009,7 @@ function modeResult(){
 function shareSet(){ SHARE.save(SHARE.setCard(R), 'drakkhak-set.png'); }
 
 function again(){
-  var o={track:R.track, sec:R.sec, topic:R.topic, mode:R.mode,
+  var o={track:R.track, sec:R.sec, topic:R.topic, subject:R.subject, mode:R.mode,
          n:(R.mode==='plan'||R.mode==='adaptive'||R.mode==='weak'||R.mode==='speed')?DB.state().settings.setSize:R.n0,
          title:R.title, back:R.back, backParam:R.backParam, exam:R.exam, noBrief:true};
   if(R.mode==='redo'){ return UI.revenge(); }

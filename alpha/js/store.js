@@ -141,6 +141,7 @@ function load(){
   }
   if(!S.learn) S.learn={};
   SITE.reconcile(S);
+  S.settings.lang='en';          /* the interface is English only */
   /* anyone with answers on record has already met the app */
   if(!S.onboarded && S.log && S.log.length) S.onboarded=true;
   return S;
@@ -297,10 +298,11 @@ return {
    Question content (stems, options, explanations) never goes
    through this: a question stays in the language it was written in.
    =========================================================== */
-function L(en, bn){
-  return (DB.state().settings.lang==='bn' && bn!==undefined && bn!==null) ? bn : en;
-}
-function LBN(){ return DB.state().settings.lang==='bn'; }
+/* Since the merge with the community side the interface is English only
+   (owner's request): every L() gives back its English. The Bangla is kept
+   in the source so the strings stay paired, but it is never shown. */
+function L(en, bn){ return en; }
+function LBN(){ return false; }
 
 /* ===========================================================
    U — formatting and small pure helpers, used everywhere.

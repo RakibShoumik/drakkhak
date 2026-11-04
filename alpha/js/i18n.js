@@ -109,7 +109,7 @@ var EN={
 var SKIP='.qstem,.stlist,.stask,.qcpre,.opt,.whybox,.fastbox,.hintbox,.rcpassage,.trick,.omr,'+
          '.missed,.mbody,.lgroups,.lex,code,kbd,pre,input,textarea,[data-bn],[lang="bn"]';
 
-function on(){ return DB.state().settings.lang==='en'; }
+function on(){ return true; }    /* the interface is English only */
 /* t() takes the Bangla the source is written in and gives back whatever
    the interface is set to. Chrome that has no entry stays Bangla. */
 function t(s){ return on() ? (EN[s]||s) : s; }
@@ -150,7 +150,7 @@ function inside(node, blocked){
   return false;
 }
 function set(lang){
-  DB.state().settings.lang = lang==='bn'?'bn':'en';
+  DB.state().settings.lang = 'en';
   DB.save();
   document.documentElement.setAttribute('lang', DB.state().settings.lang);
 }

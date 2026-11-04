@@ -13,6 +13,12 @@
 var FX = (function(){
 
 var ctx=null, master=null, muted=false;
+/* The "right" sound has its own louder line: a boost into a limiter, so it
+   can be pushed as loud as a phone speaker allows without clipping. Same
+   notes, same timbre; only the level changes. Phones get the bigger boost. */
+var loud=null, limiter=null, bus=null;
+function phone(){ try{ return window.matchMedia('(pointer:coarse)').matches; }catch(e){ return false; } }
+function loudGain(){ return muted ? 0 : pack.gain*(phone()?3.6:1.6); }
 
 /* Sound packs. A cosmetic you buy with coins you studied for: it
    changes the voice of the app, never what anything is worth. */
@@ -22,7 +28,7 @@ var PACKS={
   soft:   {gain:0.26, wave:'sine',   tilt:0.94}
 };
 var pack=PACKS.journal;
-function setPack(id){ pack=PACKS[id]||PACKS.journal; if(master) master.gain.value=muted?0:pack.gain; }
+function setPack(id){ pack=PACKS[id]||PACKS.journal; if(master) master.gain.value=muted?0:pack.gain; if(loud) loud.gain.value=loudGain(); }
 
 function ready(){
   if(ctx) return ctx;
@@ -32,6 +38,13 @@ function ready(){
     ctx=new AC();
     master=ctx.createGain(); master.gain.value=muted?0:pack.gain;
     master.connect(ctx.destination);
+    try{
+      limiter=ctx.createDynamicsCompressor();
+      limiter.threshold.value=-3; limiter.knee.value=0; limiter.ratio.value=20;
+      limiter.attack.value=0.001; limiter.release.value=0.12;
+      loud=ctx.createGain(); loud.gain.value=loudGain();
+      loud.connect(limiter); limiter.connect(ctx.destination);
+    }catch(e2){ loud=null; }
   }catch(e){ ctx=null; }
   return ctx;
 }
@@ -39,7 +52,9 @@ function unlock(){ var c=ready(); if(c&&c.state==='suspended') c.resume(); }
 document.addEventListener('pointerdown', unlock, {passive:true});
 document.addEventListener('keydown', unlock, {passive:true});
 
-function setMuted(m){ muted=!!m; if(master) master.gain.value=muted?0:pack.gain; }
+function setMuted(m){ muted=!!m; if(master) master.gain.value=muted?0:pack.gain; if(loud) loud.gain.value=loudGain(); }
+/* play a sound through the loud line */
+function loudly(f){ bus=loud; try{ f(); }finally{ bus=null; } }
 function isMuted(){ return muted; }
 
 /* one shaped tone */
@@ -53,7 +68,7 @@ function tone(freq, at, dur, type, vol, slideTo){
   g.gain.setValueAtTime(0.0001, at);
   g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol||0.2), at+0.012);
   g.gain.exponentialRampToValueAtTime(0.0001, at+dur);
-  o.connect(g); g.connect(master);
+  o.connect(g); g.connect(bus||master);
   o.start(at); o.stop(at+dur+0.03);
 }
 function noise(at, dur, vol, hp){
@@ -64,7 +79,7 @@ function noise(at, dur, vol, hp){
   var s=c.createBufferSource(); s.buffer=buf;
   var f=c.createBiquadFilter(); f.type='highpass'; f.frequency.value=hp||2400;
   var g=c.createGain(); g.gain.value=vol||0.06;
-  s.connect(f); f.connect(g); g.connect(master); s.start(at);
+  s.connect(f); f.connect(g); g.connect(bus||master); s.start(at);
 }
 
 var SFX={
@@ -116,7 +131,8 @@ var SFX={
   },
   calc:function(){ var c=ready(); if(!c) return; tone(1400, c.currentTime, 0.022, 'square', 0.022); }
 };
-function play(n){ if(SFX[n]) try{ SFX[n](); }catch(e){} }
+var LOUD={correct:1, streak:1, golden:1};
+function play(n){ if(SFX[n]) try{ if(LOUD[n]) loudly(SFX[n]); else SFX[n](); }catch(e){} }
 
 /* ---------- visuals ---------- */
 function layer(){ return document.getElementById('fxlayer'); }
@@ -190,7 +206,8 @@ var SEMI=Math.pow(2,1/12);
 function up(n){ return Math.pow(SEMI, Math.min(n,14)); }
 
 /* correct, pitched by how long the run is */
-function combo(step){
+function combo(step){ loudly(function(){ combo0(step); }); }
+function combo0(step){
   var c=ready(); if(!c) return; var t=c.currentTime, k=up(Math.max(0,step-1));
   [[659.25,0],[830.61,0.055],[987.77,0.11],[1318.5,0.17]].forEach(function(nn){
     tone(nn[0]*k, t+nn[1], 0.26, 'triangle', 0.22);

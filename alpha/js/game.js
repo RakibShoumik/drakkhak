@@ -184,11 +184,16 @@ function fmtRecord(id, v){
 /* ---------- stars, three to a chapter ----------
    Stars measure one thing: how much of the chapter is DONE (answered
    right inside its minute, and — after any miss — right again on a
-   later day). A third done is one star, two thirds two, all of it
-   three. Nothing else moves them, so a star can only be earned by
-   the same work that shortens the days left. A chapter whose
-   questions are not written yet has no stars to give. */
-var STAR_AT=[1/3, 2/3, 1];
+   later day). Half done is one star, three quarters two, nine tenths
+   three. (It used to be a third, two thirds and every single question:
+   one star came in a single set and three never came at all, because the
+   last few misses each need a later day. Now three stars is what strong
+   work earns, and the tenth of slack absorbs the stragglers.) Nothing
+   else moves them, so a star can only be earned by the same work that
+   shortens the days left. A chapter whose questions are not written yet
+   has no stars to give. */
+var STAR_AT=[0.5, 0.75, 0.9];
+function starNeed(total, n){ return Math.ceil(STAR_AT[n-1]*total-1e-9); }   /* questions done for n stars */
 function stars(topicId){
   var px=PLAN.topic(topicId);
   var out={n:0, done:0, total:0, soon:false, next:null};
@@ -197,7 +202,7 @@ function stars(topicId){
   if(px.est || !px.total) return out;
   var f=px.cleared/px.total, i;
   for(i=0;i<STAR_AT.length;i++) if(f>=STAR_AT[i]-1e-9) out.n=i+1;
-  if(out.n<3) out.next=Math.ceil(STAR_AT[out.n]*px.total)-px.cleared;   /* questions to the next star */
+  if(out.n<3) out.next=starNeed(px.total, out.n+1)-px.cleared;   /* questions to the next star */
   return out;
 }
 function markHintUsed(topicId){
@@ -547,7 +552,7 @@ return {
   UNLOCKS:UNLOCKS, has:has, nextUnlock:nextUnlock,
   RANKS:RANKS, rankOf:rankOf, nextRank:nextRank, rating:rating,
   RECORDS:RECORDS, record:record, fmtRecord:fmtRecord,
-  stars:stars, STAR_AT:STAR_AT, markHintUsed:markHintUsed,
+  stars:stars, STAR_AT:STAR_AT, starNeed:starNeed, markHintUsed:markHintUsed,
   unlockTrick:unlockTrick, unlockTopicCard:unlockTopicCard, collection:collection,
   earnChest:earnChest, openChest:openChest,
   COSMETICS:COSMETICS, owns:owns, buy:buy, wear:wear, worn:worn, cosmetic:byId,
