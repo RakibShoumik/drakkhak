@@ -23,23 +23,33 @@ version of WoWonder expects. Use it with the same WoWonder version as that Sunsh
 | folder | name in the admin list | top bar |
 |---|---|---|
 | `theme/drakkhak` | Drakkhak | as Sunshine, in the Drakkhak look |
-| `theme/drakkhak-study` | Drakkhak + Study | the same, plus an **অনুশীলন** button with the four-bubble mark beside Home, which opens the Drakkhak practice site |
+| `theme/drakkhak-study` | Drakkhak + Study | the same, plus a **Learn** button with the four-bubble mark beside Home, which opens Drakkhak Learn at `/learn/` |
 
 To use **Drakkhak + Study** as one site:
 
 1. Upload `theme/drakkhak-study` to WoWonder as `themes/drakkhak-study` and activate **Drakkhak + Study**.
-2. Upload the practice site (everything in `iceskep/` except `source/`, `CLAUDE.md` and `.git`) into a
-   folder named **`study`** in your WoWonder root, so it opens at `https://your-site/study/`.
+2. Upload Drakkhak Learn (everything in `alpha/` except `source/`, `scripts/`, `CLAUDE.md` and `.git`) into a
+   folder named **`learn`** in your WoWonder root, so it opens at `https://your-site/learn/`.
 
-That's all. The theme's button goes to `/study/`, and the practice site, seeing itself in `/study/`,
-shows a **কমিউনিটি** button in its own top bar that leads back to the social network. To put the
-practice site somewhere else, change `$dk_study_url` in `layout/header/content.phtml`. On the practice
-site's side, set `communityUrl` in `js/config.js`.
+That's all. The theme's button goes to `/learn/`, and Learn's **Community** button goes back to the
+site root. To put Learn somewhere else, change `$dk_study_url` in `layout/header/content.phtml`.
+(The next step, one sign-in and one top bar for both halves, needs the WoWonder script itself.)
 
 The two keep separate records: WoWonder accounts live on the server, while practice progress stays in
 each student's browser, as before.
 
 ## What is different from Sunshine
+
+- **No permission prompts on arrival.** Sunshine asked for notifications on every page load and for
+  location on most pages. Now OneSignal never auto-prompts (its bell still works when tapped), the
+  browser notification prompt is gone, and location is read only if the visitor already allowed it.
+- **Username from the name.** The sign-up form asks for the full name and fills the username from it
+  (lowercase, one word, Bangla names transliterated, a number added if taken, still editable), and a
+  bad username gets: *Username must be one word (letters, numbers and underscore only).* For this,
+  leave Admin Panel → Settings → *Auto username* **off** (when it is on, WoWonder makes its own
+  numeric usernames and the form shows first and last name instead). The check uses `dk/username.php`
+  in the theme folder; it only reads. To change the same message everywhere, also edit the language
+  key for "Invalid username characters" in Admin Panel → Languages.
 
 - **Colours.** Every colour in the stylesheets was moved onto the Drakkhak palette. Greys became
   parchment and ink, blues and purples became terracotta, greens became the "right" green, reds the
@@ -70,8 +80,10 @@ python3 theme/build/build.py path/to/new/sunshine theme/drakkhak-study --study
 ```
 
 `build/build.py` does every step above from scratch: it recolours, swaps the fonts, patches
-`container.phtml` and `style.phtml`, and copies `build/overlay/` (logos, fonts, the two stylesheets,
-`info.php`) on top. If a newer Sunshine changes the lines it patches, it stops and says which one.
+`container.phtml`, `style.phtml`, the sign-up form and the permission prompts, and copies
+`build/overlay/` (logos, fonts, the two stylesheets, `dk/username.php`, `info.php`) on top. If a newer
+Sunshine changes the lines it patches, it stops and says which one. `--patch theme/drakkhak` re-applies
+only the prompt and sign-up patches to an already built theme.
 
 ## Honest limits
 

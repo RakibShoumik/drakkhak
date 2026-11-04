@@ -12,6 +12,18 @@ opens in day mode; places are Start · Map · Practice · Progress · Settings, 
 at the foot of the sidebar; days left counts the whole syllabus (unwritten chapters costed from
 their pages) at 1 hr 59 min a day by default; stars are completion only (⅓, ⅔, all done); sets are
 more than 75% new questions (13 of 16) while any are unseen; the study garden was removed.
+
+Since 2026-11-04 (the merge with the WoWonder community into one site; Learn lives at /learn/):
+the interface is **English only** (no language switch; L() always gives the English); the left
+sidebar is the default layout and lists Start, Map, Practice, Mistakes, Badges, Shop, Progress,
+Settings, the subjects and Research; stars are **½, ¾ and 9/10 done**; **every plan set mixes all
+subjects** (PLAN.nextSet deals round the subjects; a subject on the map gives a subject-only set,
+a chapter its own set); coins are **one per 8 XP** (GAME.coinsFor); the shop sells per-question
+items (GAME.ITEMS) and many cosmetic kinds at the owner's request, but never chests, lifelines or
+anything random, and a helped answer never pays or counts as done; the daily spin and lucky drops
+are off by default; under every question is Comment · Share · Report (question thread is option 4
+in api/social.php; reports go to drakkhak-data/question-reports.json and the admin panel); the
+prediction is always labelled an estimate.
 Each chapter's **Learn** sheet is built from its questions' `fast` lines and first non-page tag
 (the sub-topic), so keep writing both carefully.
 

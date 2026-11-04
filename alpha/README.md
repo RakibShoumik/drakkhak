@@ -45,9 +45,9 @@ or `1`–`4`, because nobody changes keyboard layout in the middle of a question
 - **উদ্দীপক** — a short scenario shared by two questions, which stays on screen beside
   both of them so you never read the same scenario twice.
 
-**The interface is English by default; every question is Bangla** (the English paper stays
-English). Bangla menus are one switch away in Settings → Language. The three switches in the
-top bar — **Sound, Timer, Night** — always read in English, in either language. The Bangla
+**The interface is English only; every question is Bangla** (the English paper stays
+English). Since the merge with the community side there is no language switch: every menu,
+button and label is English, and the questions stay in the language of the book. The Bangla
 faces (Noto Serif Bengali for reading, Hind Siliguri for the interface) are served from
 `fonts/`, not a CDN, so the questions read correctly offline. A first visit always opens in
 day mode; Night turns on the warm dark theme.
@@ -80,23 +80,30 @@ first chapter of every paper is reached in the first week rather than eleven pap
 
 | | |
 |---|---|
-| **Start** | The main place. Days of study left for the whole syllabus, a plain count ("0 of 6,689 questions done · 6,689 left"), the exam countdown, the streak, whether you finish in time, one nudge, and the next chapter with a **Start** button and a **Learn this chapter first** button. |
-| **Map** | Every one of the 122 chapters as stops on one winding road, climbing from Bangla at the bottom to Higher Math 2nd paper at the top. Each paper begins with a milestone showing its days left for all its chapters together. Each stop shows its three stars and its time left; tap it to open the chapter. The star rules sit on the right the whole time (on a phone, behind the ★ Star rules chip). |
+| **Start** | The main place. Today's set, which mixes every subject (each subject's row shows the chapter it is on), the road ahead, the question of the day, the mistake book, the next chapters and the last twelve weeks. |
+| **Map** | Every one of the 122 chapters as stops on one winding road across the whole width between the bars, climbing from Bangla at the bottom to Higher Math 2nd paper at the top. The head carries the seven subjects: **a subject's name starts a set from that subject only**. Each paper begins with a milestone (and a *Practise* button for its subject); each stop shows its stars and time left; tap a chapter to learn it and drill it. The star rules are one tap away (★ Star rules). |
+| **Mistakes** | Every question you got wrong and have not won back, newest first, filterable by subject, each with its answer, a **Retry** and an **Explanation**; a set from the bank in one tap. Free, always. |
+| **Badges** | Rarity counts, the latest badges, the shelf of trophies and collectible cards, and every badge (the secret ones hidden until earned). |
+| **Shop** | Coins are spent here; see *Coins and the shop* below. |
 | **Practice** | Continue the plan, four ways in (weak chapters, against the clock, a full paper, the mistake bank), every paper with its score, and more modes under **More**. |
 | **Progress** | Days left (all seven subjects added together, with the per-subject breakdown), questions a day, score, done; the days-left line; the cautious prediction; the mistake bank; and under **More** the map, the whole plan, statistics, the prediction line by line, this week and your record. |
-| **Settings** | Study time per day (hours and minutes, **1 hr 59 min** by default), exam date, the switches, language, and **More settings**. |
+| **Settings** | Study time per day (hours and minutes, **1 hr 59 min** by default), exam date, the switches and **More settings**. |
 | **Research** | At the foot of the sidebar: a caution about what the app cannot do, then thirteen sections — one per method the app uses — each with the published evidence and a vintage technical drawing. |
 
-**The sidebar** also carries the **seven subjects** (first and second papers joined), each with
-a small ring for how much is done and its days left. Tap one to jump to it on the map.
+**The left sidebar** (the default layout on a computer; phones keep the bottom tab bar) lists the
+places — Start, Map, Practice, Mistakes, Badges, Shop, Progress, Settings — then the **seven
+subjects** (first and second papers joined), each with a ring for how much is done and its days
+left, and the research page at its foot.
 
 **A chapter is Learn, then Drill.** *Learn* is a revision sheet built from the chapter's own
 questions: the one-line "fast route" of every question, grouped by sub-topic in the book's page
 order (about nine sections a chapter), each with one worked example. Mark a section **Got it**.
 *Drill* runs sets from that chapter until every question is done.
 
-**Stars** measure completion only: a third of a chapter's questions done is one star, two
-thirds two, all of them three. Nothing else — not speed, lifelines or coins — moves a star.
+**Stars** measure completion only: half of a chapter's questions done is one star, three
+quarters two, nine tenths three. (It used to be a third, two thirds and every single question;
+three stars was never reached, because the last few misses each need a later day.) Nothing
+else — not speed, lifelines or coins — moves a star.
 
 **A set takes the window, but the top bar stays**, so Sound, Timer and Night are always in
 reach and the rewards have somewhere to land: on a right answer, coins and an XP token burst
@@ -123,8 +130,8 @@ for. Three rules hold the whole thing together:
   unless you said you were sure.
 - **Nothing is taken away for being human.** Streaks can be frozen, repaired and kept;
   there is no energy meter, nothing expires, and nothing stops you practising.
-- **Nothing can be bought.** Coins come from answering. There is no money in this app, no
-  loot box you pay for, and no cosmetic that makes a question easier.
+- **Nothing costs money.** Coins come only from answering. There is no money in this app,
+  no loot box, no prize wheel, and nothing in the shop gives marks away.
 
 Deliberately absent, because they would work against the exam: paid anything,
 pay-to-win, energy timers, punishing streak loss, guilt notifications, public
@@ -158,9 +165,35 @@ you change it). **The whole syllabus counts from day one:** a chapter whose ques
 written yet is costed from its page count (about 1.5 questions a page, 40–80 a chapter — the
 same rule the question writers follow) and shows as *soon* on the map.
 
-**Continue the plan** draws its new questions from the first unfinished chapters on the path
-(more than three quarters of every set while any are unseen), brings back anything due, and
-revisits finished chapters now and then.
+**Every set mixes the subjects.** Continue the plan deals its new questions round the seven
+subjects in turn, each from that subject's first unfinished chapter (and the next one once it
+runs dry), so a set of 16 carries two or three of every subject while the book's chapter order
+holds inside each subject. More than three quarters of every set is new while any are unseen;
+anything due comes back, and finished chapters are revisited now and then. A chapter picked on
+the map drills that chapter; a subject picked on the map drills that subject.
+
+## Coins and the shop
+
+**Coins follow XP:** one coin for every 8 XP, never less than one for a right answer, so a harder
+question, a quick answer, a run, a golden question or double XP pays more coins as well.
+
+The shop's shelves: **for a question** (used during a set) — *skip, keep the streak* (the
+ordinary S skip breaks the run), *extra time +15 s / +30 s*, *review: retry now* after a miss
+(never recorded or paid), and *explanation first*, rare on purpose (three a week; a helped answer
+pays nothing and never counts as done — explanations after an answer stay free); power-ups
+(double XP, streak freeze); **in season** (Nabanna, Victory Day, winter fog, Basanta, Pohela
+Boishakh, monsoon — on sale only in their season, kept for good); profile frames (up to Gold,
+Platinum and the animated Legendary); avatars and accessories; titles (Scholar, Quiz Master,
+Elite Contender…); animated badges beside your name; profile themes; site colours; progress-bar
+skins; streak effects; right-answer effects; sound packs; trophies and collectible cards of great
+Bangladeshi minds, kept on the shelf in Badges. **Competition** items (weekly contest entry,
+challenge a friend, leaderboard spotlight, rank shield) are shown but open only when Learn and
+the community share one sign-in. Chests and lifelines still come only from the work, and the
+daily prize wheel and random lucky drops are off by default.
+
+**Under every question** sits a bar: *Comment* (a moderated discussion of the whole question,
+open once you have answered), *Share* (the question and a `#/q/<id>` link) and *Report* (kept
+for you, and sent to the admin panel's Reported questions).
 
 ## The prediction is built to be beaten
 
