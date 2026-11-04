@@ -359,7 +359,8 @@ window.DKPET_DRAW={frame:frame, POSES:POSES, COATS:COATS, HATS:HATS, GW:GW, GH:G
 /* ============================================================
    WHAT IS KEPT: one record, shared by Learn and the community
    ============================================================ */
-var DEF={v:1, on:true, name:'Mishti', coat:'ginger', hat:'none', hats:[], stay:false, quiet:false, x:0.82, love:0, seen:0, napping:false, met:0, played:0};
+var DEF={v:1, on:true, name:'Mishti', coat:'ginger', hat:'none', hats:[], stay:false, quiet:false, x:0.82, love:0, seen:0, napping:false, met:0, played:0,
+         day:'', mile:0, greeted:0, studied:'', mins:0, nudged:''};
 var store=load();
 function load(){
   var j=null;
@@ -498,7 +499,7 @@ var C={x:innerWidth*0.8, y:innerHeight, face:-1, st:'idle', t:0, until:0, surf:n
        squash:0, hop:0, held:null, fade:1, zAt:0, lastBubble:0, wakeAt:0};
 var lastAct=Date.now(), raf=0, lastT=0;
 
-function setState(st, ms){ C.st=st; C.t=0; C.until = ms ? now()+ms : 0; }
+function setState(st, ms){ C.st=st; C.t=0; C.until = ms ? now()+ms : 0; if(typeof kick==='function') kick(); }
 function now(){ return Date.now(); }
 function rnd(a,b){ return a+Math.random()*(b-a); }
 function chance(p){ return Math.random()<p; }
@@ -610,7 +611,8 @@ function yarnCanvas(){
   return cv;
 }
 function play(){
-  if(!root || env.question || env.still) return;
+  if(!root || env.question) return;
+  if(env.still){ say('I am resting: reduced motion is on.', true); return; }
   closeMenu();
   removeBall(true);
   var el=yarnCanvas();
@@ -669,6 +671,41 @@ function chaseTick(dt){
   C.speed=170;
 }
 
+/* ---------- what it notices ----------
+   In Learn: minutes studied today (real minutes from the study clock) and
+   the day streak. On the community side, at most once a day after four in
+   the afternoon, one friendly word if nothing has been practised today. */
+function localDay(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+var newsAt=0;
+function news(t){
+  if(t-newsAt<15000 || env.question) return;
+  newsAt=t;
+  var day=localDay();
+  if(store.day!==day){ store.day=day; store.mile=0; store.greeted=0; save(); }
+  try{
+    if(window.CLOCK && CLOCK.todayMins && window.DB && DB.state){
+      var m=Math.floor(CLOCK.todayMins()||0);
+      if(m>0 && (store.studied!==day || store.mins!==m)){ store.studied=day; store.mins=m; save(); }
+      var marks=[15,30,60,90,120,180,240], i;
+      for(i=marks.length-1;i>=0;i--){
+        if(m>=marks[i] && store.mile<marks[i]){
+          store.mile=marks[i]; save();
+          say(m>=60 ? Math.floor(m/60)+' hr '+(m%60?(m%60)+' min ':'')+'today. Proud of you.' : marks[i]+' minutes today!', true);
+          sparkle(2);
+          return;
+        }
+      }
+      var sk=DB.liveStreak ? DB.liveStreak() : 0;
+      if(!store.greeted && sk>=2 && document.body.getAttribute('data-route')==='today'){
+        store.greeted=1; save(); say('Day '+sk+' in a row!', true); return;
+      }
+    } else if(env.community && !store.quiet && store.nudged!==day && store.studied!==day && new Date().getHours()>=16 && t-lastAct<20000){
+      store.nudged=day; save();
+      say('Five questions in Learn? I will watch.', true);
+    }
+  }catch(e){}
+}
+
 /* ---------- reactions ---------- */
 function happy(ms){ if(C.st==='held'||C.st==='jump'||C.st==='fall') return; C.hop=0.0001; setState('happy', ms||900); hearts(1); }
 function sad(){ if(C.st==='held'||C.st==='jump'||C.st==='fall') return; setState('sad', 1500); }
@@ -680,9 +717,11 @@ function wake(){
 /* ============================================================
    EVERY FRAME
    ============================================================ */
+var inTick=false;
 function tick(ts){
   raf=0;
   if(!store.on || !root){ return; }
+  inTick=true;
   var dt=Math.min(0.05, lastT ? (ts-lastT)/1000 : 0.016); lastT=ts;
   var t=now();
   if(t-lastEnv>500) measure(t);
@@ -765,12 +804,24 @@ function tick(ts){
       }
   }
   ballTick(dt);
+  news(t);
   if(ball && env.question){ removeBall(true); }
   C.t+=dt;
   if(C.squash>0) C.squash-=dt;
   if(C.st==='happy') C.hop+=dt;
   draw(t);
-  raf=requestAnimationFrame(tick);
+  inTick=false;
+  /* sitting, sleeping or grooming does not need sixty frames a second */
+  var calm=(C.st==='idle'||C.st==='sleep'||C.st==='quiet'||C.st==='groom'||C.st==='sad') && !ball && C.squash<=0 && !press;
+  if(calm) slowT=setTimeout(function(){ slowT=0; raf=requestAnimationFrame(tick); }, C.surf?60:110), raf=-1;
+  else raf=requestAnimationFrame(tick);
+}
+var slowT=0;
+/* anything that happens wakes the full-speed loop at once */
+function kick(){
+  if(inTick || !root || !store.on || document.hidden) return;
+  if(slowT){ clearTimeout(slowT); slowT=0; raf=0; }
+  if(!raf){ lastT=0; raf=requestAnimationFrame(tick); }
 }
 
 /* which picture, and where */
@@ -812,6 +863,7 @@ function draw(t){
   shadow.style.transform = 'translateY('+(air?0:hop)+'px) scaleX('+(hop||air?0.7:1)+')';
 }
 function loop(){ if(!raf && store.on && !document.hidden){ lastT=0; raf=requestAnimationFrame(tick); } }
+function stopLoop(){ if(slowT){ clearTimeout(slowT); slowT=0; } if(raf>0) cancelAnimationFrame(raf); raf=0; }
 
 /* ============================================================
    WORDS, HEARTS, ZZZ
@@ -1013,6 +1065,8 @@ var CSS=
 '.dkpet{position:fixed;left:0;top:0;width:'+W+'px;height:'+H+'px;pointer-events:none;will-change:transform;transition:opacity .2s}'+
 '.dkpet canvas.dkp-cat{position:absolute;left:0;top:0;width:'+W+'px;height:'+H+'px;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:auto;cursor:grab;touch-action:none;transform-origin:50% 100%}'+
 '.dkpet canvas.dkp-cat:active{cursor:grabbing}'+
+'.dkpet,.dkpet *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}'+
+'@media print{.dkpet,.dkp-ball,.dkp-menu{display:none!important}}'+
 '.dkpet.night canvas.dkp-cat{filter:drop-shadow(0 0 1px rgba(255,240,220,.6))}'+
 '.dkp-shadow{position:absolute;left:12%;right:12%;bottom:-3px;height:6px;border-radius:50%;background:rgba(20,20,19,.28);transition:opacity .15s}'+
 '.dkpet.night .dkp-shadow{background:rgba(0,0,0,.55)}'+
@@ -1080,7 +1134,7 @@ function build(){
 function teardown(){
   closeMenu();
   if(root && root.parentNode) root.parentNode.removeChild(root);
-  root=null; if(raf){ cancelAnimationFrame(raf); raf=0; }
+  root=null; stopLoop();
 }
 /* coming onto the page: walk in after a long absence, otherwise be where it was */
 function arrive(){
@@ -1123,8 +1177,8 @@ window.addEventListener('pointermove', function(e){
 });
 window.addEventListener('resize', function(){ if(root){ measure(now()); scan(now()); if(!C.surf){ C.x=Math.max(env.minX, Math.min(env.maxX, C.x)); C.y=env.floor; } } });
 var scrollT=0;
-window.addEventListener('scroll', function(){ var t=now(); if(t-scrollT>300){ scrollT=t; scan(t); } }, {passive:true});
-document.addEventListener('visibilitychange', function(){ if(document.hidden){ if(raf){ cancelAnimationFrame(raf); raf=0; } remember(); } else loop(); });
+window.addEventListener('scroll', function(){ var t=now(); kick(); if(t-scrollT>300){ scrollT=t; scan(t); } }, {passive:true});
+document.addEventListener('visibilitychange', function(){ if(document.hidden){ stopLoop(); remember(); } else loop(); });
 window.addEventListener('pagehide', remember);
 window.addEventListener('storage', function(e){
   if(e.key!==KEY) return;
