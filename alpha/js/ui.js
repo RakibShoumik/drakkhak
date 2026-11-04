@@ -1,7 +1,7 @@
 /* ===========================================================
    UI — the shell.
 
-   One top bar, shared with the community side at /social/: the logo,
+   One top bar, shared with the community side (the site root): the logo,
    the Learn / Community switch, the four places (Start, Map, Practice,
    Progress) in a pill, then search, XP, coins, days left, the three
    switches and the profile button, behind which sit Settings and
@@ -1268,7 +1268,7 @@ function flip(key){
   if(route==='run' && RUN.active()){ paintChrome(); if(key!=='sound') repaintView(); return; }
   render();
 }
-/* Night is one switch for the whole site: the community side at /social/
+/* Night is one switch for the whole site: the community side (the site root)
    (WoWonder) reads the same 'mode' cookie, so flipping it here flips it there */
 function shareMode(theme){
   try{ document.cookie='mode='+(theme==='night'?'night':'day')+'; path=/; max-age=31536000; SameSite=Lax'; }catch(e){}

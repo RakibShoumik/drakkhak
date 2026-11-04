@@ -317,7 +317,7 @@ function mistakes(){
 
   var o='<div class="phead"><span class="kicker">'+L('Free, always')+'</span><h1>'+L('Mistakes')+'</h1>'+
     '<p class="lede">'+L('Every question you got wrong and have not yet won back. A right answer on a later day takes it out.')+'</p></div>';
-  o+='<div class="grid3">'+
+  o+='<div class="grid3 mx-stats">'+
     stat(L('In the bank'), '<span data-count="'+bank.length+'">'+bank.length+'</span>', L('waiting to be won back'))+
     stat(L('Due today'), '<span data-count="'+due+'">'+due+'</span>', L('back on their schedule'))+
     stat(L('Won back'), '<span data-count="'+fixed+'">'+fixed+'</span>', L('once wrong, now done'))+'</div>';

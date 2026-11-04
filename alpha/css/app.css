@@ -2269,3 +2269,9 @@ html.still .medal .mi,html.still .flairchip,html.still .ring-legendary{animation
 @media (max-width:600px){ .qbar{justify-content:space-between} .qb{flex:1;justify-content:center;padding:0 8px} }
 .esttag{font-family:var(--ui);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;
   border:1px dashed var(--ink-3);color:var(--ink-2)}
+@media (max-width:600px){
+  .grid3.mx-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .mx-stats .stat{padding:12px}
+  .mx-stats .v{font-size:22px}
+  .mx-stats .s{display:none}
+}

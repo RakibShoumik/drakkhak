@@ -88,7 +88,7 @@ var LABELS={
 };
 var SWITCH_GROUPS=[
   {t:'Top bar',d:'What sits in the bar at the top of every page.',items:[
-    ['bar.community','Between the app and /social/'],['bar.search','The search pill'],['bar.xp','The level hexagon and XP bar'],['bar.coins','The gold coin box'],
+    ['bar.community','Between Learn and the community'],['bar.search','The search pill'],['bar.xp','The level hexagon and XP bar'],['bar.coins','The gold coin box'],
     ['bar.days','Days left for the whole syllabus'],['bar.sound','Stays visible during a question'],['bar.timer','Stays visible during a question'],['bar.night','Stays visible during a question']]},
   {t:'The main places',d:'Switch one off and it leaves the menu, and its links disappear.',items:[
     ['page.map','The road through every chapter'],['page.practice','Sets, modes and full papers'],['page.progress','Charts and records']]},
@@ -608,7 +608,7 @@ function noticePage(){
       '<div class="rows">'+toggle('maintenance.on','Close the site')+'</div>'+
       '<label class="field">Heading<input class="fld wide" data-k="maintenance.title" value="'+esc(val('maintenance.title'))+'" maxlength="120"></label>'+
       '<label class="field">Message<textarea class="area" data-k="maintenance.message" maxlength="400">'+esc(val('maintenance.message'))+'</textarea></label>'+
-      '<p class="tiny">A browser picks this up the next time a page opens, or within 5 minutes. The community at /social/ has its own setting in WoWonder.</p></div></section></div>';
+      '<p class="tiny">A browser picks this up the next time a page opens, or within 5 minutes. The community (WoWonder) has its own setting there.</p></div></section></div>';
 }
 
 /* ---------- History ---------- */
