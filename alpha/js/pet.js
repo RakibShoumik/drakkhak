@@ -616,7 +616,7 @@ function play(){
   closeMenu();
   removeBall(true);
   var el=yarnCanvas();
-  el.className='dkp-ball';
+  el.className='dkp-ball'; el.setAttribute('data-noadvance','');
   el.style.zIndex=root.style.zIndex;
   document.body.appendChild(el);
   var side = C.x<innerWidth/2 ? 1 : -1;
@@ -745,7 +745,7 @@ function tick(ts){
 
   /* a question has appeared or gone */
   if(env.question && C.st!=='quiet' && C.st!=='held' && C.st!=='happy' && C.st!=='sad'){ removeBall(true); goQuiet(); }
-  if(!env.question && C.st==='quiet') setState('idle', 1200);
+  if(!env.question && C.st==='quiet'){ C.fade=1; setState('idle', 1200); }
 
   var idleLong = t-lastAct>75000;
   switch(C.st){
@@ -858,6 +858,7 @@ function draw(t){
   root.style.transform='translate3d('+Math.round(C.x-W/2)+'px,'+Math.round(C.y-H-hop)+'px,0)';
   cat.style.transform='scale('+(C.face*(sq<1?1.06:1))+','+sq+')';
   root.style.opacity=String(C.fade);
+  cat.style.pointerEvents = C.fade<0.5 ? 'none' : 'auto';
   var air = C.st==='jump'||C.st==='fall'||C.st==='held';
   shadow.style.opacity = air ? '0.25' : (hop ? '0.35' : '0.55');
   shadow.style.transform = 'translateY('+(air?0:hop)+'px) scaleX('+(hop||air?0.7:1)+')';
@@ -972,7 +973,7 @@ function coatPreview(id, hat){
 function openMenu(){
   closeMenu();
   var m=document.createElement('div');
-  m.className='dkp-menu'+(env.night?' night':''); m.setAttribute('role','dialog'); m.setAttribute('aria-label','Your cat');
+  m.className='dkp-menu'+(env.night?' night':''); m.setAttribute('role','dialog'); m.setAttribute('aria-label','Your cat'); m.setAttribute('data-noadvance','');
   m.style.zIndex = env.community ? 2000 : 200;
   m.innerHTML='<div class="dkp-mh"><span class="dkp-mpic"></span><div><label class="dkp-l" for="dkpName">Name</label>'+
       '<input id="dkpName" maxlength="16" autocomplete="off" spellcheck="false"></div>'+
@@ -1114,6 +1115,7 @@ function build(){
     var st=document.createElement('style'); st.id='dkPetCss'; st.textContent=CSS; document.head.appendChild(st);
   }
   root=document.createElement('div'); root.className='dkpet'; root.id='dkPet'; root.setAttribute('aria-hidden','true');
+  root.setAttribute('data-noadvance','');   /* petting the cat never moves Learn on to the next question */
   shadow=document.createElement('div'); shadow.className='dkp-shadow';
   cat=document.createElement('canvas'); cat.className='dkp-cat'; cat.width=GW; cat.height=GH; cat.title=store.name;
   bubble=document.createElement('div'); bubble.className='dkp-bubble'; bubble.hidden=true;
@@ -1133,6 +1135,7 @@ function build(){
 }
 function teardown(){
   closeMenu();
+  removeBall(true);
   if(root && root.parentNode) root.parentNode.removeChild(root);
   root=null; stopLoop();
 }
