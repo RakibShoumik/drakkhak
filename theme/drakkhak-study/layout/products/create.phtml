@@ -234,7 +234,7 @@ function FileListItemsP (files) {
 }
 $(function() {
    	if (navigator.geolocation) {
-        var location = navigator.geolocation.getCurrentPosition(function (position) {
+        var location = DkGeo(function (position) {
             $("#lng-product").val(position.coords.longitude);
             $("#lat-product").val(position.coords.latitude);
         });

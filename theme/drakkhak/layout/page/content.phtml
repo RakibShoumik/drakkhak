@@ -1218,7 +1218,7 @@ function Wo_LoadPageReviews(self = false){
 
 	$(document).ready(function() {
 		if (navigator.geolocation) {
-	        var location = navigator.geolocation.getCurrentPosition(function (position) {
+	        var location = DkGeo(function (position) {
 	            $("#lng-job").val(position.coords.longitude);
 	            $("#lat-job").val(position.coords.latitude);
 	        });

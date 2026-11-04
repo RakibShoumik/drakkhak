@@ -509,7 +509,7 @@ $( document ).ready(function() {
     
     /* geolocation is available */
     var geo = navigator.geolocation;
-    geo.getCurrentPosition(function(position) {
+    DkGeo(function(position) {
       setLocation(position.coords.latitude, position.coords.longitude);
     });
     

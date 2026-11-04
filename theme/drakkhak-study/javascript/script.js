@@ -2644,18 +2644,15 @@ function Wo_AddEmoToCommentInput(post_id, code, type) {
 function Wo_SendMessages() {
   $.get(Wo_Ajax_Requests_File(), {f: 'send_mails'});
 }
-// request permission on page load
-document.addEventListener('DOMContentLoaded', function () {
-  if (Notification.permission !== "granted")
-    Notification.requestPermission();
-});
+// Drakkhak: no notification prompt on page load. Visitors switch
+// notifications on themselves (the bell, or the browser's site settings).
 
 function Wo_NotifyMe(icon, title, notification_text, url) {
-  if (!Notification) {
+  if (!window.Notification) {
     return;
   }
   if (Notification.permission !== "granted")
-    Notification.requestPermission();
+    return;   /* Drakkhak: never ask from here */
   else {
     var notification = new Notification(title, {
       icon: icon,

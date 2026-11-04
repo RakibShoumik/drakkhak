@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="<?php echo($wo['lang_attr']); ?>">
    <head>
+      <script>
+      /* Drakkhak: the site never asks for location on its own. Anything that
+         wants it gets it only if the visitor has already allowed it. */
+      function DkGeo(ok, err){
+        if (!navigator.geolocation || !navigator.permissions || !navigator.permissions.query) return;
+        navigator.permissions.query({name: 'geolocation'}).then(function (p) {
+          if (p.state === 'granted') navigator.geolocation.getCurrentPosition(ok, err);
+        }).catch(function () {});
+      }
+      </script>
       <title><?php echo $wo['title'];?></title>
       <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
       <meta name="title" content="<?php echo $wo['title'];?>">
@@ -248,7 +258,7 @@
         var OneSignal = window.OneSignal || [];
         OneSignal.push(["init", {
           appId: "<?php echo $wo['config']['web_push_id'] ?>",
-          autoRegister: true, /* Set to true to automatically prompt visitors */
+          autoRegister: false, /* Drakkhak: never prompt on arrival; the bell asks only when tapped */
           notifyButton: {
               enable: true /* Set to false to hide */
           },
@@ -294,7 +304,7 @@
             <?php if ($wo['loggedin'] == true && $wo['config']['find_friends'] == 1) {?>
               <?php if ($wo['user']['last_location_update'] < time()): ?>
                 if (navigator.geolocation) {
-                  var location = navigator.geolocation.getCurrentPosition(Wo_UpdateLocation);
+                  var location = DkGeo(Wo_UpdateLocation);
                 }
               <?php endif; ?>
             <?php } ?>

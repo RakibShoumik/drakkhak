@@ -28,6 +28,20 @@ Add --study to also put a Drakkhak practice-site button in the top bar
 
     python3 theme/build/build.py path/to/sunshine theme/drakkhak-study --study
 
+Two further patches run on every build (and can be re-applied to a built
+theme on their own with --patch, no Sunshine folder needed):
+
+  6. no permission prompts on arrival: Sunshine asked for notifications on
+     every page load and for location on most pages. Now OneSignal never
+     auto-prompts (its bell still works when tapped), the browser
+     notification prompt is gone, and location is read only when the
+     visitor has already allowed it;
+  7. the sign-up form suggests a username from the full name (lowercase,
+     one word, numbers added if taken; still editable) and says
+     "Username must be one word (letters, numbers and underscore only)."
+
+    python3 theme/build/build.py --patch theme/drakkhak
+
 Run it on a fresh Sunshine folder; it is not meant to be run twice on the
 same output (the out folder is wiped first).
 """
@@ -204,12 +218,12 @@ NIGHT_CSS = ['stylesheet/dark.css']
 
 
 def read(p):
-    with open(p, encoding='utf-8', errors='surrogateescape') as f:
+    with open(p, encoding='utf-8', errors='surrogateescape', newline='') as f:
         return f.read()
 
 
 def write(p, s):
-    with open(p, 'w', encoding='utf-8', errors='surrogateescape') as f:
+    with open(p, 'w', encoding='utf-8', errors='surrogateescape', newline='') as f:
         f.write(s)
 
 
@@ -308,7 +322,170 @@ def build(src, out):
             dst = os.path.join(out, os.path.relpath(srcf, OVERLAY))
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy2(srcf, dst)
+    patch_prompts(out)
+    patch_register(out)
     print('Drakkhak theme written to', out)
+
+
+# ---------------------------------------------------------------- 6. no prompts on arrival
+DKGEO = '''
+      <script>
+      /* Drakkhak: the site never asks for location on its own. Anything that
+         wants it gets it only if the visitor has already allowed it. */
+      function DkGeo(ok, err){
+        if (!navigator.geolocation || !navigator.permissions || !navigator.permissions.query) return;
+        navigator.permissions.query({name: 'geolocation'}).then(function (p) {
+          if (p.state === 'granted') navigator.geolocation.getCurrentPosition(ok, err);
+        }).catch(function () {});
+      }
+      </script>'''
+
+
+def patch_prompts(out):
+    p = os.path.join(out, 'layout', 'container.phtml')
+    s = read(p)
+    if 'function DkGeo' not in s:
+        s = re.sub(r'<head>', '<head>' + DKGEO, s, count=1)
+    s = s.replace('autoRegister: true, /* Set to true to automatically prompt visitors */',
+                  'autoRegister: false, /* Drakkhak: never prompt on arrival; the bell asks only when tapped */')
+    write(p, s)
+    n = 0
+    for dp, _, fs in os.walk(os.path.join(out, 'layout')):
+        for f in fs:
+            if not f.endswith('.phtml'):
+                continue
+            q = os.path.join(dp, f)
+            t = read(q)
+            u = re.sub(r'(?<!\.)\bnavigator\.geolocation\.getCurrentPosition\(', 'DkGeo(', t)
+            u = u.replace('if (p.state === \'granted\') DkGeo(ok, err);', 'if (p.state === \'granted\') navigator.geolocation.getCurrentPosition(ok, err);')
+            u = re.sub(r'\bgeo\.getCurrentPosition\(', 'DkGeo(', u)
+            if u != t:
+                write(q, u)
+                n += 1
+    js = os.path.join(out, 'javascript', 'script.js')
+    if os.path.isfile(js):
+        t = read(js)
+        nl = '\r\n' if '\r\n' in t else '\n'
+        def fix(old, new, text):
+            return text.replace(old.replace('\n', nl), new.replace('\n', nl))
+        u = fix('''// request permission on page load
+document.addEventListener('DOMContentLoaded', function () {
+  if (Notification.permission !== "granted")
+    Notification.requestPermission();
+});''', '''// Drakkhak: no notification prompt on page load. Visitors switch
+// notifications on themselves (the bell, or the browser's site settings).''', t)
+        u = fix('''  if (!Notification) {
+    return;
+  }
+  if (Notification.permission !== "granted")
+    Notification.requestPermission();
+  else {''', '''  if (!window.Notification) {
+    return;
+  }
+  if (Notification.permission !== "granted")
+    return;   /* Drakkhak: never ask from here */
+  else {''', u)
+        if u != t:
+            write(js, u)
+
+
+# ---------------------------------------------------------------- 7. the username from the name
+USERNAME_FIELDS = '''<div class="wow_form_fields">
+							<label for="dk_fullname">Full name</label>
+							<input id="dk_fullname" type="text" autocomplete="name" placeholder="Your full name" autofocus>
+							<input id="dk_first" name="first_name" type="hidden"><input id="dk_last" name="last_name" type="hidden">
+						</div>
+						<div class="wow_form_fields">
+							<label for="username"><?php echo $wo['lang']['username']?></label>
+							<input id="username" name="username" type="text" autocomplete="off" placeholder="<?php echo $wo['lang']['username']?>">
+							<small class="dk-uhint" id="dk_uhint">Made from your name. You can change it.</small>
+						</div>'''
+
+USERNAME_JS = r'''
+<script>
+/* Drakkhak: a username made from the full name. Lowercase, one word, letters,
+   numbers and underscore only; numbers are added when the name is taken. It
+   stays editable: once you type your own, it is left alone. */
+var DK_USER_MSG = 'Username must be one word (letters, numbers and underscore only).';
+function DkUserOk(){
+  var u = $('#username');
+  if (!u.length) return true;
+  if (!/^[A-Za-z0-9_]+$/.test(u.val())) { $('#register .errors').html(DK_USER_MSG); return false; }
+  return true;
+}
+function DkUserMsg(html){
+  return String(html || '').replace(/invalid username characters?\.?/ig, DK_USER_MSG);
+}
+(function(){
+  var BN = {'অ':'a','আ':'a','ই':'i','ঈ':'i','উ':'u','ঊ':'u','ঋ':'ri','এ':'e','ঐ':'oi','ও':'o','ঔ':'ou',
+    'া':'a','ি':'i','ী':'i','ু':'u','ূ':'u','ৃ':'ri','ে':'e','ৈ':'oi','ো':'o','ৌ':'ou',
+    'ক':'k','খ':'kh','গ':'g','ঘ':'gh','ঙ':'ng','চ':'ch','ছ':'chh','জ':'j','ঝ':'jh','ঞ':'n','ট':'t','ঠ':'th','ড':'d','ঢ':'dh','ণ':'n',
+    'ত':'t','থ':'th','দ':'d','ধ':'dh','ন':'n','প':'p','ফ':'f','ব':'b','ভ':'bh','ম':'m','য':'j','র':'r','ল':'l','শ':'sh','ষ':'sh','স':'s','হ':'h',
+    '\u09DC':'r','\u09DD':'rh','\u09DF':'y','\u09BC':'','ৎ':'t','ং':'ng','ঃ':'h','ঁ':'','্':'','০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+  var KAR = 'ািীুূৃেৈোৌ্ংঃঁ';
+  function isCons(c){ return /[\u0995-\u09B9\u09DC-\u09DF]/.test(c); }
+  function latin(s){
+    s = String(s || '').replace(/\u09A1\u09BC/g, '\u09DC').replace(/\u09A2\u09BC/g, '\u09DD').replace(/\u09AF\u09BC/g, '\u09DF');
+    var out = '', i, c, nx;
+    for (i = 0; i < s.length; i++) {
+      c = s.charAt(i); nx = s.charAt(i + 1);
+      if (BN[c] === undefined) { out += c; continue; }
+      out += BN[c];
+      /* a consonant carries an "a" unless a vowel sign, a hasanta or the end of the word follows */
+      if (isCons(c) && nx && KAR.indexOf(nx) < 0 && /[\u0980-\u09FF]/.test(nx) && !/[\u0985-\u0994]/.test(nx)) out += 'a';
+    }
+    return out;
+  }
+  function slug(name){
+    var s = latin(name).toLowerCase();
+    if (s.normalize) s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return s.replace(/[^a-z0-9_]/g, '').slice(0, 26);
+  }
+  var u = $('#username'), f = $('#dk_fullname'), hint = $('#dk_uhint'), mine = false, t = null, seq = 0;
+  if (!u.length || !f.length) return;
+  u.on('input', function(){ mine = u.val() !== ''; });
+  f.on('input', function(){
+    var parts = $.trim(f.val()).split(/\s+/);
+    $('#dk_first').val(parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0] || '');
+    $('#dk_last').val(parts.length > 1 ? parts[parts.length - 1] : '');
+    if (mine) return;
+    var base = slug(f.val());
+    if (!base) { u.val(''); return; }
+    while (base.length < 5) base += String(Math.floor(Math.random() * 10));
+    u.val(base);
+    clearTimeout(t);
+    var my = ++seq;
+    t = setTimeout(function(){
+      $.getJSON('<?php echo $wo['config']['theme_url'];?>/dk/username.php', {u: base}).done(function(d){
+        if (my !== seq || mine || !d || !d.ok) return;
+        u.val(d.name);
+        hint.text(d.name === base ? 'Made from your name. You can change it.' : base + ' is taken, so a number was added. You can change it.');
+      });
+    }, 350);
+  });
+})();
+</script>
+'''
+
+
+def patch_register(out):
+    p = os.path.join(out, 'layout', 'welcome', 'register.phtml')
+    if not os.path.isfile(p):
+        return
+    s = read(p)
+    if 'DkUserOk' in s:
+        return
+    old = re.search(r'<div class="wow_form_fields">\s*<label for="username"><\?php echo \$wo\[.lang.\]\[.username.\]\?></label>\s*'
+                    r'<input id="username" name="username" type="text" autocomplete="off" placeholder="<\?php echo \$wo\[.lang.\]\[.username.\]\?>" autofocus>\s*</div>', s)
+    if not old:
+        sys.exit('build: could not find the username field in welcome/register.phtml; Sunshine has changed, update build.py')
+    s = s[:old.start()] + USERNAME_FIELDS + s[old.end():]
+    s, n = re.subn(r'(beforeSend:\s*function\(\)\s*\{)', r'\1\n    \tif (typeof DkUserOk === "function" && !DkUserOk()) return false;', s, count=1)
+    if not n:
+        sys.exit('build: could not find beforeSend in welcome/register.phtml')
+    s = s.replace('$state.html(data.errors);', '$state.html(typeof DkUserMsg === "function" ? DkUserMsg(data.errors) : data.errors);')
+    s += USERNAME_JS
+    write(p, s)
 
 
 def patch_night_toggle(out):
@@ -337,13 +514,13 @@ def patch_night_toggle(out):
 STUDY_LI = '''
 							<li class="dk-study-li">
 								<?php
-								/* Drakkhak practice site. Change this address if you put the
-								   practice site somewhere other than /study on this domain. */
-								$dk_study_url = $wo['config']['site_url'] . '/study/';
+								/* Drakkhak Learn. Change this address if you put the
+								   practice site somewhere other than /learn on this domain. */
+								$dk_study_url = $wo['config']['site_url'] . '/learn/';
 								?>
-								<a class="sixteen-font-size dk-study-btn" href="<?php echo $dk_study_url; ?>" title="Drakkhak MCQ">
+								<a class="sixteen-font-size dk-study-btn" href="<?php echo $dk_study_url; ?>" title="Drakkhak Learn: MCQ practice">
 									<svg viewBox="0 0 112 28" width="38" height="10" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.2"><circle cx="14" cy="14" r="11"/><circle cx="42" cy="14" r="11"/><circle cx="98" cy="14" r="11"/></g><circle cx="70" cy="14" r="12.5" fill="currentColor"/><path d="m63.5 14.4 4.4 4.4 8.4-9.2" fill="none" stroke="var(--dk-card,#FAF9F5)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-									<span>অনুশীলন</span>
+									<span>Learn</span>
 								</a>
 							</li>'''
 
@@ -372,6 +549,17 @@ def add_study_button(out):
 
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    if '--patch' in sys.argv:
+        for out in args:
+            patch_prompts(out)
+            patch_register(out)
+            for dp, _, fs in os.walk(os.path.join(OVERLAY, 'dk')):
+                for f in fs:
+                    dst = os.path.join(out, 'dk', f)
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    shutil.copy2(os.path.join(dp, f), dst)
+            print('patched', out)
+        sys.exit(0)
     if len(args) != 2:
         sys.exit(__doc__)
     build(args[0], args[1])

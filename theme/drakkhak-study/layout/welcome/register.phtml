@@ -40,8 +40,14 @@ $fields = Wo_GetWelcomeFileds();
 						</div>
 					<?php }else{ ?>
 						<div class="wow_form_fields">
+							<label for="dk_fullname">Full name</label>
+							<input id="dk_fullname" type="text" autocomplete="name" placeholder="Your full name" autofocus>
+							<input id="dk_first" name="first_name" type="hidden"><input id="dk_last" name="last_name" type="hidden">
+						</div>
+						<div class="wow_form_fields">
 							<label for="username"><?php echo $wo['lang']['username']?></label>
-							<input id="username" name="username" type="text" autocomplete="off" placeholder="<?php echo $wo['lang']['username']?>" autofocus>
+							<input id="username" name="username" type="text" autocomplete="off" placeholder="<?php echo $wo['lang']['username']?>">
+							<small class="dk-uhint" id="dk_uhint">Made from your name. You can change it.</small>
 						</div>
 					<?php } ?>
 					<div class="wow_form_fields">
@@ -155,6 +161,7 @@ $(function() {
   $this.ajaxForm({
     url: Wo_Ajax_Requests_File() + '?f=register',
     beforeSend: function() {
+    	if (typeof DkUserOk === "function" && !DkUserOk()) return false;
     	<?php if ($wo['config']['password_complexity_system'] == 1) { ?>
     	if ($('.helper-text .length').hasClass('valid') && $('.helper-text .lowercase').hasClass('valid') && $('.helper-text .uppercase').hasClass('valid') && $('.helper-text .special').hasClass('valid')) {
     		working = true;
@@ -187,7 +194,7 @@ $(function() {
       } else {
         $this.find('button').attr("disabled", false);
 		$this.find('.add_wow_loader').removeClass('btn-loading');
-        $state.html(data.errors);
+        $state.html(typeof DkUserMsg === "function" ? DkUserMsg(data.errors) : data.errors);
       }
       working = false;
     }
@@ -314,4 +321,68 @@ function activateButton(element) {
 
 })();
 <?php } ?>
+</script>
+
+<script>
+/* Drakkhak: a username made from the full name. Lowercase, one word, letters,
+   numbers and underscore only; numbers are added when the name is taken. It
+   stays editable: once you type your own, it is left alone. */
+var DK_USER_MSG = 'Username must be one word (letters, numbers and underscore only).';
+function DkUserOk(){
+  var u = $('#username');
+  if (!u.length) return true;
+  if (!/^[A-Za-z0-9_]+$/.test(u.val())) { $('#register .errors').html(DK_USER_MSG); return false; }
+  return true;
+}
+function DkUserMsg(html){
+  return String(html || '').replace(/invalid username characters?\.?/ig, DK_USER_MSG);
+}
+(function(){
+  var BN = {'অ':'a','আ':'a','ই':'i','ঈ':'i','উ':'u','ঊ':'u','ঋ':'ri','এ':'e','ঐ':'oi','ও':'o','ঔ':'ou',
+    'া':'a','ি':'i','ী':'i','ু':'u','ূ':'u','ৃ':'ri','ে':'e','ৈ':'oi','ো':'o','ৌ':'ou',
+    'ক':'k','খ':'kh','গ':'g','ঘ':'gh','ঙ':'ng','চ':'ch','ছ':'chh','জ':'j','ঝ':'jh','ঞ':'n','ট':'t','ঠ':'th','ড':'d','ঢ':'dh','ণ':'n',
+    'ত':'t','থ':'th','দ':'d','ধ':'dh','ন':'n','প':'p','ফ':'f','ব':'b','ভ':'bh','ম':'m','য':'j','র':'r','ল':'l','শ':'sh','ষ':'sh','স':'s','হ':'h',
+    '\u09DC':'r','\u09DD':'rh','\u09DF':'y','\u09BC':'','ৎ':'t','ং':'ng','ঃ':'h','ঁ':'','্':'','০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+  var KAR = 'ািীুূৃেৈোৌ্ংঃঁ';
+  function isCons(c){ return /[\u0995-\u09B9\u09DC-\u09DF]/.test(c); }
+  function latin(s){
+    s = String(s || '').replace(/\u09A1\u09BC/g, '\u09DC').replace(/\u09A2\u09BC/g, '\u09DD').replace(/\u09AF\u09BC/g, '\u09DF');
+    var out = '', i, c, nx;
+    for (i = 0; i < s.length; i++) {
+      c = s.charAt(i); nx = s.charAt(i + 1);
+      if (BN[c] === undefined) { out += c; continue; }
+      out += BN[c];
+      /* a consonant carries an "a" unless a vowel sign, a hasanta or the end of the word follows */
+      if (isCons(c) && nx && KAR.indexOf(nx) < 0 && /[\u0980-\u09FF]/.test(nx) && !/[\u0985-\u0994]/.test(nx)) out += 'a';
+    }
+    return out;
+  }
+  function slug(name){
+    var s = latin(name).toLowerCase();
+    if (s.normalize) s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return s.replace(/[^a-z0-9_]/g, '').slice(0, 26);
+  }
+  var u = $('#username'), f = $('#dk_fullname'), hint = $('#dk_uhint'), mine = false, t = null, seq = 0;
+  if (!u.length || !f.length) return;
+  u.on('input', function(){ mine = u.val() !== ''; });
+  f.on('input', function(){
+    var parts = $.trim(f.val()).split(/\s+/);
+    $('#dk_first').val(parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0] || '');
+    $('#dk_last').val(parts.length > 1 ? parts[parts.length - 1] : '');
+    if (mine) return;
+    var base = slug(f.val());
+    if (!base) { u.val(''); return; }
+    while (base.length < 5) base += String(Math.floor(Math.random() * 10));
+    u.val(base);
+    clearTimeout(t);
+    var my = ++seq;
+    t = setTimeout(function(){
+      $.getJSON('<?php echo $wo['config']['theme_url'];?>/dk/username.php', {u: base}).done(function(d){
+        if (my !== seq || mine || !d || !d.ok) return;
+        u.val(d.name);
+        hint.text(d.name === base ? 'Made from your name. You can change it.' : base + ' is taken, so a number was added. You can change it.');
+      });
+    }, 350);
+  });
+})();
 </script>
