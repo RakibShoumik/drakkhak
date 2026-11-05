@@ -150,3 +150,13 @@ h1,h2,h3,.h1,.h2,.h3,.modal-title,.page-margin h3,.wow_main_float_head h1,.wow_m
 .wow_hdr_innr_left .navbar-nav{display:flex;flex-wrap:nowrap;align-items:center}
 .wow_hdr_innr_left .navbar-nav>li{float:none}
 .wow_hdr_innr_left .navbar-nav:has(.dk-study-li){margin-left:36px}
+
+/* ---------- one search for the whole site: Learn's chapters on top ---------- */
+.dk-sres{padding:6px 6px 8px;border-bottom:1px solid var(--dk-rule);margin-bottom:4px}
+.dk-sres-h{font-family:var(--dk-ui);font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--dk-ink-3);padding:4px 8px 6px}
+.dk-sres-i{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;color:var(--dk-ink)!important;text-decoration:none!important}
+.dk-sres-i:hover{background:var(--dk-quiet)}
+.dk-sres-ic{width:30px;height:30px;flex:none;border-radius:8px;background:var(--dk-accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C6613F' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z'/%3E%3C/svg%3E") center/18px no-repeat}
+.dk-sres-t{display:flex;flex-direction:column;min-width:0}
+.dk-sres-t b{font-weight:600;font-size:14px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dk-sres-t small{font-size:12px;color:var(--dk-ink-3)}

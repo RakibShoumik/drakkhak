@@ -478,6 +478,9 @@ function paintSearch(){
         '<b>'+h(ICE.tname(r.tp))+'</b><small>'+h(ICE.sname(r.tp.sec))+' &middot; '+L('Chapter ','অধ্যায় ')+r.tp.n+'</small></a>';
     }).join('')
     : '<div class="none">'+L('No chapter by that name.','এই নামে কোনো অধ্যায় নেই।')+'</div>';
+  /* one search for the whole site: the same words, in the community's search */
+  if(SITE.on('bar.community')) box.innerHTML+='<a class="tsres-people" href="../index.php?link1=search&amp;query='+encodeURIComponent(inp.value.trim())+'">'+
+    '<b>'+L('Search people and posts in Community')+'</b><small>&ldquo;'+h(inp.value.trim())+'&rdquo;</small></a>';
   box.hidden=false;
 }
 function closeSearch(clear){

@@ -206,10 +206,12 @@ function Wo_SearchResult(query) {
       Searchcontainer.find('.search-advanced-link').attr('data-ajax','<?php echo Wo_SeoLink("?link1=search&query=")?>' + query);
       $.get(Wo_Ajax_Requests_File(), {f: 'search', s: 'normal', query: query}, function(data) {
         if (data.status == 200) {
-          if (data.html.length == 0) {
+          /* Drakkhak: Learn's chapters on top of the people, pages and groups */
+          var dkChapters = window.DkSearch ? DkSearch.html(query) : '';
+          if (data.html.length == 0 && !dkChapters) {
             SearchResult.html('<span class="center-text">' + " <?php echo $wo['lang']['no_result']; ?>" + '<span>');
           } else {
-            SearchResult.html(data.html);
+            SearchResult.html(dkChapters + data.html);
           }
         }
         Wo_progressIconLoader(Searchcontainer.find('.navbar-form'));

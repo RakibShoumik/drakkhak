@@ -325,6 +325,7 @@ def build(src, out):
     patch_prompts(out)
     patch_register(out)
     patch_pet(out)
+    patch_search(out)
     print('Drakkhak theme written to', out)
 
 
@@ -512,6 +513,51 @@ def patch_pet(out):
     write(p, s)
 
 
+# ---------------------------------------------------------------- 9. one search for the whole site
+SEARCH_TAG = ('    <script>window.DK_LEARN_URL = <?php echo json_encode($wo[\'config\'][\'site_url\'] . \'/learn/\'); ?>; '
+              'window.DK_THEME_URL = <?php echo json_encode($wo[\'config\'][\'theme_url\']); ?>;</script>\n'
+              '    <script src="<?php echo $wo[\'config\'][\'theme_url\'];?>/javascript/drakkhak-search.js?version=<?php echo $wo[\'config\'][\'version\']; ?>" defer></script>\n')
+SEARCH_OLD = '''        if (data.status == 200) {
+          if (data.html.length == 0) {
+            SearchResult.html('<span class="center-text">' + " <?php echo $wo['lang']['no_result']; ?>" + '<span>');
+          } else {
+            SearchResult.html(data.html);
+          }
+        }'''
+SEARCH_NEW = '''        if (data.status == 200) {
+          /* Drakkhak: Learn's chapters on top of the people, pages and groups */
+          var dkChapters = window.DkSearch ? DkSearch.html(query) : '';
+          if (data.html.length == 0 && !dkChapters) {
+            SearchResult.html('<span class="center-text">' + " <?php echo $wo['lang']['no_result']; ?>" + '<span>');
+          } else {
+            SearchResult.html(dkChapters + data.html);
+          }
+        }'''
+
+
+def patch_search(out):
+    p = os.path.join(out, 'layout', 'container.phtml')
+    s = read(p)
+    if 'drakkhak-search.js' not in s:
+        i = s.rfind('</body>')
+        s = s[:i] + SEARCH_TAG + '   ' + s[i:]
+        write(p, s)
+    p = os.path.join(out, 'layout', 'header', 'content.phtml')
+    s = read(p)
+    if 'DkSearch' in s:
+        return
+    at = s.find("{f: 'search', s: 'normal', query: query}")
+    if at < 0:
+        sys.exit('build: could not find the header search in header/content.phtml')
+    nl = '\r\n' if '\r\n' in s else '\n'
+    old, new = SEARCH_OLD.replace('\n', nl), SEARCH_NEW.replace('\n', nl)
+    j = s.find(old, at)
+    if j < 0:
+        sys.exit('build: the header search results code has changed; update build.py')
+    s = s[:j] + new + s[j + len(old):]
+    write(p, s)
+
+
 def patch_night_toggle(out):
     """WoWonder's night-mode switch appends dark.css with jQuery; wherever it
     does, add drakkhak-night.css right after it, and remove both together."""
@@ -578,6 +624,9 @@ if __name__ == '__main__':
             patch_prompts(out)
             patch_register(out)
             patch_pet(out)
+            patch_search(out)
+            for name in ('javascript/drakkhak-search.js', 'stylesheet/drakkhak.css', 'stylesheet/drakkhak-night.css'):
+                shutil.copy2(os.path.join(OVERLAY, name), os.path.join(out, name))
             for dp, _, fs in os.walk(os.path.join(OVERLAY, 'dk')):
                 for f in fs:
                     dst = os.path.join(out, 'dk', f)

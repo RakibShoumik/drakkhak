@@ -40,6 +40,10 @@ each student's browser, as before.
 
 ## What is different from Sunshine
 
+- **One search for the whole site.** The header search shows Learn's chapters ("Chapters in Learn")
+  on top of WoWonder's people, pages and groups; a chapter opens in Learn. The list is `dk/chapters.json`,
+  written by `node alpha/tools/export-chapters.js` (run it again when chapters change). Learn's own
+  search box ends with *Search people and posts in Community*.
 - **The pixel cat.** The same cat as in Learn walks the community pages, sits on posts and cards,
   and hops when you like something. Tap, drag, or hold it for its menu. It is
   `javascript/drakkhak-pet.js` (a copy of Learn's `js/pet.js`), loaded at the end of

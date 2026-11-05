@@ -2276,3 +2276,5 @@ html.still .medal .mi,html.still .flairchip,html.still .ring-legendary{animation
   .mx-stats .s{display:none}
 }
 .cathatpic{width:96px;height:auto;image-rendering:pixelated}
+.tsres .tsres-people{border-top:1px solid var(--rule);margin-top:4px}
+.tsres .tsres-people b{color:var(--accent-press)}
