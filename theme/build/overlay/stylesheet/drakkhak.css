@@ -1,0 +1,237 @@
+/* ============================================================
+   DRAKKHAK for WoWonder
+
+   The look of the Drakkhak practice site on top of WoWonder's
+   Sunshine templates: warm parchment by day, a lamp-lit desk by
+   night, ink greys, one terracotta accent, and green and red only
+   where something is right or wrong. Headings are serif (Noto Serif
+   Bengali, then Georgia); everything else is Hind Siliguri, served
+   from this theme so Bangla reads correctly without a font CDN.
+
+   The colours of the whole Sunshine stylesheet were already moved
+   onto this palette by theme/build/build.py; this file adds what a
+   recolour cannot: the fonts, the card edges, the raised buttons,
+   the header and the welcome page. Loaded after style.css.
+   ============================================================ */
+
+/* ---------- the Bangla faces ---------- */
+@font-face{font-family:'Noto Serif Bengali';src:url('../fonts/drakkhak/noto-serif-bengali.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-400.woff2') format('woff2');
+  font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-500.woff2') format('woff2');
+  font-weight:500;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-600.woff2') format('woff2');
+  font-weight:600;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+@font-face{font-family:'Hind Siliguri';src:url('../fonts/drakkhak/hind-siliguri-700.woff2') format('woff2');
+  font-weight:700;font-style:normal;font-display:swap;unicode-range:U+0951-0952,U+0964-0965,U+0980-09FE,U+200C-200D,U+20B9,U+25CC}
+
+/* ---------- the palette, the same tokens as the practice site ---------- */
+:root{
+  --dk-page:#F5F4ED; --dk-card:#FAF9F5; --dk-quiet:#F0EEE6; --dk-warm:#E8E6DC; --dk-rule:#E0DDD2; --dk-rule-2:#CFCBBE;
+  --dk-ink:#141413; --dk-ink-2:#5E5D59; --dk-ink-3:#76756E;
+  --dk-accent:#D97757; --dk-accent-press:#C6613F; --dk-accent-soft:#F6E6DE; --dk-on-accent:#FFF8F2;
+  --dk-ok:#4C7A4E; --dk-ok-soft:#E3EBDD; --dk-no:#B04A38; --dk-no-soft:#F5E3DD; --dk-star:#E2A12B;
+  --dk-serif:'Noto Serif Bengali',Georgia,'Times New Roman',serif;
+  --dk-ui:'Hind Siliguri',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dk-radius:12px;
+  --main-color:#D97757;
+  --plyr-color-main:#D97757;
+}
+
+html,body{background:var(--dk-page)!important}
+body{color:var(--dk-ink);font-family:var(--dk-ui);-webkit-font-smoothing:antialiased}
+::selection{background:var(--dk-accent-soft)}
+a{color:inherit}
+a:hover{color:var(--dk-accent-press)}
+
+/* ---------- serif headings, as on the practice site ---------- */
+h1,h2,h3,.h1,.h2,.h3,.modal-title,.page-margin h3,.wow_main_float_head h1,.wow_main_float_head h2,
+.login_left_combo h1,.login_innre .title,
+.post-heading .meta .title a b,#user-full-name,.wow_side_loggd_usr_hdr .title a,
+.profile-name,.user-name,.wo_page_hdng h2,.wo_page_hdng_innr span{
+  font-family:var(--dk-serif)!important;letter-spacing:-.005em}
+.post-heading .meta .title a b{font-weight:600;font-size:16.5px}
+
+/* ---------- Bangla reads bigger ---------- */
+.post-description,.post-description p,.post .post-text,.comment-text,.wo_shared_doc_text{font-size:16px;line-height:1.7}
+.post-description p{margin-bottom:6px}
+
+/* ---------- the header: parchment, a thin rule, no shadow ---------- */
+.navbar-default,.header-container .navbar-default{background:var(--dk-page)!important;box-shadow:none!important;
+  border-bottom:1px solid var(--dk-rule)!important}
+.header-brand img,.brand.header-brand img{width:150px!important;height:auto}
+.navbar-default .search-input,.search-container .search-input{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:22px!important}
+.navbar-default .search-input:focus{border-color:var(--dk-accent)!important}
+
+/* ---------- cards: one warm edge, no floating shadow ---------- */
+.panel,.panel-white,.wow_content,.left-sidebar,.wo_new_left_side,.alert.greetalert,.sidebar-conatnier .panel,
+.wow_side_loggd_usr,.list-group,.setting-panel,.wo_settings_page .setting-panel,.profile-container .card{
+  background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;box-shadow:none!important;border-radius:var(--dk-radius)!important}
+.panel-shadow{box-shadow:none!important}
+.alert.greetalert{border-left:4px solid var(--dk-accent)!important}
+.modal-content{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:16px!important;
+  box-shadow:0 30px 70px -30px rgba(20,20,19,.5)!important}
+.modal-header{background:transparent!important;border-bottom:1px solid var(--dk-rule)!important}
+.modal-footer{border-top:1px solid var(--dk-rule)!important}
+.dropdown-menu{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:var(--dk-radius)!important;
+  box-shadow:0 14px 34px -14px rgba(20,20,19,.35)!important}
+.dropdown-menu>li>a:hover,.dropdown-menu>li>a:focus{background:var(--dk-quiet)!important;color:var(--dk-ink)!important}
+
+/* the left menu: a soft terracotta wash on the current place */
+.left-sidebar ul li a{border-radius:10px}
+.left-sidebar ul li a:hover{background:var(--dk-quiet)}
+.left-sidebar ul li.active a,.left-sidebar ul li a.active{background:var(--dk-accent-soft)!important;color:var(--dk-accent-press)!important}
+
+/* ---------- buttons: one filled terracotta, raised like the site's big button ---------- */
+.btn{border-radius:12px;font-family:var(--dk-ui);font-weight:600}
+.btn-main,.btn-primary,.login button,.btn.btn-mat,.wow_mat_mdl .modal-footer .btn.main{
+  background:var(--dk-accent)!important;border-color:var(--dk-accent)!important;color:var(--dk-on-accent)!important}
+.btn-main:hover,.btn-primary:hover,.login button:hover,.btn.btn-mat:hover{background:var(--dk-accent-press)!important;border-color:var(--dk-accent-press)!important}
+.login button,.btn-main.btn-lg{box-shadow:0 4px 0 var(--dk-accent-press)!important;transition:transform .15s,box-shadow .15s}
+.login button:active,.btn-main.btn-lg:active{transform:translateY(3px);box-shadow:0 1px 0 var(--dk-accent-press)!important}
+.btn-default{background:var(--dk-card);border:1.5px solid var(--dk-rule-2);color:var(--dk-ink)}
+.btn-default:hover{background:var(--dk-quiet);border-color:var(--dk-ink-3)}
+#wo_home_btns.btn-main{box-shadow:none!important}
+
+/* ---------- inputs ---------- */
+.form-control,textarea.form-control,select.form-control{background:var(--dk-card);border:1.5px solid var(--dk-rule);border-radius:10px;color:var(--dk-ink);box-shadow:none}
+.form-control:focus{border-color:var(--dk-accent)!important;box-shadow:0 0 0 3px var(--dk-accent-soft)!important}
+.form-control::placeholder{color:var(--dk-ink-3)}
+.postText,.comment-textarea{background:var(--dk-quiet)!important;border:1px solid var(--dk-rule)!important}
+
+/* ---------- badges, counters, the verified mark ---------- */
+.new-update-alert,.badge,.notification-list .badge{background:var(--dk-accent)!important;color:var(--dk-on-accent)!important}
+.verified-color svg,.verified-color path{fill:var(--dk-accent)!important;color:var(--dk-accent)!important}
+
+/* the cookie notice keeps readable text on parchment */
+.cc-window,.cc-window .cc-message,.cc-window .cc-link{color:var(--dk-ink)!important}
+.cc-window{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:var(--dk-radius)!important}
+.cc-window .cc-link{color:var(--dk-accent-press)!important}
+
+/* ---------- the welcome page ---------- */
+.welcome-container,.wrapper{background:transparent}
+.login_left_combo h1{font-weight:700;font-size:46px;line-height:1.25;color:var(--dk-ink)}
+.login_left_combo p{font-family:var(--dk-ui);font-size:19px;line-height:1.6;color:var(--dk-ink-2)}
+.login_left_combo .logo img,.login_innre .logo img,.wrapper .logo img{width:200px;height:auto}
+.login_innre{background:transparent!important;border:0!important;box-shadow:none!important}
+.login_innre form{background:var(--dk-card)!important;border:1px solid var(--dk-rule)!important;border-radius:20px!important;
+  box-shadow:0 30px 60px -40px rgba(20,20,19,.35)!important}
+.login_innre .title{font-size:30px!important;font-weight:700}
+.login input{background:var(--dk-card)!important}
+.login button{border-radius:14px!important;font-size:18px!important;font-weight:700!important;min-height:52px}
+.login a.main,.login .dec.main{color:var(--dk-accent-press)!important}
+
+/* ---------- the honest scrollbar ---------- */
+@media (min-width:992px){
+  ::-webkit-scrollbar-thumb{background:var(--dk-rule-2)!important;border-radius:6px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--dk-accent)!important}
+}
+
+/* ---------- a phone: comfortable tap targets ---------- */
+@media (max-width:767px){
+  .btn{min-height:44px}
+  .left-sidebar ul li a{min-height:44px;display:flex;align-items:center}
+  .header-brand img,.brand.header-brand img{width:128px!important}
+  .login_left_combo h1{font-size:34px}
+}
+
+/* ---------- the study button (drakkhak-study theme only) ---------- */
+.navbar-default .navbar-nav>li.dk-study-li>a.dk-study-btn{display:flex;align-items:center;gap:8px;height:40px;margin:8px 2px 8px 6px;padding:0 14px!important;
+  border-radius:20px;border:1.5px solid var(--dk-accent);background:var(--dk-accent-soft);color:var(--dk-accent-press)!important;font-weight:700;font-size:14px}
+.navbar-default .navbar-nav>li.dk-study-li>a.dk-study-btn:hover{background:var(--dk-accent)!important;color:var(--dk-on-accent)!important}
+.dk-study-btn svg{flex:none}
+@media (max-width:991px){ .dk-study-btn span{display:none} .navbar-default .navbar-nav>li.dk-study-li>a.dk-study-btn{padding:0 10px!important;margin-left:4px} }
+/* with the extra button the search box gives way, never the icons on the right */
+.header-fixed1000 .container-fluid{flex-wrap:nowrap}
+.header-fixed1000 .container-fluid>.navbar-nav:not(.navbar-right){flex:1 1 auto;min-width:140px;margin-left:16px}
+.header-fixed1000 .container-fluid>.navbar-nav:not(.navbar-right)>li,.header-fixed1000 .search-container{width:100%;max-width:475px}
+.header-fixed1000 .container-fluid>.navbar-right{flex:none}
+.wow_hdr_innr_left .navbar-nav{display:flex;flex-wrap:nowrap;align-items:center}
+.wow_hdr_innr_left .navbar-nav>li{float:none}
+.wow_hdr_innr_left .navbar-nav:has(.dk-study-li){margin-left:36px}
+
+/* ---------- one search for the whole site: Learn's chapters on top ---------- */
+.dk-sres{padding:6px 6px 8px;border-bottom:1px solid var(--dk-rule);margin-bottom:4px}
+.dk-sres-h{font-family:var(--dk-ui);font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--dk-ink-3);padding:4px 8px 6px}
+.dk-sres-i{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;color:var(--dk-ink)!important;text-decoration:none!important}
+.dk-sres-i:hover{background:var(--dk-quiet)}
+.dk-sres-ic{width:30px;height:30px;flex:none;border-radius:8px;background:var(--dk-accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C6613F' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z'/%3E%3C/svg%3E") center/18px no-repeat}
+.dk-sres-t{display:flex;flex-direction:column;min-width:0}
+.dk-sres-t b{font-weight:600;font-size:14px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dk-sres-t small{font-size:12px;color:var(--dk-ink-3)}
+
+/* ============================================================
+   ONE WEBSITE: Learn inside the community
+   ============================================================ */
+/* the /learn page: Learn fills the window under the site's header */
+.dk-learn{position:fixed;left:0;right:0;bottom:0;top:56px;z-index:2;background:var(--dk-page)}
+.dk-learn iframe{display:block;width:100%;height:100%;border:0;background:var(--dk-page)}
+body.dk-on-learn{overflow:hidden}
+body.dk-on-learn .footer-wrapper,body.dk-on-learn #footer,body.dk-on-learn .wo_footer{display:none!important}
+/* Learn's numbers in the header */
+.dk-lchips{display:flex!important;align-items:center;gap:6px;margin:0 8px;list-style:none}
+.navbar-right>li.dk-lchips{float:left;height:70px}
+.dk-lc{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border-radius:17px;border:1px solid var(--dk-rule);background:var(--dk-card);
+  color:var(--dk-ink);font:600 12.5px var(--dk-ui);white-space:nowrap;cursor:pointer}
+.dk-lc:hover{border-color:var(--dk-accent)}
+.dk-lc.dk-lv i{width:16px;height:18px;background:var(--dk-accent);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.dk-lc-bar{width:38px;height:4px;border-radius:2px;background:var(--dk-warm);overflow:hidden}
+.dk-lc-bar em{display:block;height:100%;background:var(--dk-accent)}
+.dk-lc.dk-coins{background:#FFF4CC;border-color:#F0D58A;color:#6A4A00}
+.dk-lc.dk-coins i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#FFF4C2,#F6C744 45%,#B9800F);box-shadow:0 0 0 1px #A86F0A}
+.dk-lc.dk-days span{font-weight:500;color:var(--dk-ink-3)}
+.dk-lc.dk-tog{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dk-ink-2)}
+.dk-lc.dk-tog i{width:6px;height:6px;border-radius:50%;background:var(--dk-ink-3)}
+.dk-lc.dk-tog.on{border-color:var(--dk-accent);background:var(--dk-accent-soft);color:var(--dk-accent-press)}
+.dk-lc.dk-tog.on i{background:var(--dk-accent)}
+@media (max-width:1100px){ .dk-lc.dk-days span,.dk-lc-bar{display:none} }
+@media (max-width:900px){ .dk-lc.dk-tog{display:none} .dk-lchips{margin:0 4px;gap:4px} }
+@media (max-width:600px){ .dk-lc.dk-days{display:none} .dk-lc{height:30px;padding:0 8px} }
+.navbar-default .navbar-nav>li.dk-study-li.active>a.dk-study-btn{background:var(--dk-accent)!important;color:var(--dk-on-accent)!important}
+.navbar-default .navbar-nav>li.dk-study-li.active>a.dk-study-btn *{color:var(--dk-on-accent)!important}
+
+/* Learn level and streak beside a name */
+.dk-nb{display:inline-flex;align-items:center;gap:3px;margin-left:5px;vertical-align:middle;text-decoration:none!important}
+.dk-nb i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;height:17px;min-width:17px;padding:0 4px;border-radius:9px;font:700 10.5px/1 var(--dk-ui)}
+.dk-nb-lv{background:var(--dk-accent-soft);color:var(--dk-accent-press);box-shadow:inset 0 0 0 1px var(--dk-accent)}
+.dk-nb-st{background:#FFE9C7;color:#9A5A00}
+.dk-nb-st::before{content:'\1F525';font-size:9px;margin-right:1px}
+.dk-nb.fr-gold .dk-nb-lv{box-shadow:inset 0 0 0 1.5px #D6A520}
+.dk-nb.fr-platinum .dk-nb-lv{box-shadow:inset 0 0 0 1.5px #8E9AA3}
+.dk-nb.fr-legendary .dk-nb-lv{box-shadow:inset 0 0 0 1.5px #E2A12B,0 0 6px rgba(226,161,43,.6)}
+.dk-nb.fr-royal .dk-nb-lv{box-shadow:inset 0 0 0 1.5px #7A4B94}
+
+/* the profile's study card, and a group's weekly goal */
+.dk-study-card,.dk-goal-card{padding:16px 18px!important;margin-bottom:16px}
+.dk-sc-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.dk-sc-head b{font-family:var(--dk-serif);font-size:17px;flex:1}
+.dk-sc-head a,.dk-goal-week{font-size:13px;color:var(--dk-accent-press)!important;font-weight:600}
+.dk-goal-week{color:var(--dk-ink-3)!important;font-weight:500}
+.dk-sc-mark{width:38px;height:10px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 112 28'%3E%3Cg fill='none' stroke='%23141413' stroke-width='3'%3E%3Ccircle cx='14' cy='14' r='11'/%3E%3Ccircle cx='42' cy='14' r='11'/%3E%3Ccircle cx='98' cy='14' r='11'/%3E%3C/g%3E%3Ccircle cx='70' cy='14' r='12.5' fill='%23D98A68'/%3E%3C/svg%3E") center/contain no-repeat}
+.dk-sc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.dk-sc-grid div{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:10px;background:var(--dk-quiet)}
+.dk-sc-grid b{font-size:16px;color:var(--dk-ink)}
+.dk-sc-grid span{font-size:11.5px;color:var(--dk-ink-3);line-height:1.3}
+.dk-sc-college{margin:10px 0 0;font-size:13.5px;color:var(--dk-ink-2)}
+.dk-sc-empty,.dk-goal-sub{margin:0;font-size:13.5px;color:var(--dk-ink-2);line-height:1.5}
+.dk-goal-num{font-size:14px;color:var(--dk-ink-2)}
+.dk-goal-num b{font-size:22px;color:var(--dk-ink);font-family:var(--dk-serif)}
+.dk-goal-bar{height:10px;border-radius:5px;background:var(--dk-warm);overflow:hidden;margin:8px 0}
+.dk-goal-bar i{display:block;height:100%;background:var(--dk-accent);border-radius:5px}
+.dk-goal-top{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-direction:column;gap:6px;counter-reset:g}
+.dk-goal-top li{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.dk-goal-top img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+.dk-goal-top a{flex:1;color:var(--dk-ink)!important;font-weight:600}
+.dk-goal-top span{color:var(--dk-ink-3);font-size:12.5px}
+.dk-goal-form{display:flex;align-items:flex-end;gap:8px;margin-top:12px}
+.dk-goal-form label{flex:1;font-size:12.5px;color:var(--dk-ink-3);display:flex;flex-direction:column;gap:4px}
+.dk-goal-form input{height:34px;border-radius:9px;border:1.5px solid var(--dk-rule);background:var(--dk-card);padding:0 10px;color:var(--dk-ink)}
+/* a coin or XP from Learn has landed on its chip */
+.dk-lc.dk-bump{animation:dkBump .42s cubic-bezier(.3,1.6,.5,1)}
+@keyframes dkBump{0%{transform:scale(1)}40%{transform:scale(1.16)}100%{transform:scale(1)}}
+/* the chapter search on /learn: results need room for a chapter's name */
+.dk-on-learn .search-container .search-dropdown-container{min-width:380px}
+@media (max-width:600px){ .dk-on-learn .search-container .search-dropdown-container{min-width:0;width:calc(100vw - 24px)} }
+/* a narrow phone: the header keeps its own icons; Learn shows its numbers in its own thin bar */
+@media (max-width:600px){ .dk-lchips{display:none!important} }

@@ -1,0 +1,9 @@
+# the OCR text of the NCTB books: study material only, never uploaded to the
+# site and far too big to be worth versioning. The chapter maps built from it
+# ARE versioned, because they are work.
+source/*/p*.txt
+
+# the deploy bundle, built on demand
+upload.zip
+
+.DS_Store

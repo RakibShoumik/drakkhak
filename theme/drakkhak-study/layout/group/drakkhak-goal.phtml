@@ -1,0 +1,36 @@
+<?php
+/* Drakkhak: a study group. A WoWonder group with a shared weekly goal:
+   every member's active minutes in Learn this week, added together. */
+if (!function_exists('dk_group_goal')) { @include_once('drakkhak/lib.php'); }
+if (function_exists('dk_group_goal') && !empty($wo['group_profile']['id'])) {
+    $dkg = dk_group_goal($wo['group_profile']['id'], !empty($wo['user']['user_id']) ? $wo['user']['user_id'] : 0);
+    if ($dkg['on'] || $dkg['can_edit']) {
+        $pct = $dkg['goal'] ? min(100, round(100 * $dkg['total'] / $dkg['goal'])) : 0; ?>
+<div class="wow_content dk-goal-card" id="dkGoal" data-id="<?php echo (int) $wo['group_profile']['id']; ?>">
+  <div class="dk-sc-head"><span class="dk-sc-mark" aria-hidden="true"></span><b>Study group</b><span class="dk-goal-week">this week</span></div>
+  <?php if ($dkg['on']) { ?>
+  <div class="dk-goal-num"><b><?php echo dk_hours($dkg['total']); ?></b> of <?php echo dk_hours($dkg['goal']); ?></div>
+  <div class="dk-goal-bar"><i style="width:<?php echo $pct; ?>%"></i></div>
+  <p class="dk-goal-sub"><?php echo $pct >= 100 ? 'Goal reached. Well done, everyone.' : 'Active study time of all ' . (int) $dkg['members'] . ' members in Learn, added together.'; ?></p>
+  <?php if ($dkg['top']) { ?><ol class="dk-goal-top"><?php foreach ($dkg['top'] as $t) { ?>
+    <li><img src="<?php echo htmlspecialchars($t['user']['avatar']); ?>" alt=""><a href="<?php echo htmlspecialchars($t['user']['url']); ?>"><?php echo htmlspecialchars($t['user']['name']); ?></a><span><?php echo dk_hours($t['mins']); ?></span></li>
+  <?php } ?></ol><?php } ?>
+  <?php } else { ?>
+  <p class="dk-goal-sub">Turn this group into a study group: set a weekly goal of active study minutes, and everyone's time in Learn counts towards it.</p>
+  <?php } ?>
+  <?php if ($dkg['can_edit']) { ?>
+  <form class="dk-goal-form" onsubmit="return DkSetGoal(this);">
+    <label>Weekly goal, in hours <input type="number" name="hours" min="0" max="500" step="1" value="<?php echo $dkg['goal'] ? round($dkg['goal'] / 60) : 10; ?>"></label>
+    <button type="submit" class="btn btn-main btn-sm"><?php echo $dkg['on'] ? 'Save' : 'Start'; ?></button>
+  </form>
+  <script>
+  function DkSetGoal(f){
+    var h=Math.max(0, parseInt(f.hours.value,10)||0), id=document.getElementById('dkGoal').getAttribute('data-id');
+    fetch(Wo_Ajax_Requests_File()+'?f=drakkhak&s=group_goal_set',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+      body:JSON.stringify({id:+id, minutes:h*60})}).then(function(r){ return r.json(); }).then(function(){ location.reload(); });
+    return false;
+  }
+  </script>
+  <?php } ?>
+</div>
+<?php } } ?>

@@ -1,0 +1,4 @@
+# Only the three pages meant to be opened are reachable here.
+<FilesMatch "^(lib|boot)\.php$|\.sql$|^\.installed">
+  Require all denied
+</FilesMatch>
