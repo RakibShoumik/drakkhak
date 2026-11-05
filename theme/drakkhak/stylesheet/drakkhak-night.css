@@ -21,3 +21,5 @@ body{color:var(--dk-ink)}
 /* text that Sunshine's own night mode leaves dark */
 .no-messages,.empty_state,.empty_state p,.empty_state h5,.no-messages p{color:var(--dk-ink-2)!important}
 .post-description,.post-description p,.comment-text{color:var(--dk-ink)}
+/* night switched on without a reload: the day logo is still in the header, so light it */
+.header-brand img:not([src*="night-"]){filter:invert(1) hue-rotate(180deg) brightness(1.05)}

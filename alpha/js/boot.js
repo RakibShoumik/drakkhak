@@ -73,6 +73,9 @@
   var start=UI.readHash();
   UI.go(start && start.r!=='run' && start.r!=='welcome' ? start.r : 'today', start?start.p:null);
 
+  /* one account with the community: who is signed in, and their record */
+  if(window.ACCOUNT) ACCOUNT.check();
+
   if(!ICE.Q.length) UI.toast(L('No question bank loaded &mdash; check the script tags in index.html.','কোনো প্রশ্নের ব্যাংক লোড হয়নি &mdash; index.html-এর স্ক্রিপ্ট ট্যাগ দেখে নিন।'), 6000);
 
   if(!SITE.preview && 'serviceWorker' in navigator && location.protocol.indexOf('http')===0){

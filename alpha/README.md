@@ -208,12 +208,23 @@ It never gets in the way: it never stops on a button, link or field (and walks o
 appears under it), prefers empty space to text, goes to a corner and keeps quiet while a
 question is on screen, never speaks during one, and stays still with reduced motion. Nothing is
 ever lost: it never gets hungry or ill and needs nothing. The community side loads the same file
-from the theme (`javascript/drakkhak-pet.js`), and because Learn at `/learn/` and the community
-are one origin, it is the same cat, with the same name, coat and place, on the whole site.
+from the theme (`javascript/drakkhak-pet.js`), and because Learn at `/learn` and the community
+are one origin, it is the same cat (inside `/learn` the page around Learn draws it; Learn only sends it the news), with the same name, coat and place, on the whole site.
 
 **Under every question** sits a bar: *Comment* (a moderated discussion of the whole question,
 open once you have answered), *Share* (the question and a `#/q/<id>` link) and *Report* (kept
 for you, and sent to the admin panel's Reported questions).
+
+## One website with the community
+
+On the website Learn opens at `/learn`, inside the community's header, and uses the community's
+account (`js/account.js`): progress is kept on the account and follows a student to any device,
+badges and levels reach the site's bell, Message opens the site's chat box and Share posts to the
+timeline. **Ranks** in the sidebar (`js/ranks.js`) ranks students on active minutes this week,
+colleges on their students' average score (once five study), and runs a daily study duel and a
+weekly contest; the shop's Competition shelf sells a contest seat, a friend challenge, a spotlight
+and a rank shield. Signed out, nothing changes: Learn works on its own, no account needed.
+Install and the server side: `../social/README.md`.
 
 ## The prediction is built to be beaten
 

@@ -486,14 +486,7 @@ function shop(){
     } else if(k==='cathat' && !window.DKPET){
       body='';
     } else if(k==='compete'){
-      var soon=[['&#127942;','Weekly contest entry','A seat in this week\'s contest, ranked on active study time.'],
-                ['&#9876;&#65039;','Challenge a friend','A duel on the same questions, with a friend from Community.'],
-                ['&#128226;','Leaderboard spotlight','Your name highlighted on the leaderboard for 24 hours.'],
-                ['&#128737;&#65039;','Rank shield','Keeps your rank in ranked mode through one bad day.']];
-      body=soon.map(function(x){
-        return '<div class="shopitem locked"><span class="art">'+x[0]+'</span><b>'+L(x[1])+'</b><span class="small note">'+L(x[2])+'</span>'+
-          '<span class="lvtag">'+L('With your Community account')+'</span></div>';
-      }).join('');
+      body=window.RANKS ? RANKS.shopCards() : '';
     } else {
       body=GAME.COSMETICS.filter(function(c){ return c.kind===k && !c.season && (!c.more || more); })
         .map(function(c){ return cosmeticCard(c, g); }).join('');
@@ -502,7 +495,7 @@ function shop(){
     o+='<section class="shelfsec" id="shelf-'+k+'"><div class="seclabel">'+x.en+
       (k==='items'?' <span class="faint">&middot; '+L('used during a set')+'</span>':'')+
       (k==='season'?' <span class="faint">&middot; '+L('on sale only in their season, yours for good')+'</span>':'')+
-      (k==='compete'?' <span class="faint">&middot; '+L('opens when Learn and Community share one sign-in')+'</span>':'')+
+      (k==='compete'?' <span class="faint">&middot; '+(window.ACCOUNT && ACCOUNT.has() ? L('kept by the site, ')+'<a href="#/ranks" data-go="ranks">'+L('see the ranks')+'</a>' : L('with your Community account'))+'</span>':'')+
       '</div><div class="grid-auto" style="margin-top:12px">'+body+'</div></section>';
   });
   o+='<div class="grid2">'+stat(L('50:50 lifelines'), String(g.lifelines.fifty), L('removes options'))+
@@ -534,7 +527,10 @@ function social(){
      '<p class="muted" style="font-size:16.5px">'+L('A picture, drawn here and saved to your downloads. Whether you send it is up to you.','একটি ছবি, এখানেই আঁকা আর আপনার ডাউনলোডে রাখা। পাঠাবেন কি না, আপনার ইচ্ছা।')+'</p>'+
      '<div class="btns"><button class="btn ghost sm" data-act="card" data-arg="streak">'+L('Streak card','ধারার কার্ড')+'</button>'+
      '<button class="btn ghost sm" data-act="card" data-arg="level">'+L('Level card','লেভেলের কার্ড')+'</button>'+
-     '<button class="btn ghost sm" data-act="card" data-arg="score">'+L('Score card','স্কোরের কার্ড')+'</button></div></section>';
+     '<button class="btn ghost sm" data-act="card" data-arg="score">'+L('Score card','স্কোরের কার্ড')+'</button></div>'+
+     (window.ACCOUNT && ACCOUNT.has() ? '<div class="btns"><span class="small" style="align-self:center">'+L('Post to your Community timeline:')+'</span>'+
+       '<button class="btn sm" data-act="cardPost" data-arg="streak">'+L('Streak')+'</button><button class="btn sm" data-act="cardPost" data-arg="level">'+L('Level')+'</button>'+
+       '<button class="btn sm" data-act="cardPost" data-arg="score">'+L('Score')+'</button></div>' : '')+'</section>';
   o+='<section class="card" style="display:flex;flex-direction:column;gap:12px"><h3 style="font-size:21px">'+L('For a teacher or parent','শিক্ষক বা অভিভাবকের জন্য')+'</h3>'+
      '<p class="muted" style="font-size:16.5px">'+L('A printable four-week report &mdash; measured minutes, questions, accuracy by paper and the cautious prediction.','চার সপ্তাহের একটি প্রিন্টযোগ্য রিপোর্ট &mdash; মাপা মিনিট, প্রশ্ন, পত্র অনুযায়ী শুদ্ধতা আর সাবধানী পূর্বাভাস।')+'</p>'+
      '<div class="btns"><button class="btn ghost sm" data-act="report">'+L('Print the report','রিপোর্ট প্রিন্ট করুন')+'</button><button class="btn ghost sm" data-act="cert">'+L('Print a certificate','সনদ প্রিন্ট করুন')+'</button></div></section>';
@@ -988,6 +984,14 @@ UI.act('card', function(k){
   if(k==='streak') SHARE.save(SHARE.streakCard(),'drakkhak-streak.png');
   else if(k==='level') SHARE.save(SHARE.levelCard(),'drakkhak-level.png');
   else SHARE.save(SHARE.scoreCard(track()),'drakkhak-score.png');
+});
+/* the same cards, posted to your Community timeline */
+UI.act('cardPost', function(k){
+  if(!window.ACCOUNT) return;
+  var LV=GAME.level(), st=QUEST.streak(), sc=AB.score({track:track()});
+  if(k==='streak') ACCOUNT.share(SHARE.streakCard(), st.live+'-day study streak on Drakkhak Learn.');
+  else if(k==='level') ACCOUNT.share(SHARE.levelCard(), 'Level '+LV.level+' on Drakkhak Learn.');
+  else ACCOUNT.share(SHARE.scoreCard(track()), 'My '+(ICE.edition==='ssc'?'SSC':'HSC')+' MCQ score on Drakkhak Learn: '+sc.score+' out of 100, on '+sc.n+' answers.');
 });
 UI.act('newDuel', function(){
   var code=MODES.makeDuel({track:track()});

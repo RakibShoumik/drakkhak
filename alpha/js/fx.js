@@ -353,13 +353,15 @@ function fly(o){
   var LY=layer();
   var to=o.to, from=o.from;
   var visible = to && to.getBoundingClientRect && to.offsetParent!==null;
-  if(!effectsOn() || !LY || !from || !visible){
+  /* inside the site at /learn the boxes are the chips in the site's header, above this frame */
+  var far = !visible && to && window.DKEMBED && DKEMBED.rect ? DKEMBED.rect(to.id) : null;
+  if(!effectsOn() || !LY || !from || !(visible || far)){
     if(o.onLand) o.onLand(0, true);
     if(o.onDone) o.onDone();
     return;
   }
-  var fr=from.getBoundingClientRect(), tr=to.getBoundingClientRect();
-  var icon=to.querySelector('.fly-target')||to, ir=icon.getBoundingClientRect();
+  var fr=from.getBoundingClientRect();
+  var ir=far || (to.querySelector('.fly-target')||to).getBoundingClientRect();
   var tx=ir.left+ir.width/2, ty=ir.top+ir.height/2;
   var n=Math.max(1, o.count||1), done=0, t0=performance.now();
   inFlight++;
@@ -394,7 +396,7 @@ function fly(o){
         sc=1.15-0.55*kk;
         if(q>=1){
           d.remove(); done++;
-          pop(to, 'fx-bump');
+          if(far) DKEMBED.bump(to.id); else pop(to, 'fx-bump');
           if(o.kind==='coin') play('coin');
           if(o.onLand) o.onLand(i, done===n);
           if(done===n){ inFlight--; if(o.onDone) o.onDone(); }

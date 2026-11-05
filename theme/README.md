@@ -23,25 +23,19 @@ version of WoWonder expects. Use it with the same WoWonder version as that Sunsh
 | folder | name in the admin list | top bar |
 |---|---|---|
 | `theme/drakkhak` | Drakkhak | as Sunshine, in the Drakkhak look |
-| `theme/drakkhak-study` | Drakkhak + Study | the same, plus a **Learn** button with the four-bubble mark beside Home, which opens Drakkhak Learn at `/learn/` |
+| `theme/drakkhak-study` | Drakkhak + Study | the same, plus a **Learn** button with the four-bubble mark beside Home, which opens Drakkhak Learn at `/learn` |
 
-To use **Drakkhak + Study** as one site:
-
-1. Upload `theme/drakkhak-study` to WoWonder as `themes/drakkhak-study` and activate **Drakkhak + Study**.
-2. Upload Drakkhak Learn (everything in `alpha/` except `source/`, `scripts/`, `CLAUDE.md` and `.git`) into a
-   folder named **`learn`** in your WoWonder root, so it opens at `https://your-site/learn/`.
-
-That's all. The theme's button goes to `/learn/`, and Learn's **Community** button goes back to the
-site root. To put Learn somewhere else, change `$dk_study_url` in `layout/header/content.phtml`.
-(The next step, one sign-in and one top bar for both halves, needs the WoWonder script itself.)
-
-The two keep separate records: WoWonder accounts live on the server, while practice progress stays in
-each student's browser, as before.
+To use **Drakkhak + Study** as one site, follow `social/README.md`: a few WoWonder files, the theme,
+and Learn uploaded as `learn-app/`. Learn then opens at `/learn` inside this theme's header (bell,
+messages, photo, night mode), with one sign-in, rankings, daily duels, a Study card on profiles,
+levels beside names, group goals and share to the feed. Both themes carry those templates, so either
+can be active.
 
 ## What is different from Sunshine
 
 - **One search for the whole site.** The header search shows Learn's chapters ("Chapters in Learn")
-  on top of WoWonder's people, pages and groups; a chapter opens in Learn. The list is `dk/chapters.json`,
+  on top of WoWonder's people, pages and groups; a chapter opens in Learn. On `/learn` it finds only
+  chapters, and opens them in place. The list is `dk/chapters.json`,
   written by `node alpha/tools/export-chapters.js` (run it again when chapters change). Learn's own
   search box ends with *Search people and posts in Community*.
 - **The pixel cat.** The same cat as in Learn walks the community pages, sits on posts and cards,

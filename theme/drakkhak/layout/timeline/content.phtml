@@ -1486,6 +1486,7 @@ if ($wo['loggedin'] && $IsOwnerUser) {
         </ul>
         <?php } ?>
 
+        <?php echo Wo_LoadPage('timeline/drakkhak-study'); ?>
         <?php
         if ($wo['config']['website_mode'] != 'instagram') {
         	echo Wo_LoadPage('timeline/albums-sidebar');

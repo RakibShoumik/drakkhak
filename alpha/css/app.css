@@ -2070,7 +2070,7 @@ html[data-fun] body[data-heat="3"].focus .qcard{box-shadow:0 0 0 3px var(--accen
 .lgr:last-child{border-bottom:0}
 .lgr.me{background:var(--accent-soft);margin:0 -16px;padding-left:16px;padding-right:16px}
 .lgn{width:30px;text-align:center;font-family:var(--mono);font-size:14px;color:var(--ink-2);flex:none}
-.lgr.top .lgn{font-size:22px}
+.lgr.podium .lgn{font-size:22px}
 .lgw{flex:1;min-width:0;font-family:var(--ui)}
 .lgw b{display:block;font-size:15px;font-weight:600;overflow-wrap:anywhere}
 .lgw i{font-style:normal;font-size:12px;color:var(--accent-press)}
@@ -2278,3 +2278,114 @@ html.still .medal .mi,html.still .flairchip,html.still .ring-legendary{animation
 .cathatpic{width:96px;height:auto;image-rendering:pixelated}
 .tsres .tsres-people{border-top:1px solid var(--rule);margin-top:4px}
 .tsres .tsres-people b{color:var(--accent-press)}
+
+/* ============================================================
+   INSIDE THE SITE (/learn): the site's own header is the top bar.
+   Learn's bar goes; its level, coins, days left, Sound and Timer
+   are chips in the site's header (drakkhak-learn.js). Phones keep
+   a thin bar with Sound and Timer, since the site hides them there.
+   ============================================================ */
+html.embedded{--bar-h:0px}
+html.embedded .top{display:none}
+html.embedded .main{min-height:100vh}
+@media (max-width:900px){
+  html.embedded{--bar-h:44px}
+  html.embedded .top{display:flex;align-items:center;justify-content:flex-end;height:44px;padding:0 12px;gap:8px;position:sticky;top:0}
+  html.embedded .top .tb-l,html.embedded .top .nav,html.embedded .tsearch,html.embedded #nightBtn,html.embedded .avatar,html.embedded .pmenu,
+  html.embedded .xpbox,html.embedded .coinbox{display:none!important}
+  html.embedded .tb-r{gap:8px}
+  html.embedded .top .clock{display:inline-flex!important;margin-right:auto;order:-1}
+}
+@media (max-width:600px){ html.embedded .daysbox{display:none} }
+
+/* the account: your photo, the card in Settings */
+.avatar.photo{padding:0;overflow:hidden;background:var(--quiet)}
+.avatar.photo img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.acc-card{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.acc-head{display:flex;align-items:center;gap:12px}
+.acc-head img{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 1px var(--rule)}
+.acc-head div{flex:1;min-width:0;display:flex;flex-direction:column}
+.acc-head b{font-family:var(--serif);font-size:19px;color:var(--ink)}
+.acc-head small{font-family:var(--ui);font-size:12.5px;color:var(--ink-3)}
+.acc-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.acc-row label,.acc-par label{display:flex;flex-direction:column;gap:5px;font-family:var(--ui);font-size:13px;font-weight:600;color:var(--ink-2);flex:1 1 240px;min-width:0}
+.acc-par{display:flex;flex-direction:column;gap:10px}
+.acc-par label{flex:none}
+.acc-par label.acc-ok{flex-direction:row;align-items:flex-start;gap:9px;font-weight:400;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+.acc-ok input{margin-top:3px;flex:none}
+
+/* ============================================================
+   RANKS: students, colleges, today's duel, the contest
+   ============================================================ */
+.rk-tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.rk-tabs .mchip{padding:0 14px;height:34px;font-size:13.5px}
+.rk-refresh{margin-left:auto;font-size:13px}
+.rk-box{padding:6px 14px}
+.rk-row{display:grid;grid-template-columns:34px 40px minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--rule)}
+.rk-row:last-child{border-bottom:0}
+.rk-row.me{background:var(--accent-soft);border-radius:12px;padding:10px 10px;margin:4px -6px;border-bottom:0}
+.rk-row.spot{background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 22%,transparent),transparent 70%);border-radius:12px}
+.rk-row.spot .rk-name{color:var(--ink);font-weight:700}
+.rk-n{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--ink-3);text-align:center}
+.rk-row.podium .rk-n{font-size:20px}
+.rk-av{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--quiet);flex:none}
+.rk-av:not([class*="ring-"]),.rk-av.ring-plain,.rk-av.ring-{box-shadow:0 0 0 1px var(--rule)}
+.rk-who{min-width:0;display:flex;flex-direction:column;gap:1px}
+.rk-name{font-family:var(--ui);font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+a.rk-name:hover{color:var(--accent)}
+.rk-ver{font-style:normal;color:var(--accent);font-size:12px}
+.rk-who small{font-family:var(--ui);font-size:12px;color:var(--ink-3);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.rk-tag{font-weight:600;color:var(--gold)}
+.rk-tag.sh{color:var(--ok)}
+.rk-v{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.rk-v b{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--ink)}
+.rk-v small{font-family:var(--ui);font-size:11px;color:var(--ink-3)}
+.rk-me{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-press);min-width:62px;text-align:center}
+html[data-theme="night"] .rk-me{color:var(--accent)}
+.rk-gap{height:1px;margin:6px 0;border-top:1px dashed var(--rule-2)}
+.rk-foot{padding:10px 4px}
+.rk-col{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--quiet);
+  font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink-2);box-shadow:0 0 0 1px var(--rule)}
+.rk-cta{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.rk-cta .art{font-size:34px}
+.rk-cta div{flex:1 1 220px;min-width:0}
+.rk-cta b{font-family:var(--serif);font-size:18px}
+.dl-card{display:flex;flex-direction:column;gap:14px}
+.dl-wait{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--quiet);font-family:var(--ui);font-size:14.5px;color:var(--ink-2)}
+.dl-pulse{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:none;animation:dlPulse 1.4s ease-in-out infinite}
+@keyframes dlPulse{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.dl-board{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:14px;align-items:start}
+.dl-side{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;border:1px solid var(--rule);background:var(--card)}
+.dl-side.us{border-color:color-mix(in srgb,var(--accent) 45%,var(--rule))}
+.dl-tot{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--ink)}
+.dl-vs{align-self:center;font-family:var(--serif);font-style:italic;font-size:18px;color:var(--ink-3)}
+.dl-p{display:flex;align-items:center;gap:10px;min-width:0}
+.dl-p .rk-av{width:32px;height:32px}
+.dl-p .rk-who{flex:1}
+.dl-bar{height:8px;border-radius:4px;background:var(--warm);overflow:hidden}
+.dl-bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .6s}
+.rk-friends{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+.rk-fr{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;border:1px solid var(--rule);background:var(--card);text-align:left;width:100%}
+.rk-fr:hover{border-color:var(--accent)}
+.rk-fr .rk-av{width:34px;height:34px}
+.rk-fr .rk-who{flex:1}
+@media (max-width:600px){
+  .rk-row{grid-template-columns:26px 34px minmax(0,1fr) auto;gap:9px}
+  .rk-row .btn,.rk-row .rk-me{display:none}
+  .rk-av{width:34px;height:34px}
+  .dl-board{grid-template-columns:minmax(0,1fr)}
+  .dl-vs{display:none}
+}
+/* the thin bar inside the site on phones: one line; on a narrow phone it also carries
+   the level and coins, since the site's header has no room for them there */
+@media (max-width:900px){
+  html.embedded .top{flex-wrap:nowrap!important;height:44px!important;min-height:0}
+  html.embedded .top .clock{white-space:nowrap;flex:none}
+  html.embedded .tb-r{flex:1 1 auto;justify-content:flex-end;min-width:0;flex-wrap:nowrap}
+}
+@media (max-width:600px){
+  html.embedded .top .xpbox,html.embedded .top .coinbox{display:flex!important;flex:none}
+  html.embedded .top .clock{display:none!important}
+  html.embedded .tb-r{justify-content:flex-start}
+  html.embedded .tb-r .togs{margin-left:auto}
+}

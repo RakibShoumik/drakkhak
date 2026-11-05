@@ -1,0 +1,10 @@
+<?php
+/* Drakkhak: Learn, inside the site. The site's own header (search, bell,
+   messages, night mode, your photo) stays on top; Learn fills the rest of
+   the window. Learn's files live in /learn-app/. */
+$dk_app = rtrim($wo['config']['site_url'], '/') . '/learn-app/index.html?embed=1';
+?>
+<div class="dk-learn" id="dkLearn">
+  <iframe id="dkLearnFrame" src="<?php echo htmlspecialchars($dk_app); ?>" title="Learn" allow="autoplay; clipboard-write; fullscreen"></iframe>
+</div>
+<script src="<?php echo $wo['config']['theme_url'];?>/javascript/drakkhak-learn.js?version=<?php echo $wo['config']['version']; ?>"></script>

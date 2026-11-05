@@ -196,7 +196,7 @@ function paintBoard(o){
   if(o.error){ b.innerHTML='<p class="small">'+h(o.error)+'</p>'; return; }
   var row=function(r){
     var av=GAME.cosmetic(r.av), ti=r.ti&&r.ti!=='none'?GAME.cosmetic(r.ti):null;
-    return '<div class="lgr'+(r.me?' me':'')+(r.rank<=3?' top':'')+'"><span class="lgn">'+(r.rank<=3?['&#129351;','&#129352;','&#129353;'][r.rank-1]:r.rank)+'</span><span class="scav ring-'+h(r.fr||'plain')+'">'+(av&&av.art||'&#129417;')+'</span>'+
+    return '<div class="lgr'+(r.me?' me':'')+(r.rank<=3?' podium':'')+'"><span class="lgn">'+(r.rank<=3?['&#129351;','&#129352;','&#129353;'][r.rank-1]:r.rank)+'</span><span class="scav ring-'+h(r.fr||'plain')+'">'+(av&&av.art||'&#129417;')+'</span>'+
       '<span class="lgw"><b>'+h(r.n)+'</b>'+(ti?'<i>'+h(ti.name)+'</i>':'')+'</span><span class="lgx">'+U.num(r.xp)+' XP</span></div>';
   };
   var out=o.top.map(row).join('');

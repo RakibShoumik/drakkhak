@@ -326,6 +326,8 @@ def build(src, out):
     patch_register(out)
     patch_pet(out)
     patch_search(out)
+    patch_community(out)
+    patch_learn_button(out)
     print('Drakkhak theme written to', out)
 
 
@@ -514,7 +516,7 @@ def patch_pet(out):
 
 
 # ---------------------------------------------------------------- 9. one search for the whole site
-SEARCH_TAG = ('    <script>window.DK_LEARN_URL = <?php echo json_encode($wo[\'config\'][\'site_url\'] . \'/learn/\'); ?>; '
+SEARCH_TAG = ('    <script>window.DK_LEARN_URL = <?php echo json_encode($wo[\'config\'][\'site_url\'] . \'/learn\'); ?>; '
               'window.DK_THEME_URL = <?php echo json_encode($wo[\'config\'][\'theme_url\']); ?>;</script>\n'
               '    <script src="<?php echo $wo[\'config\'][\'theme_url\'];?>/javascript/drakkhak-search.js?version=<?php echo $wo[\'config\'][\'version\']; ?>" defer></script>\n')
 SEARCH_OLD = '''        if (data.status == 200) {
@@ -558,6 +560,130 @@ def patch_search(out):
     write(p, s)
 
 
+# ---------------------------------------------------------------- 10. one website: the community templates
+NB = "<?php if (!function_exists('dk_name_badge')) { @include_once('drakkhak/lib.php'); } if (function_exists('dk_name_badge') && !empty(%s) && empty(%s)) echo dk_name_badge(%s); ?>"
+
+NOTIF_BLOCK = '''    if ($wo['notification']['type'] == 'drakkhak') {
+        /* Drakkhak: Learn's moments in the one bell (a duel, a badge, a level, a set) */
+        $wo['notification']['type_text'] = $wo['notification']['text'];
+        if (!empty($wo['notification']['full_link'])) { $wo['notification']['url'] = $wo['notification']['full_link']; }
+        $wo['notification']['wo_url'] = 1;
+        $wo['notification']['icon'] .= '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather active"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"></path></svg>';
+        if (empty($wo['notification']['notifier']['user_id']) || $wo['notification']['notifier_id'] == $wo['notification']['recipient_id']) {
+            $wo['notification']['notifier']['name']   = 'Drakkhak Learn';
+            $wo['notification']['notifier']['avatar'] = $wo['config']['theme_url'] . "/img/icon.png";
+        }
+    }
+'''
+
+COLLEGE_FIELD = '''<div class="wow_form_fields">
+							<label for="dk_college">College or school <small>(optional)</small></label>
+							<input id="dk_college" type="text" autocomplete="off" list="dk_college_list" placeholder="e.g. Notre Dame College, Dhaka">
+							<datalist id="dk_college_list"></datalist>
+							<small class="dk-uhint">Your college joins the college rankings in Learn once five of its students study.</small>
+						</div>
+					'''
+
+SIGNUP_JS = r'''
+<script>
+/* Drakkhak: after sign-up, keep the full name and the college (one account for Learn and Community) */
+(function(){
+  var c=document.getElementById('dk_college'), list=document.getElementById('dk_college_list'), t=null;
+  if(c && list) c.addEventListener('input', function(){
+    clearTimeout(t); var q=c.value.trim(); if(q.length<2) return;
+    t=setTimeout(function(){ fetch('<?php echo $wo['config']['site_url'];?>/drakkhak/colleges.php?q='+encodeURIComponent(q)).then(function(r){ return r.json(); }).then(function(d){
+      list.innerHTML=(d.list||[]).map(function(x){ var o=document.createElement('option'); o.value=x.name; return o.outerHTML; }).join('');
+    }).catch(function(){}); }, 250);
+  });
+  window.DkAfterSignup=function(){
+    var f=document.getElementById('dk_first'), l=document.getElementById('dk_last');
+    try{ fetch(Wo_Ajax_Requests_File()+'?f=drakkhak&s=after_signup', {method:'POST', credentials:'same-origin', keepalive:true,
+      headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+      body:JSON.stringify({first:f?f.value:'', last:l?l.value:'', college:c?c.value:''})}); }catch(e){}
+  };
+})();
+</script>
+'''
+
+
+def patch_community(out):
+    L = os.path.join(out, 'layout')
+    # names in posts and comments: Learn level, streak and frame
+    p = os.path.join(L, 'story', 'includes', 'header.phtml')
+    s = read(p)
+    if 'dk_name_badge' not in s:
+        old = "<b><?php echo $wo['story']['publisher']['name']; ?></b></a>"
+        if old not in s:
+            sys.exit('build: the post name in story/includes/header.phtml has changed')
+        s = s.replace(old, old + NB % ("$wo['story']['publisher']['user_id']", "$wo['story']['publisher']['page_id']", "$wo['story']['publisher']['user_id']"))
+        write(p, s)
+    p = os.path.join(L, 'comment', 'content.phtml')
+    s = read(p)
+    if 'dk_name_badge' not in s:
+        m = re.search(r'(<h4 class="user">\s*<\?php echo \$wo\[\'comment\'\]\[\'publisher\'\]\[\'name\'\]\?>\s*</h4>\s*</a>\s*</span>)', s)
+        if not m:
+            sys.exit('build: the comment name in comment/content.phtml has changed')
+        badge = NB % ("$wo['comment']['publisher']['user_id']", "$wo['comment']['publisher']['page_id']", "$wo['comment']['publisher']['user_id']")
+        s = s[:m.end()] + badge + s[m.end():]
+        write(p, s)
+    # the profile: a study card above the albums
+    p = os.path.join(L, 'timeline', 'content.phtml')
+    s = read(p)
+    if 'drakkhak-study' not in s:
+        old = "echo Wo_LoadPage('timeline/albums-sidebar');"
+        i = s.find(old)
+        if i < 0:
+            sys.exit('build: the profile sidebar in timeline/content.phtml has changed')
+        j = s.rfind('<?php', 0, i)
+        s = s[:j] + "<?php echo Wo_LoadPage('timeline/drakkhak-study'); ?>\n        " + s[j:]
+        write(p, s)
+    # a group: the weekly study goal at the top of its sidebar
+    p = os.path.join(L, 'group', 'content.phtml')
+    s = read(p)
+    if 'drakkhak-goal' not in s:
+        old = '<div class="col-md-4">'
+        if old not in s:
+            sys.exit('build: the group sidebar in group/content.phtml has changed')
+        s = s.replace(old, old + "\n\t\t<?php echo Wo_LoadPage('group/drakkhak-goal'); ?>", 1)
+        write(p, s)
+    # the bell: a notification type for Learn
+    p = os.path.join(L, 'header', 'notifecation.phtml')
+    s = read(p)
+    if "'drakkhak'" not in s:
+        old = "    if ($wo['notification']['type'] == 'remaining') {"
+        if old not in s:
+            sys.exit('build: header/notifecation.phtml has changed')
+        nl = '\r\n' if '\r\n' in s else '\n'
+        s = s.replace(old, NOTIF_BLOCK.replace('\n', nl) + old, 1)
+        write(p, s)
+    # sign-up: the college, and the full name kept after sign-up
+    p = os.path.join(L, 'welcome', 'register.phtml')
+    s = read(p)
+    if 'dk_college' not in s:
+        old = '<div class="wow_form_fields">\n\t\t\t\t\t\t<label for="email">'
+        k = s.find('<label for="email">')
+        if k < 0:
+            sys.exit('build: the email field in welcome/register.phtml has changed')
+        j = s.rfind('<div class="wow_form_fields">', 0, k)
+        s = s[:j] + COLLEGE_FIELD + s[j:]
+        s = s.replace("if (data.status == 200) {", "if (data.status == 200) {\n        if (window.DkAfterSignup) DkAfterSignup();", 1)
+        s += SIGNUP_JS
+        write(p, s)
+
+
+def patch_learn_button(out):
+    """Learn is part of the site: the top-bar button in every Drakkhak theme, lit on /learn."""
+    p = os.path.join(out, 'layout', 'header', 'content.phtml')
+    s = read(p)
+    if 'dk-study-li' not in s:
+        add_study_button(out, rename=False)
+        s = read(p)
+    s = s.replace("$dk_study_url = $wo['config']['site_url'] . '/learn/';", "$dk_study_url = $wo['config']['site_url'] . '/learn';")
+    s = s.replace("$dk_study_url = $wo['config']['site_url'] . '/study/';", "$dk_study_url = $wo['config']['site_url'] . '/learn';")
+    s = s.replace('<li class="dk-study-li">', '<li class="dk-study-li<?php echo (isset($wo[\'page\']) && $wo[\'page\'] == \'learn\') ? \' active\' : \'\'; ?>">')
+    write(p, s)
+
+
 def patch_night_toggle(out):
     """WoWonder's night-mode switch appends dark.css with jQuery; wherever it
     does, add drakkhak-night.css right after it, and remove both together."""
@@ -586,7 +712,7 @@ STUDY_LI = '''
 								<?php
 								/* Drakkhak Learn. Change this address if you put the
 								   practice site somewhere other than /learn on this domain. */
-								$dk_study_url = $wo['config']['site_url'] . '/learn/';
+								$dk_study_url = $wo['config']['site_url'] . '/learn';
 								?>
 								<a class="sixteen-font-size dk-study-btn" href="<?php echo $dk_study_url; ?>" title="Drakkhak Learn: MCQ practice">
 									<svg viewBox="0 0 112 28" width="38" height="10" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.2"><circle cx="14" cy="14" r="11"/><circle cx="42" cy="14" r="11"/><circle cx="98" cy="14" r="11"/></g><circle cx="70" cy="14" r="12.5" fill="currentColor"/><path d="m63.5 14.4 4.4 4.4 8.4-9.2" fill="none" stroke="var(--dk-card,#FAF9F5)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -595,7 +721,7 @@ STUDY_LI = '''
 							</li>'''
 
 
-def add_study_button(out):
+def add_study_button(out, rename=True):
     """Put a Drakkhak button beside Home in the top bar, in every website mode."""
     p = os.path.join(out, 'layout', 'header', 'content.phtml')
     s = read(p)
@@ -612,6 +738,8 @@ def add_study_button(out):
     if not n:
         sys.exit('build: could not find the Home button in header/content.phtml')
     write(p, s)
+    if not rename:
+        return
     q = os.path.join(out, 'info.php')
     write(q, read(q).replace("$themeName = 'Drakkhak';", "$themeName = 'Drakkhak + Study';")
                     .replace("$themeFolder = 'drakkhak';", "$themeFolder = '%s';" % os.path.basename(os.path.normpath(out))))
@@ -625,7 +753,11 @@ if __name__ == '__main__':
             patch_register(out)
             patch_pet(out)
             patch_search(out)
-            for name in ('javascript/drakkhak-search.js', 'stylesheet/drakkhak.css', 'stylesheet/drakkhak-night.css'):
+            patch_community(out)
+            patch_learn_button(out)
+            for name in ('javascript/drakkhak-search.js', 'javascript/drakkhak-learn.js', 'stylesheet/drakkhak.css', 'stylesheet/drakkhak-night.css',
+                         'layout/learn/content.phtml', 'layout/timeline/drakkhak-study.phtml', 'layout/group/drakkhak-goal.phtml', 'img/icon.png', 'img/favicon.svg'):
+                os.makedirs(os.path.dirname(os.path.join(out, name)), exist_ok=True)
                 shutil.copy2(os.path.join(OVERLAY, name), os.path.join(out, name))
             for dp, _, fs in os.walk(os.path.join(OVERLAY, 'dk')):
                 for f in fs:

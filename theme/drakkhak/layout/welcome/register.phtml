@@ -51,6 +51,12 @@ $fields = Wo_GetWelcomeFileds();
 						</div>
 					<?php } ?>
 					<div class="wow_form_fields">
+							<label for="dk_college">College or school <small>(optional)</small></label>
+							<input id="dk_college" type="text" autocomplete="off" list="dk_college_list" placeholder="e.g. Notre Dame College, Dhaka">
+							<datalist id="dk_college_list"></datalist>
+							<small class="dk-uhint">Your college joins the college rankings in Learn once five of its students study.</small>
+						</div>
+					<div class="wow_form_fields">
 						<label for="email"><?php echo $wo['lang']['email']?></label>
 						<input id="email" name="email" type="email" placeholder="<?php echo $wo['lang']['email_address']?>" />
 					</div>
@@ -182,6 +188,7 @@ $(function() {
     },
     success: function(data) {
       if (data.status == 200) {
+        if (window.DkAfterSignup) DkAfterSignup();
 				$state.removeClass('alert-danger');
 				$state.addClass('alert-success');
         $state.html('<?php echo $wo['lang']['welcome_'] ?>');
@@ -384,5 +391,24 @@ function DkUserMsg(html){
       });
     }, 350);
   });
+})();
+</script>
+
+<script>
+/* Drakkhak: after sign-up, keep the full name and the college (one account for Learn and Community) */
+(function(){
+  var c=document.getElementById('dk_college'), list=document.getElementById('dk_college_list'), t=null;
+  if(c && list) c.addEventListener('input', function(){
+    clearTimeout(t); var q=c.value.trim(); if(q.length<2) return;
+    t=setTimeout(function(){ fetch('<?php echo $wo['config']['site_url'];?>/drakkhak/colleges.php?q='+encodeURIComponent(q)).then(function(r){ return r.json(); }).then(function(d){
+      list.innerHTML=(d.list||[]).map(function(x){ var o=document.createElement('option'); o.value=x.name; return o.outerHTML; }).join('');
+    }).catch(function(){}); }, 250);
+  });
+  window.DkAfterSignup=function(){
+    var f=document.getElementById('dk_first'), l=document.getElementById('dk_last');
+    try{ fetch(Wo_Ajax_Requests_File()+'?f=drakkhak&s=after_signup', {method:'POST', credentials:'same-origin', keepalive:true,
+      headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+      body:JSON.stringify({first:f?f.value:'', last:l?l.value:'', college:c?c.value:''})}); }catch(e){}
+  };
 })();
 </script>

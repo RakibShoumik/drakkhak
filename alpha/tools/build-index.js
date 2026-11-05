@@ -36,7 +36,7 @@ var files=[].concat(
   list('js/gen',['core.js']),
   ['js/edition.js','js/store.js','js/fx.js','js/ability.js','js/learn.js','js/plan.js','js/clock.js','js/predict.js',
    'js/charts.js','js/game.js','js/quests.js','js/modes.js','js/share.js',
-   'js/i18n.js','js/runner.js','js/ui.js','js/ui-pages.js','js/map.js','js/research.js','js/stats.js','js/social.js','js/fun.js','js/pet.js','js/boot.js']
+   'js/i18n.js','js/runner.js','js/ui.js','js/ui-pages.js','js/map.js','js/research.js','js/stats.js','js/social.js','js/account.js','js/ranks.js','js/fun.js','js/pet.js','js/boot.js']
 );
 /* only the chosen edition's data is fetched: q-ssc-* and ssc-registry belong to SSC,
    q-hsc-* to HSC (edition.js still filters, as a safety net) */

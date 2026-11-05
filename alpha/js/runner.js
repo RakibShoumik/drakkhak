@@ -1034,7 +1034,8 @@ function results(){
   }
   d+='<div class="btns" style="margin-top:16px">'+
      (wrong.length?'<button class="btn sm ghost" type="button" onclick="RUN.redoWrong()">'+L('The '+wrong.length+' wrong ones again','ভুল '+wrong.length+'টি আবার')+'</button>':'')+
-     '<button class="btn sm ghost" type="button" onclick="RUN.shareSet()">'+L('Save as an image','ছবি হিসেবে রাখুন')+'</button></div>';
+     '<button class="btn sm ghost" type="button" onclick="RUN.shareSet()">'+L('Save as an image','ছবি হিসেবে রাখুন')+'</button>'+
+     (window.ACCOUNT && ACCOUNT.has() ? '<button class="btn sm" type="button" onclick="RUN.postSet()">'+L('Share to Community')+'</button>' : '')+'</div>';
   o+='<details class="more"><summary>'+L('See the details','বিস্তারিত দেখুন')+'</summary><div class="inner">'+d+'</div></details>';
   o+='</div>';
   return o;
@@ -1079,6 +1080,7 @@ function modeResult(){
   return '';
 }
 function shareSet(){ SHARE.save(SHARE.setCard(R), 'drakkhak-set.png'); }
+function postSet(){ if(window.ACCOUNT) ACCOUNT.share(SHARE.setCard(R), R.right+' of '+R.marks.length+' right on Drakkhak Learn: '+String(R.title||'a practice set').replace(/<[^>]*>/g,'')+'.'); }
 
 function again(){
   var o={track:R.track, sec:R.sec, topic:R.topic, subject:R.subject, mode:R.mode,
@@ -1138,7 +1140,7 @@ return {start:start, begin:begin, leave:leave, stop:stop, render:render, afterPa
         choose:choose, submit:submit, next:next, skip:skip,
         again:again, redoWrong:redoWrong, current:current, view:view, setResp:setResp,
         toggleWhy:toggleWhy, stopAlarm:stopAlarm, toggleTimer:toggleTimer,
-        bet:bet, useFifty:useFifty, useTrick:useTrick, flag:flag, shareSet:shareSet,
+        bet:bet, useFifty:useFifty, useTrick:useTrick, flag:flag, shareSet:shareSet, postSet:postSet,
         useSkip:useSkip, useTime:useTime, usePeek:usePeek, useRetry:useRetry,
         endRun:endRun, state:function(){ return R; }};
 })();

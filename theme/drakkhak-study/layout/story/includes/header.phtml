@@ -211,7 +211,7 @@ if (!empty($wo['story']['parent_id'])) {
    <div class="meta">
       <div class="title h5">
          <span class="user-popover" data-type="<?php echo $wo['story']['publisher']['type']; ?>" data-id="<?php echo $wo['story']['publisher']['id']; ?>">
-            <a href="<?php echo $wo['story']['publisher']['url']; ?>" data-ajax="?link1=timeline&u=<?php echo $wo['story']['publisher']['username']; ?>"><b><?php echo $wo['story']['publisher']['name']; ?></b></a>
+            <a href="<?php echo $wo['story']['publisher']['url']; ?>" data-ajax="?link1=timeline&u=<?php echo $wo['story']['publisher']['username']; ?>"><b><?php echo $wo['story']['publisher']['name']; ?></b></a><?php if (!function_exists('dk_name_badge')) { @include_once('drakkhak/lib.php'); } if (function_exists('dk_name_badge') && !empty($wo['story']['publisher']['user_id']) && empty($wo['story']['publisher']['page_id'])) echo dk_name_badge($wo['story']['publisher']['user_id']); ?>
          </span>
 		 
 		 <?php if (!empty($wo['story']['publisher']['is_open_to_work']) && $wo['config']['website_mode'] == 'linkedin') { ?>
@@ -898,7 +898,7 @@ if (!empty($wo['story']['parent_id'])) {
       <div class="title h5">
          <?php if (!isset($anonymous)) { ?>
          <span class="user-popover" data-type="<?php echo $wo['story']['publisher']['type']; ?>" data-id="<?php echo $wo['story']['publisher']['id']; ?>">
-            <a href="<?php echo $wo['story']['publisher']['url']; ?>" data-ajax="?link1=timeline&u=<?php echo $wo['story']['publisher']['username']; ?>"><b><?php echo $wo['story']['publisher']['name']; ?></b></a>
+            <a href="<?php echo $wo['story']['publisher']['url']; ?>" data-ajax="?link1=timeline&u=<?php echo $wo['story']['publisher']['username']; ?>"><b><?php echo $wo['story']['publisher']['name']; ?></b></a><?php if (!function_exists('dk_name_badge')) { @include_once('drakkhak/lib.php'); } if (function_exists('dk_name_badge') && !empty($wo['story']['publisher']['user_id']) && empty($wo['story']['publisher']['page_id'])) echo dk_name_badge($wo['story']['publisher']['user_id']); ?>
          </span>
 		 
 		 <?php if (!empty($wo['story']['publisher']['is_open_to_work']) && $wo['config']['website_mode'] == 'linkedin') { ?>

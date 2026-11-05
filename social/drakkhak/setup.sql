@@ -1,0 +1,105 @@
+-- Drakkhak: the tables that join Learn and the community.
+-- Every table is new and named dk_*; no WoWonder table changes shape.
+-- drakkhak/lib.php runs this by itself the first time it is needed, so
+-- importing it by hand (phpMyAdmin > Import) is optional.
+
+CREATE TABLE IF NOT EXISTS dk_study (
+  user_id INT UNSIGNED NOT NULL PRIMARY KEY,
+  xp INT UNSIGNED NOT NULL DEFAULT 0,
+  level SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  coins INT UNSIGNED NOT NULL DEFAULT 0,
+  streak SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  best SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  answered INT UNSIGNED NOT NULL DEFAULT 0,
+  correct INT UNSIGNED NOT NULL DEFAULT 0,
+  score TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  minutes INT UNSIGNED NOT NULL DEFAULT 0,
+  days SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  badges SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  frame VARCHAR(16) NOT NULL DEFAULT '',
+  title VARCHAR(40) NOT NULL DEFAULT '',
+  flair VARCHAR(16) NOT NULL DEFAULT '',
+  edition VARCHAR(4) NOT NULL DEFAULT 'hsc',
+  spotlight_until INT UNSIGNED NOT NULL DEFAULT 0,
+  shield_until INT UNSIGNED NOT NULL DEFAULT 0,
+  shield_rank SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  updated INT UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_days (
+  user_id INT UNSIGNED NOT NULL,
+  day DATE NOT NULL,
+  minutes SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  answered SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  correct SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, day),
+  KEY day (day)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_record (
+  user_id INT UNSIGNED NOT NULL PRIMARY KEY,
+  data MEDIUMTEXT NOT NULL,
+  answered INT UNSIGNED NOT NULL DEFAULT 0,
+  updated INT UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_colleges (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  norm VARCHAR(120) NOT NULL,
+  UNIQUE KEY norm (norm)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_profile (
+  user_id INT UNSIGNED NOT NULL PRIMARY KEY,
+  college_id INT UNSIGNED NOT NULL DEFAULT 0,
+  parent_email VARCHAR(160) NOT NULL DEFAULT '',
+  parent_phone VARCHAR(32) NOT NULL DEFAULT '',
+  parent_ok TINYINT NOT NULL DEFAULT 0,
+  parent_token CHAR(32) NOT NULL DEFAULT '',
+  parent_consent INT UNSIGNED NOT NULL DEFAULT 0,
+  report_day DATE NULL,
+  KEY college (college_id),
+  KEY token (parent_token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_queue (
+  user_id INT UNSIGNED NOT NULL,
+  day DATE NOT NULL,
+  size TINYINT NOT NULL DEFAULT 1,
+  avg SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  created INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, day)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_duels (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  day DATE NOT NULL,
+  size TINYINT NOT NULL DEFAULT 1,
+  a1 INT UNSIGNED NOT NULL DEFAULT 0,
+  a2 INT UNSIGNED NOT NULL DEFAULT 0,
+  b1 INT UNSIGNED NOT NULL DEFAULT 0,
+  b2 INT UNSIGNED NOT NULL DEFAULT 0,
+  status VARCHAR(10) NOT NULL DEFAULT 'open',
+  winner CHAR(1) NOT NULL DEFAULT '',
+  friend TINYINT NOT NULL DEFAULT 0,
+  created INT UNSIGNED NOT NULL DEFAULT 0,
+  KEY day (day), KEY a1 (a1), KEY a2 (a2), KEY b1 (b1), KEY b2 (b2)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_contest (
+  week CHAR(8) NOT NULL,
+  user_id INT UNSIGNED NOT NULL,
+  joined INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (week, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dk_group_goals (
+  group_id INT UNSIGNED NOT NULL PRIMARY KEY,
+  minutes SMALLINT UNSIGNED NOT NULL DEFAULT 600,
+  set_by INT UNSIGNED NOT NULL DEFAULT 0,
+  updated INT UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- The owner's wording for a bad username (a language string, not a table change).
+UPDATE Wo_Langs SET english = 'Username must be one word (letters, numbers and underscore only).' WHERE lang_key = 'username_invalid_characters';

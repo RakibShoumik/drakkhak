@@ -27,6 +27,15 @@ prediction is always labelled an estimate. The pixel cat is `js/pet.js` (standal
 dependencies; Learn tells it about answers with `dk:answer`, `dk:setdone`, `dk:level`, `dk:badge`
 window events); the WoWonder theme carries a copy as `javascript/drakkhak-pet.js` (build.py
 `patch_pet` copies it), so after changing pet.js run `python3 theme/build/build.py --patch theme/drakkhak theme/drakkhak-study`.
+Since 2026-11-05 (Phase 2, one website; see `../social/README.md`): Learn is uploaded as `/learn-app/` and
+opens at **`/learn`** inside the WoWonder header (`?embed=1` puts `html.embedded` on; Learn's own bar is
+hidden and `UI.paintChrome` feeds the header chips through `parent.DKLEARN`; `window.DKEMBED` is what the
+page around calls). Signed out, `/learn` sends guests to `/learn-app/` and Learn works as before; signed in,
+the standalone app moves to `/learn`. `js/account.js` (ACCOUNT) is the one account: the record is kept on it,
+a summary syncs each minute, `dk:*` events reach the site's bell; `js/ranks.js` (RANKS) is the Ranks page
+(students by active minutes, colleges, daily duel, contest) and the shop's Competition items. In embedded
+mode there is one cat (the page around's; pet.js forwards events) and one night switch (the site's). Never
+use a class named `top` on page content: `.top` is the top bar and is hidden when embedded.
 Each chapter's **Learn** sheet is built from its questions' `fast` lines and first non-page tag
 (the sub-topic), so keep writing both carefully.
 

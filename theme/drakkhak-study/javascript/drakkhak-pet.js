@@ -27,6 +27,33 @@
 'use strict';
 if(window.DKPET) return;
 
+/* Inside the site at /learn, Learn runs in a frame under the site's own
+   header, and the page around it already has the cat (it loads this same
+   file). One cat: this frame sends its news up to it, and the switches
+   in Learn's Settings and Shop reach it. */
+var UP=null;
+try{ if(/[?&]embed=1/.test(location.search) && window.parent!==window && window.parent.location.host===location.host) UP=window.parent; }catch(e){}
+if(UP){
+  ['dk:answer','dk:setdone','dk:level','dk:badge'].forEach(function(n){
+    window.addEventListener(n, function(e){ try{ UP.dispatchEvent(new UP.CustomEvent(n, {detail:e.detail})); }catch(x){} });
+  });
+  var P={};
+  ['on','setOn','menu','play','name','hat','setHat','addHat','preview','say'].forEach(function(k){
+    P[k]=function(){ var t=UP.DKPET; return t && t[k] ? t[k].apply(t, arguments) : (k==='preview' ? '' : undefined); };
+  });
+  try{ Object.defineProperty(P, 'hats', {get:function(){ return (UP.DKPET && UP.DKPET.hats) || {}; }}); }catch(e){ P.hats={}; }
+  window.DKPET=P;
+  /* hats bought in Learn's shop belong to the one cat */
+  var hats=function(){
+    try{
+      if(!(window.GAME && GAME.COSMETICS && GAME.owns && UP.DKPET)) return;
+      GAME.COSMETICS.forEach(function(c){ if(c.kind==='cathat' && c.hat && c.hat!=='none' && GAME.owns(c.id)) UP.DKPET.addHat(c.hat); });
+    }catch(e){}
+  };
+  window.addEventListener('load', function(){ setTimeout(hats, 1500); });
+  return;
+}
+
 var KEY='drakkhak.pet.v1';
 var GW=30, GH=27;                       /* the sprite grid: poses are drawn on 28 x 22, with room for the outline and three rows for a hat */
 var S=(window.innerWidth||0)>=1200 ? 3 : 2;   /* screen pixels per grid pixel: bigger on a wide screen */
@@ -387,6 +414,8 @@ var root=null, cat=null, shadow=null, bubble=null, handle=null, menuEl=null;
 var INTER='a,button,input,textarea,select,label,summary,details,[role="button"],[onclick],[contenteditable="true"],.opt,video,iframe';
 var PERCH='.card,.t-hero,.t-road,.t-card,.shopitem,.mx,.stat,.medal,.shelf,.mhead,.qcard,.bdg-sum .bs,.l-numstrip,.badge,'+
           '.wow_content,.post,.panel-white,.wow_side_loggd_usr,.list-group,.setting-panel,.sidebar-conatnier .panel,.profile-container .card';
+function learnDoc(){ var f=document.getElementById('dkLearnFrame'); try{ return f && f.contentDocument && f.contentDocument.body ? f.contentDocument : null; }catch(e){ return null; } }
+function asking(d){ return !!(d && d.body && d.body.getAttribute('data-route')==='run' && d.querySelector('.qcard .opt:not([disabled])')); }
 var env={top:0, floor:innerHeight, minX:20, maxX:innerWidth-20, night:false, question:false, still:false, typing:false, community:false};
 var perches=[], lastScan=0, lastEnv=0;
 
@@ -417,6 +446,16 @@ function measure(now){
   env.minX=W*0.5+6; env.maxX=w-W*0.5-6;
   e=topAt(8, env.floor-30); f=e && isFixed(e);
   if(f && f!==document.body){ var r3=f.getBoundingClientRect(); if(r3.left<=4 && r3.width<w*0.4 && r3.height>h*0.4) env.minX=Math.max(env.minX, r3.right+W*0.5+4); }
+  /* on the site's /learn page, Learn is a frame: its sidebar and its phone tab bar count too */
+  var fd=learnDoc();
+  if(fd){
+    try{
+      var fr=document.getElementById('dkLearnFrame').getBoundingClientRect();
+      var ls=fd.getElementById('lside'), tb=fd.getElementById('tabbar');
+      if(ls && ls.offsetParent!==null){ var r4=ls.getBoundingClientRect(); if(r4.width>0 && r4.width<w*0.4) env.minX=Math.max(env.minX, fr.left+r4.right+W*0.5+4); }
+      if(tb && tb.offsetParent!==null){ var r5=tb.getBoundingClientRect(); if(r5.height>0 && r5.top>fr.height*0.6) env.floor=Math.min(env.floor, fr.top+r5.top-1); }
+    }catch(x){}
+  }
   if(env.maxX<env.minX+40){ env.minX=W*0.5+6; env.maxX=w-W*0.5-6; }
   var de=document.documentElement;
   var wasNight=env.night;
@@ -426,7 +465,7 @@ function measure(now){
     setTimeout(function(){ say(new Date().getHours()>=21 ? 'Late study? I will keep you company.' : 'Cosy.', false); }, 400);
   }
   env.still = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || de.classList.contains('still');
-  env.question = !!(document.body && document.body.getAttribute('data-route')==='run' && document.querySelector('.qcard .opt:not([disabled])'));
+  env.question = asking(document) || asking(fd);
   var a=document.activeElement;
   env.typing = !!(a && (a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable) && !(menuEl && menuEl.contains(a)));
   env.ready=true;
@@ -1051,7 +1090,7 @@ function paintHats(m){
 }
 function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 /* Learn's shop: here if this is Learn, otherwise Learn at /learn/ */
-function shopLink(){ return window.UI && window.UI.go ? '#/shop' : '/learn/#/shop'; }
+function shopLink(){ return window.UI && window.UI.go ? '#/shop' : '/learn#/shop'; }
 function setHat(h){
   if(!HATS[h]) return;
   if(h!=='none' && store.hats.indexOf(h)<0) return;

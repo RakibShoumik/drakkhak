@@ -50,6 +50,7 @@ var SIDE=[
   {id:'mistakes', en:'Mistakes', ic:'M6 3h12v18l-6-4-6 4zM9.5 8.5l5 5M14.5 8.5l-5 5'},
   {id:'badges',   en:'Badges',   ic:'M12 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM8.5 13.3 7 21l5-2.6 5 2.6-1.5-7.7'},
   {id:'shop',     en:'Shop',     ic:'M5 8h14l-1.2 12H6.2zM9 8V6.5a3 3 0 0 1 6 0V8'},
+  {id:'ranks',    en:'Ranks',    ic:'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4', live:1},
   {id:'progress', en:'Progress'},
   {id:'settings', en:'Settings'}
 ];
@@ -61,10 +62,10 @@ var PARENT={
   mock:'practice', quests:'practice', section:'practice', run:'practice',
   progress:'progress', plan:'progress', stats:'progress', predict:'progress', wrapped:'progress',
   record:'progress', badges:'progress', collection:'progress', shop:'progress', social:'progress',
-  settings:'settings', research:'research', league:'progress', mistakes:'progress'
+  settings:'settings', research:'research', league:'progress', mistakes:'progress', ranks:'progress'
 };
 /* the sidebar lights its own entry for the pages it lists */
-var SIDE_OWN={mistakes:1, badges:1, shop:1};
+var SIDE_OWN={mistakes:1, badges:1, shop:1, ranks:1};
 /* older names for places still arrive from the engine and old links */
 var ALIAS={home:'today', start:'today', track:'practice', chapter:'topic'};
 
@@ -122,11 +123,16 @@ function go(r,p){
 function current(){ return route; }
 function writeHash(){
   var hsh='#/'+route+(param?'/'+encodeURIComponent(param):'');
+  var up=host(); if(up && up.route) try{ up.route(route, param); }catch(e){}
   if(location.hash===hsh) return;
   ownHash=true;
   try{ location.hash=hsh; }catch(e){}
   setTimeout(function(){ ownHash=false; }, 0);
 }
+/* inside the site at /learn: the page around Learn (drakkhak-learn.js) */
+var EMBED=document.documentElement.classList.contains('embedded');
+function host(){ if(!EMBED) return null; try{ return window.parent.DKLEARN||null; }catch(e){ return null; } }
+function embedded(){ return EMBED; }
 function readHash(){
   var m=String(location.hash||'').match(/^#\/([a-z]+)(?:\/(.+))?$/);
   if(!m) return null;
@@ -157,6 +163,7 @@ var VIEWS={
   shop:function(){ return PAGES.shop(); },
   social:function(){ return PAGES.social(); },
   league:function(){ return FUN.leaguePage(); },
+  ranks:function(p){ return RANKS.view(p); },
   modes:function(){ return PAGES.modes(); },
   quests:function(){ return PAGES.quests(); },
   tricks:function(p){ return PAGES.tricks(p); },
@@ -169,7 +176,8 @@ var VIEWS={
 function render(o){
   o=o||{};
   if(!built) build();
-  if(!DB.state().onboarded && route!=='run') route='welcome';
+  /* the rankings and a duel invitation can be seen before the first five questions */
+  if(!DB.state().onboarded && route!=='run' && !(route==='ranks' || route==='settings' || route==='research')) route='welcome';
   var focus = route==='run' || route==='welcome';
   document.body.classList.toggle('focus', focus);
   document.body.classList.toggle('welcoming', route==='welcome');
@@ -268,6 +276,7 @@ function buildSide(){
   var o='<nav class="ls-nav">';
   SIDE.forEach(function(t){
     if(!SITE.routeOn(t.id) || !VIEWS[t.id]) return;
+    if(t.live && !(window.ACCOUNT && ACCOUNT.live())) return;
     o+='<a href="#/'+t.id+'" data-go="'+t.id+'" data-side="'+t.id+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+(t.ic||TAB_ICONS[t.id])+'"/></svg>'+
        '<span class="nm">'+t.en+'</span><span class="tk"></span></a>';
   });
@@ -416,7 +425,16 @@ function paintChrome(){
     av.innerHTML=(art.id!=='owl' ? '<span class="av-art">'+art.art+'</span>' : nm ? h(nm.charAt(0).toUpperCase())
       : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 19.5a7 7 0 0 1 14 0"/></svg>')+
       (acc && acc.id!=='noacc' ? '<span class="av-acc" aria-hidden="true">'+acc.art+'</span>' : '');
+    var me=window.ACCOUNT && ACCOUNT.has() ? ACCOUNT.user() : null;
+    if(me && me.avatar){ av.innerHTML='<img src="'+h(me.avatar)+'" alt="">'; av.classList.add('photo'); av.title=me.name; }
     av.classList.toggle('on', route==='settings'||route==='research');
+  }
+  /* the site's header shows Learn's level, coins, days left and two switches */
+  var up=host();
+  if(up && up.chrome){
+    var pt=PLAN.track(t);
+    try{ up.chrome({level:LV.level, into:LV.into, need:LV.need, coins:coins, days:pt.minutes<1?'\u2713':PLAN.daysShort(pt.minutes),
+                    sound:!!s.sound, timer:!!s.timer, night:s.theme==='night'}); }catch(e){}
   }
 }
 
@@ -440,8 +458,8 @@ function profileMenu(){
     item('shop', L('Shop'), null)+
     item('record', L('Your record','আপনার রেকর্ড'), null)+
     item('research', L('How Drakkhak teaches','দ্রাক্ষাক কীভাবে শেখায়'), L('The research behind it','এর পেছনের গবেষণা'))+
-    '<div class="pm-foot">'+L('Your answers are kept in this browser. Export a copy from Settings now and then.',
-                          'আপনার উত্তর এই ব্রাউজারেই জমা থাকে। মাঝে মাঝে সেটিংস থেকে একটি কপি রেখে দিন।')+'</div>';
+    '<div class="pm-foot">'+(window.ACCOUNT && ACCOUNT.has() ? L('Your progress is kept on your account, on every device.')
+      : L('Your answers are kept in this browser. Export a copy from Settings now and then.'))+'</div>';
   SITE.prune(m);
   m.setAttribute('role','menu');
   m.hidden=false;
@@ -602,10 +620,9 @@ function welcome(){
       '<span><span class="brand-name">Drakkhak</span><span class="brand-sub">'+(ICE.edition==='ssc'?'SSC':'HSC')+'</span></span></span>'+
       '<button class="link quiet" data-act="welcomeMore">'+L('I have used it before','আগে ব্যবহার করেছি')+'</button></div>'+
     '<div class="stack s">'+
-    '<span class="kicker">'+L('First visit &middot; no sign-up','প্রথম আসা &middot; কোনো সাইন-আপ নেই')+'</span>'+
+    '<span class="kicker">'+(window.ACCOUNT && ACCOUNT.has() ? L('Welcome, ')+h(ACCOUNT.user().name) : L('First visit &middot; no sign-up','প্রথম আসা &middot; কোনো সাইন-আপ নেই'))+'</span>'+
     '<h1>'+L('Five questions first.','আগে পাঁচটি প্রশ্ন।')+'</h1>'+
-    '<p class="lede muted" style="font-size:19px;max-width:48ch">'+L('No sign-up and no settings. Your answers decide where you should start, and your plan comes straight after.',
-      'সাইন-আপ নেই, সেটিংসও নেই। আপনার উত্তর দেখেই ঠিক হবে কোথা থেকে শুরু করা উচিত, আর তার পরেই আপনার পরিকল্পনা।')+'</p>'+
+    '<p class="lede muted" style="font-size:19px;max-width:48ch">'+L((window.ACCOUNT && ACCOUNT.has() ? '' : 'No sign-up and no settings. ')+'Your answers decide where you should start, and your plan comes straight after.')+'</p>'+
     '<div class="card pad-s" style="margin-top:18px"><div class="label">'+L('What you will practise','যা অনুশীলন করবেন')+'</div>'+
       '<p class="ui" style="font-size:15px;margin-top:6px">'+L('The MCQ of all '+(ICE.edition==='ssc'?'ten':'eleven')+' papers &mdash; ','সব পত্রের বহুনির্বাচনি &mdash; ')+
       h(ICE.sectionsOf('hsc').map(function(x){ return ICE.sname(x); }).join('  ·  '))+'.</p>'+
@@ -613,7 +630,7 @@ function welcome(){
         'প্রশ্ন আসে এনসিটিবির পাঠ্যবই থেকে, অধ্যায় ধরে ধরে। চারটি অপশন, প্রতি প্রশ্নে এক মিনিট, ভুলে কিছু কাটা যায় না।')+'</p></div>'+
     '<div class="row" style="flex-wrap:wrap;margin-top:12px">'+
       '<button class="btn" data-act="startWelcome">'+L('Start five questions','পাঁচটি প্রশ্ন শুরু করুন')+'</button>'+
-      '<span class="small">'+L('About five minutes. Your answers stay on this device.','প্রায় পাঁচ মিনিট। আপনার উত্তর এই ডিভাইসেই থাকে।')+'</span></div>';
+      '<span class="small">'+(window.ACCOUNT && ACCOUNT.has() ? L('About five minutes. Your answers are kept on your account.') : L('About five minutes. Your answers stay on this device.','প্রায় পাঁচ মিনিট। আপনার উত্তর এই ডিভাইসেই থাকে।'))+'</span></div>';
   if(welcomeMore){
     o+='<div class="card pad-s" style="margin-top:8px"><div class="spread" style="align-items:center">'+
        '<span class="ui" style="font-size:14px">'+L('Restore a copy you exported, or go straight in.','আগে রাখা কপি ফিরিয়ে আনুন, বা সোজা ভিতরে চলে যান।')+'</span>'+
@@ -1085,6 +1102,7 @@ function bankCard(t){
 function settings(){
   var s=DB.state(), st=s.settings, dm=PLAN.dailyMin();
   var o='<div class="phead"><span class="kicker">'+L('Settings','সেটিংস')+'</span><h1>'+L('Settings','সেটিংস')+'</h1></div>';
+  if(window.ACCOUNT) o+=ACCOUNT.settingsCard();
   o+='<div class="setlist">'+
     (SITE.onlyEdition() ? '' : row(L('Edition','সংস্করণ'), L('Switch the whole app between HSC and SSC. Your progress in each is kept.','পুরো অ্যাপ এইচএসসি আর এসএসসির মধ্যে বদলান। দুটির অগ্রগতিই আলাদা করে থাকে।'),
       '<span class="seg2">'+['hsc','ssc'].map(function(e){ return '<button type="button" class="'+(ICE.edition===e?'on':'')+'" data-act="edition" data-arg="'+e+'">'+e.toUpperCase()+'</button>'; }).join('')+'</span>'))+
@@ -1098,7 +1116,7 @@ function settings(){
       '<input class="field" type="date" value="'+h(s.examDate.hsc||'')+'" data-change="examDate.hsc">')+
     row(L('Sound','শব্দ'), L('A chime when right, a low tone when wrong, coins as they land.','ঠিক হলে একটি টোকা, ভুল হলে নিচু সুর, কয়েন পৌঁছালে ঝনঝন।'), onoff('sound', s.sound))+
     row(L('Question timer','প্রশ্নের টাইমার'), L('Each question gets the paper\'s own time.','প্রতিটি প্রশ্নে প্রশ্নপত্রের নিজের সময়।'), onoff('timer', s.timer))+
-    row(L('Night mode','রাতের মোড'), L('Warm dark colours for late study. The app always opens in day mode for a new visitor.','দেরি করে পড়ার জন্য উষ্ণ অন্ধকার রং।'), onoff('night', s.theme==='night'))+
+    row(L('Night mode','রাতের মোড'), L(EMBED ? 'One switch for the whole site: this, N, or the moon in the site\'s header.' : 'Warm dark colours for late study. The app always opens in day mode for a new visitor.'), onoff('night', s.theme==='night'))+
     row(L('Cautious estimate'), L('The estimated mark shows the figure you should beat nine times in ten.'), onoff('hardPredict', st.hardPredict))+
     (SITE.on('stats.on') ? row(L('Anonymous statistics','বেনামি পরিসংখ্যান'), L('Counts minutes and questions, with a random number instead of your name, so the site can improve. Your answers never leave this browser.','আপনার নামের বদলে একটি এলোমেলো সংখ্যা দিয়ে মিনিট ও প্রশ্নের হিসাব রাখে, যাতে সাইটটি ভালো করা যায়। আপনার উত্তর এই ব্রাউজারের বাইরে যায় না।'), onoff('shareStats', st.shareStats!==false)) : '')+
     (window.DKPET ? row(L('Pixel cat'), L('A small cat who lives on the site, in Learn and in Community. Tap it to pet it, drag it to move it, hold it for its name and coat.'),
@@ -1264,7 +1282,11 @@ function dismissNudge(id){
 }
 function flip(key){
   var s=DB.state();
-  if(key==='night'){ s.theme = s.theme==='night'?'day':'night'; shareMode(s.theme); }
+  if(key==='night'){
+    var up=host();
+    if(up && up.night){ try{ up.night(s.theme!=='night'); return; }catch(e){} }
+    s.theme = s.theme==='night'?'day':'night'; shareMode(s.theme);
+  }
   else if(key==='sound'){ s.sound=!s.sound; FX.setMuted(!s.sound); if(s.sound) FX.play('correct'); }
   else if(key==='timer'){ s.timer=!s.timer; }
   else s.settings[key]=!s.settings[key];
@@ -1442,6 +1464,35 @@ function markTrickRead(id){
   GAME.check('trick');
 }
 
+/* what the page around Learn calls (drakkhak-learn.js) */
+if(EMBED) window.DKEMBED={
+  /* the site's night switch was flipped */
+  night:function(on){
+    var s=DB.state(), want=on?'night':'day';
+    if(s.theme===want) return;
+    s.theme=want; DB.save(); applyTheme();
+    if(route==='run' && RUN.active()){ paintChrome(); repaintView(); } else if(built) render();
+  },
+  go:function(r, p){ go(r, p); },
+  ready:function(){ if(built) paintChrome(); },
+  /* where the coins and XP fly to: the chips in the site's header */
+  rect:function(id){
+    try{
+      var up=window.parent, f=window.frameElement; if(!f) return null;
+      var c=up.document.querySelector(id==='coinBox' ? '.dk-lchips .dk-coins i' : '.dk-lchips .dk-lv i');
+      if(!c || !c.offsetParent) return null;
+      var r=c.getBoundingClientRect(), fr=f.getBoundingClientRect();
+      return {left:r.left-fr.left, top:r.top-fr.top, width:r.width, height:r.height};
+    }catch(e){ return null; }
+  },
+  bump:function(id){
+    try{
+      var c=window.parent.document.querySelector(id==='coinBox' ? '.dk-lchips .dk-coins' : '.dk-lchips .dk-lv');
+      if(c){ c.classList.remove('dk-bump'); void c.offsetWidth; c.classList.add('dk-bump'); }
+    }catch(e){}
+  }
+};
+
 /* called once at boot: a long gap earns a warm welcome, said once */
 function noteComeback(){ cameBack=QUEST.comeback(); }
 
@@ -1455,6 +1506,6 @@ return {
   speedDrill:speedDrill, revenge:revenge, openChest:openChest, flip:flip, markTrickRead:markTrickRead,
   act:act, h:h, stat:stat, link:link, starMarks:starMarks, lineChart:lineChart, plural:plural,
   dShort:dShort, dLong:dLong, noteComeback:noteComeback, shortcuts:shortcuts, donut:donut,
-  sharedMode:sharedMode, subjectRows:subjectRows, chNo:chNo, pickPaper:pickPaper, pickStart:pickStart, pickLearn:pickLearn
+  sharedMode:sharedMode, embedded:embedded, host:host, subjectRows:subjectRows, chNo:chNo, pickPaper:pickPaper, pickStart:pickStart, pickLearn:pickLearn
 };
 })();

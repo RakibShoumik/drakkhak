@@ -1,0 +1,26 @@
+<?php
+/* Drakkhak: the profile's study card. Days studied, average time a day,
+   level, streak and college, from Learn. Shown only once there is study. */
+if (!function_exists('dk_stats')) { @include_once('drakkhak/lib.php'); }
+if (function_exists('dk_stats') && !empty($wo['user_profile']['user_id'])) {
+    $dk = dk_stats($wo['user_profile']['user_id']);
+    $dk_mine = !empty($wo['user']['user_id']) && (int) $wo['user']['user_id'] === (int) $wo['user_profile']['user_id'];
+    if ($dk['has'] || $dk_mine) { ?>
+<div class="wow_content dk-study-card">
+  <div class="dk-sc-head"><span class="dk-sc-mark" aria-hidden="true"></span><b>Study</b>
+    <a href="<?php echo htmlspecialchars(dk_site_path('/learn')); ?>">Learn &rsaquo;</a></div>
+  <?php if ($dk['has']) { ?>
+  <div class="dk-sc-grid">
+    <div><b><?php echo (int) $dk['days']; ?></b><span>days studied</span></div>
+    <div><b><?php echo dk_hours($dk['avg_min']); ?></b><span>on average a day</span></div>
+    <div><b><?php echo dk_hours($dk['week_min']); ?></b><span>this week</span></div>
+    <div><b><?php echo (int) $dk['level']; ?></b><span>Learn level</span></div>
+    <div><b><?php echo (int) $dk['streak']; ?></b><span>day streak<?php echo $dk['best'] > $dk['streak'] ? ' &middot; best ' . (int) $dk['best'] : ''; ?></span></div>
+    <div><b><?php echo (int) $dk['badges']; ?></b><span>badges</span></div>
+  </div>
+  <?php if ($dk['college'] !== '') { ?><p class="dk-sc-college"><?php echo htmlspecialchars($dk['college']); ?></p><?php } ?>
+  <?php } else { ?>
+  <p class="dk-sc-empty">Nothing yet. Study time from Learn shows here: days studied and the average a day.</p>
+  <?php } ?>
+</div>
+<?php } } ?>
