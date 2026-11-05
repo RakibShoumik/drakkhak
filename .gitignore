@@ -1,2 +1,5 @@
 drakkhak-data/
 alpha/api/data/
+
+# the cPanel bundle, built on demand
+upload.zip

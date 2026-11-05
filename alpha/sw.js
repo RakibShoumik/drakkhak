@@ -11,7 +11,7 @@
    Cross-origin requests (the web fonts) are cache-first, because
    those never change and are the slowest thing on the page.
    =========================================================== */
-var CACHE = 'drakkhak-v204';
+var CACHE = 'drakkhak-v205';
 var CORE = [
   './',
   './index.html',
